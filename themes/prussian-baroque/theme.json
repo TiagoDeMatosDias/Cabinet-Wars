@@ -1,0 +1,123 @@
+{
+  "id": "prussian-baroque",
+  "name": "Prussian Baroque",
+  "version": 1,
+  "extends": "imperial-china",
+  "scheme": "dark",
+  "assets": {},
+  "fonts": {},
+  "color": {
+    "surface": {
+      "app": "#121a2b",
+      "panel": "#1a2438",
+      "raised": "#243049",
+      "sunken": "#0d1320",
+      "scrim": "#05080fee"
+    },
+    "text": {
+      "primary": "#eee6d3",
+      "muted": "#b3ae9f",
+      "heading": "#d6b25a"
+    },
+    "border": {
+      "subtle": "#33405c",
+      "control": "#7f8aa5"
+    },
+    "action": {
+      "primary": "#d6b25a",
+      "onPrimary": "#121a2b",
+      "secondary": "#243049",
+      "onSecondary": "#eee6d3",
+      "hoverBorder": "#d6b25a"
+    },
+    "focus": "#d6b25a",
+    "state": {
+      "danger": "#f0907f",
+      "warning": "#e6b064",
+      "success": "#8cc49a",
+      "info": "#9dbbe0"
+    },
+    "seal": {
+      "fill": "#8c1c24",
+      "text": "#eee6d3"
+    }
+  },
+  "map": {
+    "canvas": {
+      "background": "#121a2b"
+    },
+    "fog": {
+      "color": "#141b2b",
+      "alpha": 0.5,
+      "hatch": "#05080f",
+      "hatchAlpha": 0.3
+    }
+  },
+  "type": {
+    "family": {
+      "display": [
+        "IM Fell English SC",
+        "Georgia",
+        "serif"
+      ],
+      "body": [
+        "Georgia",
+        "serif"
+      ],
+      "map": [
+        "Georgia",
+        "serif"
+      ]
+    }
+  },
+  "ornament": null,
+  "emblem": {
+    "shapes": [
+      "heater-shield",
+      "roundel",
+      "banner",
+      "lozenge"
+    ],
+    "styles": [
+      "field",
+      "outline"
+    ]
+  },
+  "controls": {
+    "endTurn": {
+      "fill": "#d6b25a",
+      "text": "#121a2b",
+      "border": "#d6b25a"
+    },
+    "nextStep": {
+      "fill": "#243049",
+      "text": "#eee6d3",
+      "border": "#d6b25a"
+    }
+  },
+  "drawer": {
+    "tab": "#1a2438",
+    "unreadDot": "#d6b25a"
+  },
+  "orders": {
+    "next": "#d6b25a",
+    "done": {
+      "fill": "#0d1320",
+      "text": "#b3ae9f"
+    },
+    "removed": {
+      "fill": "#3a1f28",
+      "text": "#f0907f"
+    }
+  },
+  "battle": {
+    "scrim": "#05080fb0",
+    "stepDone": "#d6b25a",
+    "stepTodo": "#7f8aa5",
+    "lostUnit": "#0d1320"
+  },
+  "tooltip": {
+    "surface": "#eee6d3",
+    "text": "#121a2b"
+  }
+}

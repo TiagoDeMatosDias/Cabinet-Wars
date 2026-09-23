@@ -1,0 +1,345 @@
+{
+  "id": "imperial-china",
+  "name": "Imperial China",
+  "version": 1,
+  "extends": null,
+  "scheme": "light",
+  "assets": {},
+  "fonts": {},
+  "color": {
+    "surface": {
+      "app": "#d3c7ab",
+      "panel": "#f1ead6",
+      "raised": "#faf6ea",
+      "sunken": "#e6dcc3",
+      "scrim": "#2c2521e6"
+    },
+    "text": {
+      "primary": "#2c2521",
+      "muted": "#5c5043",
+      "heading": "#2c2521"
+    },
+    "border": {
+      "subtle": "#cfc2a3",
+      "control": "#8a7a60"
+    },
+    "action": {
+      "primary": "#2c2521",
+      "onPrimary": "#faf6ea",
+      "secondary": "#faf6ea",
+      "onSecondary": "#2c2521",
+      "hoverBorder": "#a8362a"
+    },
+    "focus": "#34636b",
+    "state": {
+      "danger": "#9b2c20",
+      "warning": "#855410",
+      "success": "#3d5f45",
+      "info": "#34636b"
+    },
+    "seal": {
+      "fill": "#a8362a",
+      "text": "#faf6ea"
+    },
+    "card": {
+      "face": "#fffdf6",
+      "faceDisabled": "#ece5d3",
+      "ink": "#2c2521",
+      "border": "#8a7a60",
+      "back": "#a8362a"
+    },
+    "die": {
+      "face": "#faf6ea",
+      "pip": "#2c2521",
+      "attackerRing": "#a8362a",
+      "defenderRing": "#34636b"
+    },
+    "will": {
+      "track": "#e6dcc3",
+      "threshold": "#2c2521"
+    }
+  },
+  "map": {
+    "canvas": {
+      "background": "#d3c7ab",
+      "blank": "#eee6cf",
+      "blankBorder": "#8a7a60"
+    },
+    "road": {
+      "major": {
+        "fill": "#8f5530",
+        "casing": "#f5efdd",
+        "width": 5,
+        "casingWidth": 10
+      },
+      "minor": {
+        "color": "#8f5530",
+        "width": 3,
+        "dash": [
+          10,
+          8
+        ]
+      }
+    },
+    "node": {
+      "radius": 20,
+      "ownerRingWidth": 6,
+      "occupiedDotScale": 0.4,
+      "outline": "#2c2521",
+      "outlineWidth": 2
+    },
+    "selection": {
+      "color": "#2c2521",
+      "width": 4
+    },
+    "highlight": {
+      "move": "#3aa7a0",
+      "retreat": "#e0922a",
+      "target": "#d0447e",
+      "casing": "#2c2521",
+      "alpha": 0.45,
+      "here": "#a8362a"
+    },
+    "order": {
+      "arrow": "#2c2521",
+      "arrowWidth": 4,
+      "badge": "#faf6ea"
+    },
+    "label": {
+      "size": 16,
+      "fill": "#2c2521",
+      "halo": "#f5efdd",
+      "haloWidth": 3
+    },
+    "vp": {
+      "fill": "#a8362a",
+      "text": "#faf6ea",
+      "size": 18
+    },
+    "army": {
+      "width": 64,
+      "height": 34,
+      "radius": 3,
+      "text": "#faf6ea",
+      "textHalo": "#2c2521",
+      "border": "#2c2521"
+    },
+    "nationPalette": [
+      "#a8362a",
+      "#2f4f7a",
+      "#3f6146",
+      "#6d3b62"
+    ],
+    "fog": {
+      "color": "#5a5245",
+      "alpha": 0.42,
+      "hatch": "#2c2521",
+      "hatchAlpha": 0.22,
+      "hatchSpacing": 16,
+      "blur": 20,
+      "nodeAlpha": 0.55
+    }
+  },
+  "type": {
+    "family": {
+      "display": [
+        "LXGW WenKai",
+        "Noto Serif SC",
+        "serif"
+      ],
+      "body": [
+        "Noto Serif SC",
+        "Noto Serif",
+        "Georgia",
+        "serif"
+      ],
+      "numeric": [
+        "Noto Serif SC",
+        "Georgia",
+        "serif"
+      ],
+      "map": [
+        "LXGW WenKai",
+        "Noto Serif SC",
+        "serif"
+      ]
+    },
+    "size": {
+      "caption": 12,
+      "small": 13,
+      "body": 14,
+      "h3": 15,
+      "h2": 16,
+      "h1": 44,
+      "display": 36
+    },
+    "weight": {
+      "regular": 400,
+      "strong": 700
+    },
+    "lineHeight": {
+      "body": 1.5
+    },
+    "tracking": {
+      "heading": "0.04em",
+      "display": "0.08em"
+    },
+    "case": {
+      "heading": "none"
+    }
+  },
+  "shape": {
+    "radius": {
+      "control": 3,
+      "card": 3,
+      "chip": 2,
+      "die": 4
+    },
+    "border": {
+      "width": 1,
+      "emphasis": 2
+    },
+    "shadow": {
+      "raised": {
+        "x": 0,
+        "y": 1,
+        "blur": 3,
+        "color": "#2c252126"
+      },
+      "overlay": {
+        "x": 0,
+        "y": 6,
+        "blur": 18,
+        "color": "#2c252140"
+      }
+    }
+  },
+  "space": {
+    "1": 2,
+    "2": 4,
+    "3": 6,
+    "4": 8,
+    "5": 12,
+    "6": 16,
+    "panelWidth": 400,
+    "gutter": 16
+  },
+  "motion": {
+    "fast": 120,
+    "normal": 220,
+    "map": 450,
+    "easing": "ease-out",
+    "reduce": false
+  },
+  "icons": {
+    "unit": {
+      "cavalry": "icon:cavalry",
+      "infantry": "icon:infantry",
+      "artillery": "icon:artillery",
+      "supply": "icon:supply"
+    },
+    "general": "icon:general",
+    "vp": "icon:vp",
+    "deck": {
+      "general": "icon:deckGeneral",
+      "event": "icon:deckEvent"
+    },
+    "battle": "icon:battle",
+    "victory": "icon:victory",
+    "card": {
+      "roll+1": "+1",
+      "roll+2": "+2",
+      "roll-1": "−1",
+      "retreat": "icon:retreat",
+      "blockRetreat": "icon:blockRetreat",
+      "moves+1": "icon:moves"
+    },
+    "order": {
+      "move": "icon:move",
+      "split": "icon:split",
+      "merge": "icon:merge",
+      "reorganize": "icon:reorganize",
+      "card": "icon:card"
+    }
+  },
+  "emblem": {
+    "shapes": [
+      "square",
+      "round",
+      "gourd",
+      "tablet"
+    ],
+    "styles": [
+      "field",
+      "outline"
+    ],
+    "border": 0.06
+  },
+  "cards": {
+    "width": 112,
+    "height": 160,
+    "radius": 8,
+    "frameWidth": 7,
+    "lift": 24,
+    "fan": 4
+  },
+  "tooltip": {
+    "surface": "#2c2521",
+    "text": "#f1ead6",
+    "delay": 300
+  },
+  "army": {
+    "model": null,
+    "blockPerUnits": 2,
+    "maxBlocks": 5,
+    "shadow": {
+      "color": "#2c25216e",
+      "blur": 3
+    },
+    "ghostAlpha": 0.45
+  },
+  "orders": {
+    "next": "#a8362a",
+    "done": {
+      "fill": "#e6dcc3",
+      "text": "#5c5043"
+    },
+    "removed": {
+      "fill": "#efe3d8",
+      "text": "#9b2c20"
+    }
+  },
+  "controls": {
+    "endTurn": {
+      "fill": "#2c2521",
+      "text": "#faf6ea",
+      "border": "#2c2521"
+    },
+    "nextStep": {
+      "fill": "#faf6ea",
+      "text": "#2c2521",
+      "border": "#2c2521"
+    }
+  },
+  "battle": {
+    "scrim": "#2c252196",
+    "stepDone": "#2c2521",
+    "stepTodo": "#8a7a60",
+    "lostUnit": "#e6dcc3"
+  },
+  "drawer": {
+    "tab": "#f1ead6",
+    "width": 380,
+    "unreadDot": "#a8362a"
+  },
+  "ornament": {
+    "panelTexture": null,
+    "frame": null,
+    "divider": "〜",
+    "cardBack": null,
+    "mapVignette": {
+      "color": "#d3c7ab",
+      "strength": 0.25
+    }
+  }
+}

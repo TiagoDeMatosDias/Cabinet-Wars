@@ -1,0 +1,17 @@
+{
+  "name": "krieg",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "npm run dev -w @krieg/client",
+    "build": "npm run build -w @krieg/client",
+    "server": "npm run start -w @krieg/server",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/engine && tsc -p packages/server && tsc -p packages/client"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.1"
+  }
+}
