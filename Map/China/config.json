@@ -1,0 +1,5730 @@
+{
+  "name": "Three Kingdoms",
+  "version": 1,
+  "background": "map.png",
+  "nodesImage": "nodes.png",
+  "nations": [
+    {
+      "id": "Shu",
+      "name": "Shu",
+      "color": "#1a5fb4",
+      "side": "defender",
+      "threshold": 50
+    },
+    {
+      "id": "Wei",
+      "name": "Wei",
+      "color": "#26a269",
+      "side": "defender",
+      "threshold": 50
+    },
+    {
+      "id": "Wu",
+      "name": "Wu",
+      "color": "#e5a50a",
+      "side": "defender",
+      "threshold": 50
+    },
+    {
+      "id": "Mongol",
+      "name": "Mongol",
+      "color": "#a51d2d",
+      "side": "attacker",
+      "threshold": 50
+    },
+    {
+      "id": "Yue",
+      "name": "Yue",
+      "color": "#613583",
+      "side": "attacker",
+      "threshold": 50
+    },
+    {
+      "id": "Viet",
+      "name": "Viet",
+      "color": "#63452c",
+      "side": "attacker",
+      "threshold": 50
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Xiangwu",
+      "color": "#e63fbc",
+      "x": 869,
+      "y": 860,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n2",
+      "name": "Wudu",
+      "color": "#63a654",
+      "x": 878,
+      "y": 1051,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n3",
+      "name": "Shanggui",
+      "color": "#0f8717",
+      "x": 989,
+      "y": 958,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n4",
+      "name": "Jieting",
+      "color": "#717448",
+      "x": 1036,
+      "y": 884,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n5",
+      "name": "Chencang",
+      "color": "#154dd6",
+      "x": 1191,
+      "y": 965,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n6",
+      "name": "Chang'an",
+      "color": "#1c101b",
+      "x": 1326,
+      "y": 955,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n7",
+      "name": "Tongguan",
+      "color": "#b8171e",
+      "x": 1463,
+      "y": 922,
+      "owner": "Wei",
+      "vp": 10
+    },
+    {
+      "id": "n8",
+      "name": "Mianchi",
+      "color": "#63767b",
+      "x": 1625,
+      "y": 931,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n9",
+      "name": "Luoyang",
+      "color": "#897de7",
+      "x": 1751,
+      "y": 936,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n10",
+      "name": "Ye",
+      "color": "#669880",
+      "x": 1896,
+      "y": 898,
+      "owner": "Wei",
+      "vp": 10
+    },
+    {
+      "id": "n11",
+      "name": "Yuancheng",
+      "color": "#0ee043",
+      "x": 2042,
+      "y": 854,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n12",
+      "name": "Liaocheng",
+      "color": "#15b783",
+      "x": 2158,
+      "y": 781,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n13",
+      "name": "Dongpingling",
+      "color": "#55b68b",
+      "x": 2271,
+      "y": 708,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n14",
+      "name": "Le'an",
+      "color": "#ee34cc",
+      "x": 2393,
+      "y": 643,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n15",
+      "name": "Pingguo",
+      "color": "#a150e1",
+      "x": 2617,
+      "y": 297,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n16",
+      "name": "Linyu",
+      "color": "#8b6bd4",
+      "x": 2466,
+      "y": 425,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n17",
+      "name": "Feiru",
+      "color": "#10effc",
+      "x": 2326,
+      "y": 434,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n18",
+      "name": "Ji",
+      "color": "#3678a0",
+      "x": 2222,
+      "y": 409,
+      "owner": "Wei",
+      "vp": 10
+    },
+    {
+      "id": "n19",
+      "name": "Zhuo",
+      "color": "#4efdc7",
+      "x": 2167,
+      "y": 460,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n20",
+      "name": "Fangcheng",
+      "color": "#3b21dc",
+      "x": 2128,
+      "y": 533,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n21",
+      "name": "Lecheng",
+      "color": "#9c3ea5",
+      "x": 2116,
+      "y": 598,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n22",
+      "name": "Wuyi",
+      "color": "#7f7a22",
+      "x": 2097,
+      "y": 698,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n23",
+      "name": "Pingyang",
+      "color": "#95c7cc",
+      "x": 1584,
+      "y": 800,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n24",
+      "name": "Yangqu",
+      "color": "#4cda1c",
+      "x": 1682,
+      "y": 607,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n25",
+      "name": "Jinyang",
+      "color": "#501f4b",
+      "x": 1649,
+      "y": 690,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n26",
+      "name": "Yinguan",
+      "color": "#a0c421",
+      "x": 1746,
+      "y": 534,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n27",
+      "name": "Guangwu (Yanmen)",
+      "color": "#a13a45",
+      "x": 1838,
+      "y": 544,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n28",
+      "name": "Nie",
+      "color": "#698a4f",
+      "x": 1727,
+      "y": 776,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n29",
+      "name": "Yangcheng",
+      "color": "#fb6873",
+      "x": 1741,
+      "y": 865,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n30",
+      "name": "Luxian",
+      "color": "#81489e",
+      "x": 1822,
+      "y": 746,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n31",
+      "name": "Niangzi Pass",
+      "color": "#46a856",
+      "x": 1891,
+      "y": 669,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n32",
+      "name": "Jingxing Pass",
+      "color": "#c1f4f0",
+      "x": 1888,
+      "y": 585,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n33",
+      "name": "Handan",
+      "color": "#a7b9b7",
+      "x": 1965,
+      "y": 772,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n34",
+      "name": "Zhending",
+      "color": "#2135ea",
+      "x": 2006,
+      "y": 655,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n35",
+      "name": "Lunu",
+      "color": "#dc06f5",
+      "x": 2015,
+      "y": 548,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n36",
+      "name": "Dai",
+      "color": "#da6a0c",
+      "x": 1941,
+      "y": 469,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n37",
+      "name": "Juyong Pass",
+      "color": "#6c4a4a",
+      "x": 2036,
+      "y": 431,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n38",
+      "name": "Hunu",
+      "color": "#1919f0",
+      "x": 2101,
+      "y": 370,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n39",
+      "name": "Quanzhou",
+      "color": "#90b974",
+      "x": 2269,
+      "y": 541,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n40",
+      "name": "Gaocheng",
+      "color": "#4ba37f",
+      "x": 2247,
+      "y": 629,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n41",
+      "name": "Lishi",
+      "color": "#91b585",
+      "x": 1535,
+      "y": 619,
+      "owner": "Mongol",
+      "vp": 5
+    },
+    {
+      "id": "n42",
+      "name": "Gaonu",
+      "color": "#3c6610",
+      "x": 1467,
+      "y": 705,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n43",
+      "name": "Xiagui",
+      "color": "#565af9",
+      "x": 1343,
+      "y": 825,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n44",
+      "name": "Qixian",
+      "color": "#43008f",
+      "x": 1221,
+      "y": 892,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n45",
+      "name": "Linjing",
+      "color": "#9eeeb5",
+      "x": 1134,
+      "y": 816,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n46",
+      "name": "Niyang",
+      "color": "#6ea025",
+      "x": 1244,
+      "y": 742,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n47",
+      "name": "Diaoyin",
+      "color": "#007120",
+      "x": 1325,
+      "y": 657,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n48",
+      "name": "Fushi",
+      "color": "#d25ad0",
+      "x": 1392,
+      "y": 551,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n49",
+      "name": "Hongmen",
+      "color": "#43c0dd",
+      "x": 1477,
+      "y": 486,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n50",
+      "name": "Jiuyuan",
+      "color": "#eeb3ad",
+      "x": 1417,
+      "y": 388,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n51",
+      "name": "Shuofang",
+      "color": "#09eaf2",
+      "x": 1186,
+      "y": 358,
+      "owner": "Mongol",
+      "vp": 5
+    },
+    {
+      "id": "n52",
+      "name": "Lianshao",
+      "color": "#257211",
+      "x": 1091,
+      "y": 454,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n53",
+      "name": "Lingwu",
+      "color": "#688bf8",
+      "x": 1020,
+      "y": 564,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n54",
+      "name": "Zhanyin",
+      "color": "#1648b1",
+      "x": 905,
+      "y": 599,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n55",
+      "name": "Aowei",
+      "color": "#e77a4e",
+      "x": 779,
+      "y": 629,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n56",
+      "name": "Jincheng",
+      "color": "#1406cf",
+      "x": 759,
+      "y": 742,
+      "owner": "Mongol",
+      "vp": 5
+    },
+    {
+      "id": "n57",
+      "name": "Heguan",
+      "color": "#977574",
+      "x": 630,
+      "y": 776,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n58",
+      "name": "Pingxiang",
+      "color": "#895f6c",
+      "x": 864,
+      "y": 783,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n59",
+      "name": "Xiaoguan Pass",
+      "color": "#790b92",
+      "x": 975,
+      "y": 738,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n60",
+      "name": "Pengyang",
+      "color": "#9e349c",
+      "x": 1110,
+      "y": 687,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n61",
+      "name": "Gaowang",
+      "color": "#ac5261",
+      "x": 1204,
+      "y": 544,
+      "owner": "Mongol",
+      "vp": 0
+    },
+    {
+      "id": "n62",
+      "name": "Yangle",
+      "color": "#ac80db",
+      "x": 2550,
+      "y": 370,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n63",
+      "name": "Xiabian",
+      "color": "#49eff5",
+      "x": 985,
+      "y": 1053,
+      "owner": "Shu",
+      "vp": 5
+    },
+    {
+      "id": "n64",
+      "name": "Yangping Pass",
+      "color": "#b7c1fa",
+      "x": 1132,
+      "y": 1092,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n65",
+      "name": "Chenggu",
+      "color": "#95204d",
+      "x": 1247,
+      "y": 1104,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n66",
+      "name": "Xicheng",
+      "color": "#1ae5db",
+      "x": 1316,
+      "y": 1140,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n67",
+      "name": "Mount Dingjun",
+      "color": "#fe54da",
+      "x": 1184,
+      "y": 1183,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n68",
+      "name": "Shangyong",
+      "color": "#17c5ea",
+      "x": 1415,
+      "y": 1129,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n69",
+      "name": "Wuguan Pass",
+      "color": "#056929",
+      "x": 1511,
+      "y": 1132,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n70",
+      "name": "Wudang",
+      "color": "#e751e9",
+      "x": 1634,
+      "y": 1108,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n71",
+      "name": "Shangluo",
+      "color": "#8fc357",
+      "x": 1477,
+      "y": 1044,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n72",
+      "name": "Shan",
+      "color": "#68014e",
+      "x": 1549,
+      "y": 996,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n73",
+      "name": "Lantian",
+      "color": "#96ef30",
+      "x": 1386,
+      "y": 1005,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n74",
+      "name": "Wan",
+      "color": "#a36bd6",
+      "x": 1750,
+      "y": 1071,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n75",
+      "name": "Hulao Pass",
+      "color": "#669f42",
+      "x": 1794,
+      "y": 988,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n76",
+      "name": "Xiangyang",
+      "color": "#125e2a",
+      "x": 1737,
+      "y": 1214,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n77",
+      "name": "Yicheng",
+      "color": "#2a46b9",
+      "x": 1744,
+      "y": 1301,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n78",
+      "name": "Xinshi",
+      "color": "#39219a",
+      "x": 1750,
+      "y": 1400,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n79",
+      "name": "Jingling",
+      "color": "#aedc46",
+      "x": 1769,
+      "y": 1480,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n80",
+      "name": "Yundu",
+      "color": "#cb81db",
+      "x": 1849,
+      "y": 1506,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n81",
+      "name": "Xiakou",
+      "color": "#501863",
+      "x": 1943,
+      "y": 1504,
+      "owner": "Wu",
+      "vp": 10
+    },
+    {
+      "id": "n82",
+      "name": "Yong'an",
+      "color": "#1d0a36",
+      "x": 1353,
+      "y": 1338,
+      "owner": "Shu",
+      "vp": 5
+    },
+    {
+      "id": "n83",
+      "name": "Wuxian",
+      "color": "#fdcec9",
+      "x": 1457,
+      "y": 1339,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n84",
+      "name": "Yiling",
+      "color": "#7035b1",
+      "x": 1560,
+      "y": 1346,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n85",
+      "name": "Jiangling",
+      "color": "#ac0ab4",
+      "x": 1643,
+      "y": 1422,
+      "owner": "Wu",
+      "vp": 5
+    },
+    {
+      "id": "n86",
+      "name": "Gong'an",
+      "color": "#aa8bac",
+      "x": 1669,
+      "y": 1532,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n87",
+      "name": "Baqiu",
+      "color": "#ae2ce0",
+      "x": 1763,
+      "y": 1618,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n88",
+      "name": "Chibi",
+      "color": "#7ea9fe",
+      "x": 1875,
+      "y": 1591,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n89",
+      "name": "Chengdu",
+      "color": "#2d8883",
+      "x": 789,
+      "y": 1351,
+      "owner": "Shu",
+      "vp": 10
+    },
+    {
+      "id": "n90",
+      "name": "Quren",
+      "color": "#3666b7",
+      "x": 1275,
+      "y": 1470,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n91",
+      "name": "Zhi",
+      "color": "#f7ed79",
+      "x": 1161,
+      "y": 1525,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n92",
+      "name": "Jiangzhou",
+      "color": "#23d1db",
+      "x": 1080,
+      "y": 1573,
+      "owner": "Shu",
+      "vp": 10
+    },
+    {
+      "id": "n93",
+      "name": "Jiangyang",
+      "color": "#e0cbae",
+      "x": 944,
+      "y": 1600,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n94",
+      "name": "Nanxi",
+      "color": "#56a99c",
+      "x": 853,
+      "y": 1623,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n95",
+      "name": "Bodao",
+      "color": "#274658",
+      "x": 767,
+      "y": 1544,
+      "owner": "Shu",
+      "vp": 5
+    },
+    {
+      "id": "n96",
+      "name": "Nan'an",
+      "color": "#9a8a64",
+      "x": 757,
+      "y": 1451,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n97",
+      "name": "Yandao",
+      "color": "#3a3708",
+      "x": 617,
+      "y": 1458,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n98",
+      "name": "Zhuti",
+      "color": "#562839",
+      "x": 730,
+      "y": 1640,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n99",
+      "name": "Linqiong",
+      "color": "#fbd732",
+      "x": 679,
+      "y": 1343,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n100",
+      "name": "Wenshan",
+      "color": "#ba4ba9",
+      "x": 788,
+      "y": 1228,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n101",
+      "name": "Yinping",
+      "color": "#261381",
+      "x": 859,
+      "y": 1167,
+      "owner": "Shu",
+      "vp": 5
+    },
+    {
+      "id": "n102",
+      "name": "Baishui Pass",
+      "color": "#952a3d",
+      "x": 986,
+      "y": 1186,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n103",
+      "name": "Jiange",
+      "color": "#a8a73e",
+      "x": 999,
+      "y": 1282,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n104",
+      "name": "Langzhong",
+      "color": "#145adf",
+      "x": 1015,
+      "y": 1375,
+      "owner": "Shu",
+      "vp": 5
+    },
+    {
+      "id": "n105",
+      "name": "Dianjiang",
+      "color": "#076cb7",
+      "x": 1046,
+      "y": 1471,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n106",
+      "name": "Fu",
+      "color": "#f73893",
+      "x": 862,
+      "y": 1291,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n107",
+      "name": "Guanghan",
+      "color": "#357796",
+      "x": 913,
+      "y": 1383,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n108",
+      "name": "Deyang",
+      "color": "#7c493f",
+      "x": 966,
+      "y": 1452,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n109",
+      "name": "Zizhong",
+      "color": "#026534",
+      "x": 857,
+      "y": 1481,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n110",
+      "name": "Hanan",
+      "color": "#c0b04a",
+      "x": 900,
+      "y": 1541,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n111",
+      "name": "Dangqu",
+      "color": "#943a8d",
+      "x": 1114,
+      "y": 1373,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n112",
+      "name": "Hanchang",
+      "color": "#683dad",
+      "x": 1160,
+      "y": 1296,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n113",
+      "name": "Nanzheng",
+      "color": "#dcd751",
+      "x": 1087,
+      "y": 1203,
+      "owner": "Shu",
+      "vp": 5
+    },
+    {
+      "id": "n114",
+      "name": "Hanfeng",
+      "color": "#19780b",
+      "x": 1263,
+      "y": 1319,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n115",
+      "name": "Fujie",
+      "color": "#4a39a0",
+      "x": 1012,
+      "y": 1674,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n116",
+      "name": "Bie",
+      "color": "#1ec4ed",
+      "x": 1064,
+      "y": 1723,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n117",
+      "name": "Qielan",
+      "color": "#8d33f7",
+      "x": 1056,
+      "y": 1798,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n118",
+      "name": "Hanyang",
+      "color": "#63c398",
+      "x": 786,
+      "y": 1728,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n119",
+      "name": "Tangao",
+      "color": "#feed88",
+      "x": 725,
+      "y": 1820,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n120",
+      "name": "Linjiang",
+      "color": "#f7a4c1",
+      "x": 1270,
+      "y": 1570,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n121",
+      "name": "Fuling",
+      "color": "#708cce",
+      "x": 1297,
+      "y": 1636,
+      "owner": "Shu",
+      "vp": 5
+    },
+    {
+      "id": "n122",
+      "name": "Youyang",
+      "color": "#819d18",
+      "x": 1370,
+      "y": 1655,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n123",
+      "name": "Yuanling",
+      "color": "#d93c74",
+      "x": 1449,
+      "y": 1684,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n124",
+      "name": "Suo",
+      "color": "#279913",
+      "x": 1583,
+      "y": 1652,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n125",
+      "name": "Huarong",
+      "color": "#061af1",
+      "x": 1663,
+      "y": 1633,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n126",
+      "name": "Lingyang",
+      "color": "#a9c7d6",
+      "x": 1444,
+      "y": 1540,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n127",
+      "name": "Zigui",
+      "color": "#6bb1dc",
+      "x": 1464,
+      "y": 1441,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n128",
+      "name": "",
+      "color": "#252e95",
+      "x": 1172,
+      "y": 1700,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n129",
+      "name": "",
+      "color": "#394ffa",
+      "x": 1246,
+      "y": 1817,
+      "owner": "Shu",
+      "vp": 0
+    },
+    {
+      "id": "n130",
+      "name": "Wulian",
+      "color": "#ff9cdb",
+      "x": 1190,
+      "y": 1938,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n131",
+      "name": "Muduo",
+      "color": "#913608",
+      "x": 1090,
+      "y": 1877,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n132",
+      "name": "Tongbing",
+      "color": "#06e43c",
+      "x": 845,
+      "y": 1925,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n133",
+      "name": "Yelang",
+      "color": "#dbda8c",
+      "x": 921,
+      "y": 1897,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n134",
+      "name": "Bengu",
+      "color": "#56b554",
+      "x": 722,
+      "y": 1927,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n135",
+      "name": "Guangtan",
+      "color": "#0eedd4",
+      "x": 1034,
+      "y": 1950,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n136",
+      "name": "Wanwen",
+      "color": "#a98543",
+      "x": 838,
+      "y": 2014,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n137",
+      "name": "Juting",
+      "color": "#a8e014",
+      "x": 930,
+      "y": 2050,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n138",
+      "name": "Xinggu",
+      "color": "#221898",
+      "x": 725,
+      "y": 2026,
+      "owner": "Viet",
+      "vp": 5
+    },
+    {
+      "id": "n139",
+      "name": "Wuchang",
+      "color": "#f9cb57",
+      "x": 2036,
+      "y": 1589,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n140",
+      "name": "Xunyang",
+      "color": "#af49c2",
+      "x": 2149,
+      "y": 1611,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n141",
+      "name": "Wan (Lujiang)",
+      "color": "#b68f70",
+      "x": 2242,
+      "y": 1541,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n142",
+      "name": "Xiang'an",
+      "color": "#b1c140",
+      "x": 2328,
+      "y": 1479,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n143",
+      "name": "Jianye",
+      "color": "#259bca",
+      "x": 2420,
+      "y": 1375,
+      "owner": "Wu",
+      "vp": 10
+    },
+    {
+      "id": "n144",
+      "name": "Danyang",
+      "color": "#adf6dc",
+      "x": 2523,
+      "y": 1350,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n145",
+      "name": "Piling",
+      "color": "#d39345",
+      "x": 2643,
+      "y": 1293,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n146",
+      "name": "Wuxi",
+      "color": "#c6d7ae",
+      "x": 2760,
+      "y": 1326,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n147",
+      "name": "Haiyan",
+      "color": "#c77eb6",
+      "x": 2846,
+      "y": 1396,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n148",
+      "name": "Wu",
+      "color": "#11ec5d",
+      "x": 2762,
+      "y": 1468,
+      "owner": "Wu",
+      "vp": 10
+    },
+    {
+      "id": "n149",
+      "name": "Yuhang",
+      "color": "#bf4ff7",
+      "x": 2696,
+      "y": 1479,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n150",
+      "name": "Fuchun",
+      "color": "#4810c4",
+      "x": 2642,
+      "y": 1556,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n151",
+      "name": "Jing",
+      "color": "#b692dc",
+      "x": 2502,
+      "y": 1537,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n152",
+      "name": "Nanchang",
+      "color": "#b4ff99",
+      "x": 2127,
+      "y": 1713,
+      "owner": "Wu",
+      "vp": 5
+    },
+    {
+      "id": "n153",
+      "name": "Haihun",
+      "color": "#7531b4",
+      "x": 2111,
+      "y": 1814,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n154",
+      "name": "Wuyan",
+      "color": "#afa505",
+      "x": 2148,
+      "y": 905,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n155",
+      "name": "Pei",
+      "color": "#f02795",
+      "x": 2236,
+      "y": 986,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n156",
+      "name": "Xiapi",
+      "color": "#ceb46b",
+      "x": 2311,
+      "y": 1057,
+      "owner": "Wei",
+      "vp": 10
+    },
+    {
+      "id": "n157",
+      "name": "Ling",
+      "color": "#29dc2c",
+      "x": 2464,
+      "y": 1098,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n158",
+      "name": "Guangling",
+      "color": "#b5b3e7",
+      "x": 2508,
+      "y": 1189,
+      "owner": "Wu",
+      "vp": 5
+    },
+    {
+      "id": "n159",
+      "name": "Hailing",
+      "color": "#efe4d5",
+      "x": 2634,
+      "y": 1231,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n160",
+      "name": "Kunyang",
+      "color": "#176db7",
+      "x": 1932,
+      "y": 1135,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n161",
+      "name": "Xiang",
+      "color": "#18681e",
+      "x": 2004,
+      "y": 1149,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n162",
+      "name": "Qiao",
+      "color": "#f5a297",
+      "x": 2123,
+      "y": 1191,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n163",
+      "name": "Xiacai",
+      "color": "#b59ac4",
+      "x": 2234,
+      "y": 1249,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n164",
+      "name": "Zhongli",
+      "color": "#9d690e",
+      "x": 2303,
+      "y": 1280,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n165",
+      "name": "Xuyi",
+      "color": "#47359d",
+      "x": 2373,
+      "y": 1209,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n166",
+      "name": "Shouchun",
+      "color": "#c35633",
+      "x": 2205,
+      "y": 1339,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n167",
+      "name": "",
+      "color": "#186a71",
+      "x": 2114,
+      "y": 1344,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n168",
+      "name": "Yiyang",
+      "color": "#2cb8ea",
+      "x": 1994,
+      "y": 1364,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n169",
+      "name": "Runan",
+      "color": "#df00ec",
+      "x": 1914,
+      "y": 1212,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n170",
+      "name": "Pingyu",
+      "color": "#cdd67d",
+      "x": 1984,
+      "y": 1241,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n171",
+      "name": "Xincai",
+      "color": "#a34736",
+      "x": 2053,
+      "y": 1262,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n172",
+      "name": "Anfeng",
+      "color": "#ee071d",
+      "x": 2129,
+      "y": 1296,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n173",
+      "name": "Lu'an",
+      "color": "#b47f45",
+      "x": 2152,
+      "y": 1460,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n174",
+      "name": "Xiaoyao Ford",
+      "color": "#00e62c",
+      "x": 2205,
+      "y": 1415,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n175",
+      "name": "Hefei",
+      "color": "#64ffe3",
+      "x": 2322,
+      "y": 1416,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n176",
+      "name": "Tangyi",
+      "color": "#ddb414",
+      "x": 2441,
+      "y": 1297,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n177",
+      "name": "Chenliu",
+      "color": "#8823e9",
+      "x": 2048,
+      "y": 954,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n178",
+      "name": "Qi",
+      "color": "#23f2b7",
+      "x": 2043,
+      "y": 1064,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n179",
+      "name": "Cuo",
+      "color": "#e17b5c",
+      "x": 2190,
+      "y": 1093,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n180",
+      "name": "Fuli",
+      "color": "#05bf41",
+      "x": 2271,
+      "y": 1173,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n181",
+      "name": "Houqiu",
+      "color": "#90a44b",
+      "x": 2447,
+      "y": 1038,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n182",
+      "name": "Ju",
+      "color": "#1c94ae",
+      "x": 2467,
+      "y": 931,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n183",
+      "name": "Gaomi",
+      "color": "#76ddd5",
+      "x": 2545,
+      "y": 848,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n184",
+      "name": "Yexian",
+      "color": "#d7bfde",
+      "x": 2520,
+      "y": 731,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n185",
+      "name": "Linzi",
+      "color": "#d6beb4",
+      "x": 2359,
+      "y": 740,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n186",
+      "name": "Ju (Beihai)",
+      "color": "#71d942",
+      "x": 2452,
+      "y": 775,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n187",
+      "name": "Jimo",
+      "color": "#90d608",
+      "x": 2654,
+      "y": 804,
+      "owner": "Wei",
+      "vp": 5
+    },
+    {
+      "id": "n188",
+      "name": "Chengshan",
+      "color": "#bf3a8b",
+      "x": 2846,
+      "y": 681,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n189",
+      "name": "Muping",
+      "color": "#c145ae",
+      "x": 2794,
+      "y": 749,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n190",
+      "name": "Huang",
+      "color": "#1b1382",
+      "x": 2623,
+      "y": 683,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n191",
+      "name": "Haixi",
+      "color": "#bc824f",
+      "x": 2570,
+      "y": 1012,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n192",
+      "name": "Yandu",
+      "color": "#e870b3",
+      "x": 2669,
+      "y": 1064,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n193",
+      "name": "",
+      "color": "#1968ba",
+      "x": 2760,
+      "y": 1181,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n194",
+      "name": "Lou",
+      "color": "#ced47e",
+      "x": 2783,
+      "y": 1275,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n195",
+      "name": "Shanyin",
+      "color": "#e7a3e2",
+      "x": 2823,
+      "y": 1520,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n196",
+      "name": "Yin",
+      "color": "#8453cf",
+      "x": 2884,
+      "y": 1584,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n197",
+      "name": "Zhang'an",
+      "color": "#076a9c",
+      "x": 2835,
+      "y": 1701,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n198",
+      "name": "Xuchang",
+      "color": "#758780",
+      "x": 1895,
+      "y": 1059,
+      "owner": "Wei",
+      "vp": 0
+    },
+    {
+      "id": "n199",
+      "name": "Bowang",
+      "color": "#ebfecc",
+      "x": 1819,
+      "y": 1237,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n200",
+      "name": "Suixian",
+      "color": "#0aa5f7",
+      "x": 1867,
+      "y": 1357,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n201",
+      "name": "Yongning",
+      "color": "#006228",
+      "x": 2770,
+      "y": 1794,
+      "owner": "Yue",
+      "vp": 5
+    },
+    {
+      "id": "n202",
+      "name": "Hengyang",
+      "color": "#2ea7a7",
+      "x": 2697,
+      "y": 1896,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n203",
+      "name": "Luojiang",
+      "color": "#c416fd",
+      "x": 2642,
+      "y": 1973,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n204",
+      "name": "Houguan",
+      "color": "#7a83e7",
+      "x": 2505,
+      "y": 2084,
+      "owner": "Yue",
+      "vp": 10
+    },
+    {
+      "id": "n205",
+      "name": "Dong'an",
+      "color": "#a03c25",
+      "x": 2453,
+      "y": 2144,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n206",
+      "name": "Longxi",
+      "color": "#e66a8c",
+      "x": 2356,
+      "y": 2191,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n207",
+      "name": "Jieyang",
+      "color": "#67e57f",
+      "x": 2222,
+      "y": 2243,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n208",
+      "name": "Boluo",
+      "color": "#601467",
+      "x": 2116,
+      "y": 2253,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n209",
+      "name": "Zengcheng",
+      "color": "#1c8fe0",
+      "x": 1995,
+      "y": 2287,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n210",
+      "name": "Panyu",
+      "color": "#07890b",
+      "x": 1912,
+      "y": 2308,
+      "owner": "Wu",
+      "vp": 5
+    },
+    {
+      "id": "n211",
+      "name": "Zhongsu",
+      "color": "#c61f33",
+      "x": 1858,
+      "y": 2238,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n212",
+      "name": "Gaoyao",
+      "color": "#ac19c9",
+      "x": 1820,
+      "y": 2334,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n213",
+      "name": "Gaoliang",
+      "color": "#86c784",
+      "x": 1656,
+      "y": 2363,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n214",
+      "name": "Xuwen",
+      "color": "#d877cf",
+      "x": 1536,
+      "y": 2414,
+      "owner": "Viet",
+      "vp": 5
+    },
+    {
+      "id": "n215",
+      "name": "Hepu",
+      "color": "#24bd0c",
+      "x": 1437,
+      "y": 2355,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n216",
+      "name": "",
+      "color": "#aeab90",
+      "x": 1360,
+      "y": 2350,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n217",
+      "name": "Xuwen Harbour",
+      "color": "#f6ef53",
+      "x": 1531,
+      "y": 2492,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n218",
+      "name": "Longbian",
+      "color": "#82f5a4",
+      "x": 1020,
+      "y": 2323,
+      "owner": "Viet",
+      "vp": 10
+    },
+    {
+      "id": "n219",
+      "name": "Anding",
+      "color": "#e75b00",
+      "x": 1079,
+      "y": 2371,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n220",
+      "name": "Quyi",
+      "color": "#dad0b4",
+      "x": 1172,
+      "y": 2373,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n221",
+      "name": "Tongzhu",
+      "color": "#4c7f5b",
+      "x": 1277,
+      "y": 2326,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n222",
+      "name": "Xiyu",
+      "color": "#101b91",
+      "x": 936,
+      "y": 2260,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n223",
+      "name": "Xinchang",
+      "color": "#19e1b9",
+      "x": 852,
+      "y": 2201,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n224",
+      "name": "Fengxi",
+      "color": "#e943c9",
+      "x": 928,
+      "y": 2173,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n225",
+      "name": "Jinsang",
+      "color": "#1baaa3",
+      "x": 878,
+      "y": 2101,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n226",
+      "name": "",
+      "color": "#c19b1d",
+      "x": 1096,
+      "y": 2031,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n227",
+      "name": "",
+      "color": "#9f81df",
+      "x": 1171,
+      "y": 2076,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n228",
+      "name": "Zengshi",
+      "color": "#51bcda",
+      "x": 1254,
+      "y": 2113,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n229",
+      "name": "Lingfang",
+      "color": "#faf026",
+      "x": 1310,
+      "y": 2163,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n230",
+      "name": "Tanzhong",
+      "color": "#d9d003",
+      "x": 1380,
+      "y": 2156,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n231",
+      "name": "Bushan",
+      "color": "#01b9ff",
+      "x": 1502,
+      "y": 2187,
+      "owner": "Wu",
+      "vp": 5
+    },
+    {
+      "id": "n232",
+      "name": "Linhe",
+      "color": "#fd0bba",
+      "x": 1596,
+      "y": 2194,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n233",
+      "name": "Fengyang",
+      "color": "#3ba1c2",
+      "x": 1713,
+      "y": 2213,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n234",
+      "name": "Hanguang",
+      "color": "#1504cd",
+      "x": 1788,
+      "y": 2230,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n235",
+      "name": "Zhongliu",
+      "color": "#835b30",
+      "x": 1430,
+      "y": 2238,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n236",
+      "name": "Ningpu",
+      "color": "#80ea7d",
+      "x": 1336,
+      "y": 2274,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n237",
+      "name": "Zhulu",
+      "color": "#533df2",
+      "x": 1505,
+      "y": 2302,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n238",
+      "name": "Lipu",
+      "color": "#efa8f4",
+      "x": 1469,
+      "y": 2097,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n239",
+      "name": "Shi'an",
+      "color": "#391179",
+      "x": 1407,
+      "y": 2042,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n240",
+      "name": "",
+      "color": "#65778e",
+      "x": 1327,
+      "y": 1998,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n241",
+      "name": "Dingzhou",
+      "color": "#06e490",
+      "x": 1251,
+      "y": 2054,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n242",
+      "name": "Duliang",
+      "color": "#0a4e07",
+      "x": 1400,
+      "y": 1944,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n243",
+      "name": "Xincheng",
+      "color": "#ad7a4b",
+      "x": 1409,
+      "y": 1867,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n244",
+      "name": "Wuyang (Wuling)",
+      "color": "#853d49",
+      "x": 1314,
+      "y": 1830,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n245",
+      "name": "Chenyang",
+      "color": "#f8b5ce",
+      "x": 1446,
+      "y": 1795,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n246",
+      "name": "Zhaoling",
+      "color": "#52bc0e",
+      "x": 1555,
+      "y": 1829,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n247",
+      "name": "Chong'an",
+      "color": "#e64046",
+      "x": 1638,
+      "y": 1802,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n248",
+      "name": "Chengyang",
+      "color": "#e25983",
+      "x": 1680,
+      "y": 1880,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n249",
+      "name": "Quanling",
+      "color": "#d3c860",
+      "x": 1555,
+      "y": 1944,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n250",
+      "name": "Lingling",
+      "color": "#f398ae",
+      "x": 1516,
+      "y": 2019,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n251",
+      "name": "Fuchuan",
+      "color": "#3a77db",
+      "x": 1612,
+      "y": 2113,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n252",
+      "name": "Xiemu",
+      "color": "#c29460",
+      "x": 1701,
+      "y": 2106,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n253",
+      "name": "Linwu",
+      "color": "#31a614",
+      "x": 1758,
+      "y": 2063,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n254",
+      "name": "Chenxian",
+      "color": "#47f63d",
+      "x": 1806,
+      "y": 2010,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n255",
+      "name": "Youxian",
+      "color": "#99f9e3",
+      "x": 1799,
+      "y": 1946,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n256",
+      "name": "Yichun",
+      "color": "#6a9b5a",
+      "x": 1853,
+      "y": 1877,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n257",
+      "name": "Changsha",
+      "color": "#b2a0c0",
+      "x": 1790,
+      "y": 1847,
+      "owner": "Wu",
+      "vp": 5
+    },
+    {
+      "id": "n258",
+      "name": "Liuyang",
+      "color": "#7b6172",
+      "x": 1836,
+      "y": 1767,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n259",
+      "name": "Xiajun",
+      "color": "#3f797c",
+      "x": 1789,
+      "y": 1698,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n260",
+      "name": "Luoxian",
+      "color": "#936e56",
+      "x": 1695,
+      "y": 1748,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n261",
+      "name": "Nanye",
+      "color": "#c9e78a",
+      "x": 1946,
+      "y": 2052,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n262",
+      "name": "Qujiang",
+      "color": "#d474d3",
+      "x": 1886,
+      "y": 2128,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n263",
+      "name": "Zhenyang",
+      "color": "#a110b6",
+      "x": 1948,
+      "y": 2193,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n264",
+      "name": "Longchuan",
+      "color": "#b462d6",
+      "x": 2064,
+      "y": 2200,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n265",
+      "name": "Gan",
+      "color": "#424ada",
+      "x": 2104,
+      "y": 2116,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n266",
+      "name": "",
+      "color": "#55f548",
+      "x": 2200,
+      "y": 2112,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n267",
+      "name": "Xinluo",
+      "color": "#a43c88",
+      "x": 2277,
+      "y": 2095,
+      "owner": "Yue",
+      "vp": 5
+    },
+    {
+      "id": "n268",
+      "name": "Haiyang",
+      "color": "#c665da",
+      "x": 2254,
+      "y": 2168,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n269",
+      "name": "Nancheng",
+      "color": "#5712f4",
+      "x": 2194,
+      "y": 1882,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n270",
+      "name": "Shaowu",
+      "color": "#19eb80",
+      "x": 2273,
+      "y": 1960,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n271",
+      "name": "Jiangle",
+      "color": "#7c274a",
+      "x": 2294,
+      "y": 2034,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n272",
+      "name": "Yudu",
+      "color": "#fee13b",
+      "x": 2082,
+      "y": 2045,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n273",
+      "name": "Shicheng",
+      "color": "#e38cfb",
+      "x": 2106,
+      "y": 1975,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n274",
+      "name": "Linru",
+      "color": "#454c4d",
+      "x": 2079,
+      "y": 1888,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n275",
+      "name": "Xingan",
+      "color": "#923d22",
+      "x": 1999,
+      "y": 1831,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n276",
+      "name": "Luling",
+      "color": "#24ab58",
+      "x": 1954,
+      "y": 1976,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n277",
+      "name": "Ai",
+      "color": "#af1eb1",
+      "x": 1966,
+      "y": 1752,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n278",
+      "name": "Poyang",
+      "color": "#caea03",
+      "x": 2228,
+      "y": 1775,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n279",
+      "name": "Gexiang",
+      "color": "#0c396b",
+      "x": 2322,
+      "y": 1821,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n280",
+      "name": "Hanxing",
+      "color": "#1db8db",
+      "x": 2399,
+      "y": 1815,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n281",
+      "name": "Jian'an",
+      "color": "#bd66fe",
+      "x": 2445,
+      "y": 1868,
+      "owner": "Yue",
+      "vp": 5
+    },
+    {
+      "id": "n282",
+      "name": "Jianping (Jianan)",
+      "color": "#6a31f2",
+      "x": 2537,
+      "y": 1902,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n283",
+      "name": "Nanping",
+      "color": "#0af833",
+      "x": 2452,
+      "y": 1965,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n284",
+      "name": "Dongping (Jian'an)",
+      "color": "#2c5882",
+      "x": 2367,
+      "y": 2026,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n285",
+      "name": "Wuxing (Jian'an)",
+      "color": "#016115",
+      "x": 2566,
+      "y": 1780,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n286",
+      "name": "Taimo",
+      "color": "#bbfc74",
+      "x": 2516,
+      "y": 1690,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n287",
+      "name": "She",
+      "color": "#bd45f2",
+      "x": 2488,
+      "y": 1596,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n288",
+      "name": "Songyang",
+      "color": "#84eadb",
+      "x": 2673,
+      "y": 1706,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n289",
+      "name": "Changshan",
+      "color": "#511fc4",
+      "x": 2684,
+      "y": 1626,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n290",
+      "name": "Wushang",
+      "color": "#cd66c8",
+      "x": 2746,
+      "y": 1707,
+      "owner": "Yue",
+      "vp": 0
+    },
+    {
+      "id": "n291",
+      "name": "Yugan",
+      "color": "#bbecd0",
+      "x": 2338,
+      "y": 1720,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n292",
+      "name": "Yi",
+      "color": "#85fd80",
+      "x": 2343,
+      "y": 1641,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n293",
+      "name": "Chaisang",
+      "color": "#41a95d",
+      "x": 2193,
+      "y": 1688,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n294",
+      "name": "Wuhu",
+      "color": "#8f2f45",
+      "x": 2454,
+      "y": 1458,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n295",
+      "name": "Shu",
+      "color": "#56d964",
+      "x": 2363,
+      "y": 1556,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n296",
+      "name": "Wucheng",
+      "color": "#cee49a",
+      "x": 2605,
+      "y": 1431,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n297",
+      "name": "Youquan",
+      "color": "#feb675",
+      "x": 2752,
+      "y": 1411,
+      "owner": "Wu",
+      "vp": 0
+    },
+    {
+      "id": "n298",
+      "name": "Beidai",
+      "color": "#86fa78",
+      "x": 1063,
+      "y": 2169,
+      "owner": "Viet",
+      "vp": 0
+    },
+    {
+      "id": "n299",
+      "name": "Linchen",
+      "color": "#e8da13",
+      "x": 1190,
+      "y": 2223,
+      "owner": "Viet",
+      "vp": 0
+    }
+  ],
+  "edges": [
+    {
+      "a": "n1",
+      "b": "n3",
+      "type": "major"
+    },
+    {
+      "a": "n3",
+      "b": "n5",
+      "type": "major"
+    },
+    {
+      "a": "n5",
+      "b": "n6",
+      "type": "major"
+    },
+    {
+      "a": "n6",
+      "b": "n7",
+      "type": "major"
+    },
+    {
+      "a": "n7",
+      "b": "n8",
+      "type": "major"
+    },
+    {
+      "a": "n8",
+      "b": "n9",
+      "type": "major"
+    },
+    {
+      "a": "n9",
+      "b": "n10",
+      "type": "major"
+    },
+    {
+      "a": "n10",
+      "b": "n11",
+      "type": "major"
+    },
+    {
+      "a": "n11",
+      "b": "n12",
+      "type": "major"
+    },
+    {
+      "a": "n12",
+      "b": "n13",
+      "type": "major"
+    },
+    {
+      "a": "n13",
+      "b": "n14",
+      "type": "major"
+    },
+    {
+      "a": "n17",
+      "b": "n18",
+      "type": "major"
+    },
+    {
+      "a": "n18",
+      "b": "n19",
+      "type": "major"
+    },
+    {
+      "a": "n19",
+      "b": "n20",
+      "type": "major"
+    },
+    {
+      "a": "n20",
+      "b": "n21",
+      "type": "major"
+    },
+    {
+      "a": "n21",
+      "b": "n22",
+      "type": "major"
+    },
+    {
+      "a": "n22",
+      "b": "n11",
+      "type": "major"
+    },
+    {
+      "a": "n11",
+      "b": "n154",
+      "type": "major"
+    },
+    {
+      "a": "n154",
+      "b": "n155",
+      "type": "major"
+    },
+    {
+      "a": "n155",
+      "b": "n156",
+      "type": "major"
+    },
+    {
+      "a": "n156",
+      "b": "n157",
+      "type": "major"
+    },
+    {
+      "a": "n157",
+      "b": "n158",
+      "type": "major"
+    },
+    {
+      "a": "n158",
+      "b": "n159",
+      "type": "major"
+    },
+    {
+      "a": "n159",
+      "b": "n145",
+      "type": "major"
+    },
+    {
+      "a": "n145",
+      "b": "n146",
+      "type": "major"
+    },
+    {
+      "a": "n146",
+      "b": "n297",
+      "type": "major"
+    },
+    {
+      "a": "n297",
+      "b": "n148",
+      "type": "major"
+    },
+    {
+      "a": "n148",
+      "b": "n195",
+      "type": "major"
+    },
+    {
+      "a": "n9",
+      "b": "n75",
+      "type": "major"
+    },
+    {
+      "a": "n75",
+      "b": "n74",
+      "type": "major"
+    },
+    {
+      "a": "n74",
+      "b": "n76",
+      "type": "major"
+    },
+    {
+      "a": "n76",
+      "b": "n77",
+      "type": "major"
+    },
+    {
+      "a": "n77",
+      "b": "n85",
+      "type": "major"
+    },
+    {
+      "a": "n85",
+      "b": "n86",
+      "type": "major"
+    },
+    {
+      "a": "n86",
+      "b": "n87",
+      "type": "major"
+    },
+    {
+      "a": "n87",
+      "b": "n88",
+      "type": "major"
+    },
+    {
+      "a": "n88",
+      "b": "n81",
+      "type": "major"
+    },
+    {
+      "a": "n81",
+      "b": "n139",
+      "type": "major"
+    },
+    {
+      "a": "n139",
+      "b": "n140",
+      "type": "major"
+    },
+    {
+      "a": "n140",
+      "b": "n141",
+      "type": "major"
+    },
+    {
+      "a": "n141",
+      "b": "n142",
+      "type": "major"
+    },
+    {
+      "a": "n142",
+      "b": "n143",
+      "type": "major"
+    },
+    {
+      "a": "n143",
+      "b": "n144",
+      "type": "major"
+    },
+    {
+      "a": "n144",
+      "b": "n145",
+      "type": "major"
+    },
+    {
+      "a": "n101",
+      "b": "n102",
+      "type": "major"
+    },
+    {
+      "a": "n102",
+      "b": "n113",
+      "type": "major"
+    },
+    {
+      "a": "n113",
+      "b": "n112",
+      "type": "major"
+    },
+    {
+      "a": "n112",
+      "b": "n114",
+      "type": "major"
+    },
+    {
+      "a": "n114",
+      "b": "n82",
+      "type": "major"
+    },
+    {
+      "a": "n82",
+      "b": "n83",
+      "type": "major"
+    },
+    {
+      "a": "n83",
+      "b": "n84",
+      "type": "major"
+    },
+    {
+      "a": "n84",
+      "b": "n85",
+      "type": "major"
+    },
+    {
+      "a": "n82",
+      "b": "n90",
+      "type": "major"
+    },
+    {
+      "a": "n90",
+      "b": "n91",
+      "type": "major"
+    },
+    {
+      "a": "n91",
+      "b": "n92",
+      "type": "major"
+    },
+    {
+      "a": "n92",
+      "b": "n93",
+      "type": "major"
+    },
+    {
+      "a": "n93",
+      "b": "n94",
+      "type": "major"
+    },
+    {
+      "a": "n94",
+      "b": "n95",
+      "type": "major"
+    },
+    {
+      "a": "n95",
+      "b": "n96",
+      "type": "major"
+    },
+    {
+      "a": "n96",
+      "b": "n89",
+      "type": "major"
+    },
+    {
+      "a": "n87",
+      "b": "n259",
+      "type": "major"
+    },
+    {
+      "a": "n259",
+      "b": "n258",
+      "type": "major"
+    },
+    {
+      "a": "n258",
+      "b": "n257",
+      "type": "major"
+    },
+    {
+      "a": "n257",
+      "b": "n248",
+      "type": "major"
+    },
+    {
+      "a": "n248",
+      "b": "n249",
+      "type": "major"
+    },
+    {
+      "a": "n249",
+      "b": "n250",
+      "type": "major"
+    },
+    {
+      "a": "n250",
+      "b": "n238",
+      "type": "major"
+    },
+    {
+      "a": "n238",
+      "b": "n231",
+      "type": "major"
+    },
+    {
+      "a": "n231",
+      "b": "n232",
+      "type": "major"
+    },
+    {
+      "a": "n232",
+      "b": "n233",
+      "type": "major"
+    },
+    {
+      "a": "n233",
+      "b": "n234",
+      "type": "major"
+    },
+    {
+      "a": "n234",
+      "b": "n211",
+      "type": "major"
+    },
+    {
+      "a": "n211",
+      "b": "n210",
+      "type": "major"
+    },
+    {
+      "a": "n195",
+      "b": "n196",
+      "type": "major"
+    },
+    {
+      "a": "n196",
+      "b": "n197",
+      "type": "major"
+    },
+    {
+      "a": "n197",
+      "b": "n201",
+      "type": "major"
+    },
+    {
+      "a": "n201",
+      "b": "n202",
+      "type": "major"
+    },
+    {
+      "a": "n202",
+      "b": "n203",
+      "type": "major"
+    },
+    {
+      "a": "n203",
+      "b": "n204",
+      "type": "major"
+    },
+    {
+      "a": "n204",
+      "b": "n205",
+      "type": "major"
+    },
+    {
+      "a": "n205",
+      "b": "n206",
+      "type": "major"
+    },
+    {
+      "a": "n206",
+      "b": "n207",
+      "type": "major"
+    },
+    {
+      "a": "n207",
+      "b": "n208",
+      "type": "major"
+    },
+    {
+      "a": "n208",
+      "b": "n209",
+      "type": "major"
+    },
+    {
+      "a": "n209",
+      "b": "n210",
+      "type": "major"
+    },
+    {
+      "a": "n210",
+      "b": "n212",
+      "type": "major"
+    },
+    {
+      "a": "n212",
+      "b": "n213",
+      "type": "major"
+    },
+    {
+      "a": "n213",
+      "b": "n214",
+      "type": "major"
+    },
+    {
+      "a": "n214",
+      "b": "n215",
+      "type": "major"
+    },
+    {
+      "a": "n215",
+      "b": "n216",
+      "type": "major"
+    },
+    {
+      "a": "n216",
+      "b": "n221",
+      "type": "major"
+    },
+    {
+      "a": "n221",
+      "b": "n220",
+      "type": "major"
+    },
+    {
+      "a": "n220",
+      "b": "n219",
+      "type": "major"
+    },
+    {
+      "a": "n219",
+      "b": "n218",
+      "type": "major"
+    },
+    {
+      "a": "n218",
+      "b": "n222",
+      "type": "major"
+    },
+    {
+      "a": "n222",
+      "b": "n223",
+      "type": "major"
+    },
+    {
+      "a": "n238",
+      "b": "n239",
+      "type": "major"
+    },
+    {
+      "a": "n239",
+      "b": "n240",
+      "type": "major"
+    },
+    {
+      "a": "n240",
+      "b": "n130",
+      "type": "major"
+    },
+    {
+      "a": "n130",
+      "b": "n131",
+      "type": "major"
+    },
+    {
+      "a": "n131",
+      "b": "n135",
+      "type": "major"
+    },
+    {
+      "a": "n135",
+      "b": "n133",
+      "type": "major"
+    },
+    {
+      "a": "n133",
+      "b": "n132",
+      "type": "major"
+    },
+    {
+      "a": "n132",
+      "b": "n138",
+      "type": "major"
+    },
+    {
+      "a": "n138",
+      "b": "n134",
+      "type": "major"
+    },
+    {
+      "a": "n134",
+      "b": "n119",
+      "type": "major"
+    },
+    {
+      "a": "n273",
+      "b": "n274",
+      "type": "major"
+    },
+    {
+      "a": "n274",
+      "b": "n153",
+      "type": "major"
+    },
+    {
+      "a": "n153",
+      "b": "n152",
+      "type": "major"
+    },
+    {
+      "a": "n152",
+      "b": "n140",
+      "type": "major"
+    },
+    {
+      "a": "n273",
+      "b": "n272",
+      "type": "major"
+    },
+    {
+      "a": "n272",
+      "b": "n265",
+      "type": "major"
+    },
+    {
+      "a": "n265",
+      "b": "n264",
+      "type": "major"
+    },
+    {
+      "a": "n264",
+      "b": "n209",
+      "type": "major"
+    },
+    {
+      "a": "n75",
+      "b": "n198",
+      "type": "major"
+    },
+    {
+      "a": "n198",
+      "b": "n178",
+      "type": "major"
+    },
+    {
+      "a": "n178",
+      "b": "n162",
+      "type": "major"
+    },
+    {
+      "a": "n162",
+      "b": "n163",
+      "type": "major"
+    },
+    {
+      "a": "n163",
+      "b": "n164",
+      "type": "major"
+    },
+    {
+      "a": "n164",
+      "b": "n143",
+      "type": "major"
+    },
+    {
+      "a": "n81",
+      "b": "n168",
+      "type": "major"
+    },
+    {
+      "a": "n168",
+      "b": "n171",
+      "type": "major"
+    },
+    {
+      "a": "n171",
+      "b": "n162",
+      "type": "major"
+    },
+    {
+      "a": "n162",
+      "b": "n179",
+      "type": "major"
+    },
+    {
+      "a": "n179",
+      "b": "n156",
+      "type": "major"
+    },
+    {
+      "a": "n156",
+      "b": "n181",
+      "type": "major"
+    },
+    {
+      "a": "n181",
+      "b": "n182",
+      "type": "major"
+    },
+    {
+      "a": "n182",
+      "b": "n183",
+      "type": "major"
+    },
+    {
+      "a": "n183",
+      "b": "n187",
+      "type": "major"
+    },
+    {
+      "a": "n187",
+      "b": "n189",
+      "type": "major"
+    },
+    {
+      "a": "n189",
+      "b": "n188",
+      "type": "major"
+    },
+    {
+      "a": "n18",
+      "b": "n38",
+      "type": "major"
+    },
+    {
+      "a": "n38",
+      "b": "n37",
+      "type": "major"
+    },
+    {
+      "a": "n37",
+      "b": "n36",
+      "type": "major"
+    },
+    {
+      "a": "n36",
+      "b": "n32",
+      "type": "major"
+    },
+    {
+      "a": "n32",
+      "b": "n31",
+      "type": "major"
+    },
+    {
+      "a": "n31",
+      "b": "n30",
+      "type": "major"
+    },
+    {
+      "a": "n30",
+      "b": "n10",
+      "type": "major"
+    },
+    {
+      "a": "n17",
+      "b": "n39",
+      "type": "major"
+    },
+    {
+      "a": "n39",
+      "b": "n14",
+      "type": "major"
+    },
+    {
+      "a": "n14",
+      "b": "n184",
+      "type": "major"
+    },
+    {
+      "a": "n184",
+      "b": "n187",
+      "type": "major"
+    },
+    {
+      "a": "n17",
+      "b": "n16",
+      "type": "major"
+    },
+    {
+      "a": "n16",
+      "b": "n62",
+      "type": "major"
+    },
+    {
+      "a": "n62",
+      "b": "n15",
+      "type": "major"
+    },
+    {
+      "a": "n55",
+      "b": "n54",
+      "type": "major"
+    },
+    {
+      "a": "n54",
+      "b": "n53",
+      "type": "major"
+    },
+    {
+      "a": "n53",
+      "b": "n52",
+      "type": "major"
+    },
+    {
+      "a": "n52",
+      "b": "n51",
+      "type": "major"
+    },
+    {
+      "a": "n51",
+      "b": "n50",
+      "type": "major"
+    },
+    {
+      "a": "n50",
+      "b": "n49",
+      "type": "major"
+    },
+    {
+      "a": "n41",
+      "b": "n49",
+      "type": "major"
+    },
+    {
+      "a": "n41",
+      "b": "n42",
+      "type": "major"
+    },
+    {
+      "a": "n42",
+      "b": "n7",
+      "type": "major"
+    },
+    {
+      "a": "n7",
+      "b": "n43",
+      "type": "major"
+    },
+    {
+      "a": "n43",
+      "b": "n46",
+      "type": "major"
+    },
+    {
+      "a": "n46",
+      "b": "n60",
+      "type": "major"
+    },
+    {
+      "a": "n60",
+      "b": "n53",
+      "type": "major"
+    },
+    {
+      "a": "n1",
+      "b": "n56",
+      "type": "major"
+    },
+    {
+      "a": "n56",
+      "b": "n55",
+      "type": "major"
+    },
+    {
+      "a": "n89",
+      "b": "n106",
+      "type": "major"
+    },
+    {
+      "a": "n106",
+      "b": "n101",
+      "type": "major"
+    },
+    {
+      "a": "n112",
+      "b": "n103",
+      "type": "major"
+    },
+    {
+      "a": "n103",
+      "b": "n106",
+      "type": "major"
+    },
+    {
+      "a": "n221",
+      "b": "n236",
+      "type": "major"
+    },
+    {
+      "a": "n236",
+      "b": "n235",
+      "type": "major"
+    },
+    {
+      "a": "n235",
+      "b": "n231",
+      "type": "major"
+    },
+    {
+      "a": "n63",
+      "b": "n64",
+      "type": "major"
+    },
+    {
+      "a": "n64",
+      "b": "n65",
+      "type": "major"
+    },
+    {
+      "a": "n65",
+      "b": "n66",
+      "type": "major"
+    },
+    {
+      "a": "n66",
+      "b": "n68",
+      "type": "major"
+    },
+    {
+      "a": "n68",
+      "b": "n69",
+      "type": "major"
+    },
+    {
+      "a": "n69",
+      "b": "n70",
+      "type": "major"
+    },
+    {
+      "a": "n70",
+      "b": "n74",
+      "type": "major"
+    },
+    {
+      "a": "n106",
+      "b": "n107",
+      "type": "minor"
+    },
+    {
+      "a": "n107",
+      "b": "n108",
+      "type": "minor"
+    },
+    {
+      "a": "n108",
+      "b": "n105",
+      "type": "minor"
+    },
+    {
+      "a": "n105",
+      "b": "n91",
+      "type": "minor"
+    },
+    {
+      "a": "n92",
+      "b": "n105",
+      "type": "minor"
+    },
+    {
+      "a": "n105",
+      "b": "n111",
+      "type": "minor"
+    },
+    {
+      "a": "n111",
+      "b": "n112",
+      "type": "minor"
+    },
+    {
+      "a": "n112",
+      "b": "n67",
+      "type": "minor"
+    },
+    {
+      "a": "n67",
+      "b": "n113",
+      "type": "minor"
+    },
+    {
+      "a": "n113",
+      "b": "n103",
+      "type": "minor"
+    },
+    {
+      "a": "n103",
+      "b": "n104",
+      "type": "minor"
+    },
+    {
+      "a": "n104",
+      "b": "n108",
+      "type": "minor"
+    },
+    {
+      "a": "n104",
+      "b": "n111",
+      "type": "minor"
+    },
+    {
+      "a": "n104",
+      "b": "n105",
+      "type": "minor"
+    },
+    {
+      "a": "n93",
+      "b": "n110",
+      "type": "minor"
+    },
+    {
+      "a": "n110",
+      "b": "n109",
+      "type": "minor"
+    },
+    {
+      "a": "n109",
+      "b": "n107",
+      "type": "minor"
+    },
+    {
+      "a": "n108",
+      "b": "n110",
+      "type": "minor"
+    },
+    {
+      "a": "n109",
+      "b": "n96",
+      "type": "minor"
+    },
+    {
+      "a": "n96",
+      "b": "n97",
+      "type": "minor"
+    },
+    {
+      "a": "n97",
+      "b": "n99",
+      "type": "minor"
+    },
+    {
+      "a": "n99",
+      "b": "n100",
+      "type": "minor"
+    },
+    {
+      "a": "n100",
+      "b": "n101",
+      "type": "minor"
+    },
+    {
+      "a": "n89",
+      "b": "n99",
+      "type": "minor"
+    },
+    {
+      "a": "n100",
+      "b": "n89",
+      "type": "minor"
+    },
+    {
+      "a": "n89",
+      "b": "n109",
+      "type": "minor"
+    },
+    {
+      "a": "n103",
+      "b": "n102",
+      "type": "minor"
+    },
+    {
+      "a": "n98",
+      "b": "n94",
+      "type": "minor"
+    },
+    {
+      "a": "n98",
+      "b": "n95",
+      "type": "minor"
+    },
+    {
+      "a": "n95",
+      "b": "n97",
+      "type": "minor"
+    },
+    {
+      "a": "n98",
+      "b": "n118",
+      "type": "minor"
+    },
+    {
+      "a": "n118",
+      "b": "n119",
+      "type": "minor"
+    },
+    {
+      "a": "n115",
+      "b": "n93",
+      "type": "minor"
+    },
+    {
+      "a": "n115",
+      "b": "n92",
+      "type": "minor"
+    },
+    {
+      "a": "n120",
+      "b": "n91",
+      "type": "minor"
+    },
+    {
+      "a": "n120",
+      "b": "n121",
+      "type": "minor"
+    },
+    {
+      "a": "n121",
+      "b": "n128",
+      "type": "minor"
+    },
+    {
+      "a": "n128",
+      "b": "n116",
+      "type": "minor"
+    },
+    {
+      "a": "n116",
+      "b": "n115",
+      "type": "minor"
+    },
+    {
+      "a": "n67",
+      "b": "n66",
+      "type": "minor"
+    },
+    {
+      "a": "n63",
+      "b": "n102",
+      "type": "minor"
+    },
+    {
+      "a": "n101",
+      "b": "n2",
+      "type": "minor"
+    },
+    {
+      "a": "n2",
+      "b": "n63",
+      "type": "minor"
+    },
+    {
+      "a": "n63",
+      "b": "n3",
+      "type": "minor"
+    },
+    {
+      "a": "n2",
+      "b": "n1",
+      "type": "minor"
+    },
+    {
+      "a": "n1",
+      "b": "n58",
+      "type": "minor"
+    },
+    {
+      "a": "n58",
+      "b": "n56",
+      "type": "minor"
+    },
+    {
+      "a": "n56",
+      "b": "n57",
+      "type": "minor"
+    },
+    {
+      "a": "n58",
+      "b": "n59",
+      "type": "minor"
+    },
+    {
+      "a": "n59",
+      "b": "n54",
+      "type": "minor"
+    },
+    {
+      "a": "n59",
+      "b": "n60",
+      "type": "minor"
+    },
+    {
+      "a": "n60",
+      "b": "n45",
+      "type": "minor"
+    },
+    {
+      "a": "n45",
+      "b": "n44",
+      "type": "minor"
+    },
+    {
+      "a": "n44",
+      "b": "n6",
+      "type": "minor"
+    },
+    {
+      "a": "n46",
+      "b": "n45",
+      "type": "minor"
+    },
+    {
+      "a": "n45",
+      "b": "n4",
+      "type": "minor"
+    },
+    {
+      "a": "n4",
+      "b": "n3",
+      "type": "minor"
+    },
+    {
+      "a": "n60",
+      "b": "n61",
+      "type": "minor"
+    },
+    {
+      "a": "n61",
+      "b": "n47",
+      "type": "minor"
+    },
+    {
+      "a": "n47",
+      "b": "n48",
+      "type": "minor"
+    },
+    {
+      "a": "n48",
+      "b": "n61",
+      "type": "minor"
+    },
+    {
+      "a": "n61",
+      "b": "n52",
+      "type": "minor"
+    },
+    {
+      "a": "n51",
+      "b": "n61",
+      "type": "minor"
+    },
+    {
+      "a": "n47",
+      "b": "n46",
+      "type": "minor"
+    },
+    {
+      "a": "n47",
+      "b": "n42",
+      "type": "minor"
+    },
+    {
+      "a": "n48",
+      "b": "n49",
+      "type": "minor"
+    },
+    {
+      "a": "n48",
+      "b": "n50",
+      "type": "minor"
+    },
+    {
+      "a": "n48",
+      "b": "n41",
+      "type": "minor"
+    },
+    {
+      "a": "n41",
+      "b": "n24",
+      "type": "minor"
+    },
+    {
+      "a": "n24",
+      "b": "n25",
+      "type": "minor"
+    },
+    {
+      "a": "n25",
+      "b": "n23",
+      "type": "minor"
+    },
+    {
+      "a": "n23",
+      "b": "n7",
+      "type": "minor"
+    },
+    {
+      "a": "n25",
+      "b": "n28",
+      "type": "minor"
+    },
+    {
+      "a": "n28",
+      "b": "n29",
+      "type": "minor"
+    },
+    {
+      "a": "n29",
+      "b": "n9",
+      "type": "minor"
+    },
+    {
+      "a": "n23",
+      "b": "n8",
+      "type": "minor"
+    },
+    {
+      "a": "n28",
+      "b": "n30",
+      "type": "minor"
+    },
+    {
+      "a": "n32",
+      "b": "n27",
+      "type": "minor"
+    },
+    {
+      "a": "n27",
+      "b": "n26",
+      "type": "minor"
+    },
+    {
+      "a": "n26",
+      "b": "n24",
+      "type": "minor"
+    },
+    {
+      "a": "n6",
+      "b": "n73",
+      "type": "minor"
+    },
+    {
+      "a": "n73",
+      "b": "n71",
+      "type": "minor"
+    },
+    {
+      "a": "n71",
+      "b": "n68",
+      "type": "minor"
+    },
+    {
+      "a": "n71",
+      "b": "n70",
+      "type": "minor"
+    },
+    {
+      "a": "n71",
+      "b": "n72",
+      "type": "minor"
+    },
+    {
+      "a": "n72",
+      "b": "n8",
+      "type": "minor"
+    },
+    {
+      "a": "n37",
+      "b": "n35",
+      "type": "minor"
+    },
+    {
+      "a": "n35",
+      "b": "n32",
+      "type": "minor"
+    },
+    {
+      "a": "n35",
+      "b": "n36",
+      "type": "minor"
+    },
+    {
+      "a": "n35",
+      "b": "n34",
+      "type": "minor"
+    },
+    {
+      "a": "n34",
+      "b": "n33",
+      "type": "minor"
+    },
+    {
+      "a": "n33",
+      "b": "n10",
+      "type": "minor"
+    },
+    {
+      "a": "n33",
+      "b": "n11",
+      "type": "minor"
+    },
+    {
+      "a": "n22",
+      "b": "n34",
+      "type": "minor"
+    },
+    {
+      "a": "n34",
+      "b": "n32",
+      "type": "minor"
+    },
+    {
+      "a": "n31",
+      "b": "n34",
+      "type": "minor"
+    },
+    {
+      "a": "n34",
+      "b": "n21",
+      "type": "minor"
+    },
+    {
+      "a": "n21",
+      "b": "n40",
+      "type": "minor"
+    },
+    {
+      "a": "n40",
+      "b": "n39",
+      "type": "minor"
+    },
+    {
+      "a": "n39",
+      "b": "n19",
+      "type": "minor"
+    },
+    {
+      "a": "n40",
+      "b": "n13",
+      "type": "minor"
+    },
+    {
+      "a": "n22",
+      "b": "n12",
+      "type": "minor"
+    },
+    {
+      "a": "n13",
+      "b": "n185",
+      "type": "minor"
+    },
+    {
+      "a": "n185",
+      "b": "n186",
+      "type": "minor"
+    },
+    {
+      "a": "n186",
+      "b": "n184",
+      "type": "minor"
+    },
+    {
+      "a": "n186",
+      "b": "n183",
+      "type": "minor"
+    },
+    {
+      "a": "n184",
+      "b": "n190",
+      "type": "minor"
+    },
+    {
+      "a": "n182",
+      "b": "n191",
+      "type": "minor"
+    },
+    {
+      "a": "n191",
+      "b": "n192",
+      "type": "minor"
+    },
+    {
+      "a": "n192",
+      "b": "n193",
+      "type": "minor"
+    },
+    {
+      "a": "n193",
+      "b": "n194",
+      "type": "minor"
+    },
+    {
+      "a": "n194",
+      "b": "n146",
+      "type": "minor"
+    },
+    {
+      "a": "n181",
+      "b": "n191",
+      "type": "minor"
+    },
+    {
+      "a": "n159",
+      "b": "n193",
+      "type": "minor"
+    },
+    {
+      "a": "n158",
+      "b": "n176",
+      "type": "minor"
+    },
+    {
+      "a": "n176",
+      "b": "n143",
+      "type": "minor"
+    },
+    {
+      "a": "n176",
+      "b": "n144",
+      "type": "minor"
+    },
+    {
+      "a": "n176",
+      "b": "n165",
+      "type": "minor"
+    },
+    {
+      "a": "n165",
+      "b": "n180",
+      "type": "minor"
+    },
+    {
+      "a": "n180",
+      "b": "n156",
+      "type": "minor"
+    },
+    {
+      "a": "n180",
+      "b": "n163",
+      "type": "minor"
+    },
+    {
+      "a": "n180",
+      "b": "n162",
+      "type": "minor"
+    },
+    {
+      "a": "n165",
+      "b": "n164",
+      "type": "minor"
+    },
+    {
+      "a": "n164",
+      "b": "n166",
+      "type": "minor"
+    },
+    {
+      "a": "n166",
+      "b": "n163",
+      "type": "minor"
+    },
+    {
+      "a": "n163",
+      "b": "n172",
+      "type": "minor"
+    },
+    {
+      "a": "n172",
+      "b": "n167",
+      "type": "minor"
+    },
+    {
+      "a": "n167",
+      "b": "n166",
+      "type": "minor"
+    },
+    {
+      "a": "n166",
+      "b": "n172",
+      "type": "minor"
+    },
+    {
+      "a": "n172",
+      "b": "n171",
+      "type": "minor"
+    },
+    {
+      "a": "n171",
+      "b": "n170",
+      "type": "minor"
+    },
+    {
+      "a": "n170",
+      "b": "n169",
+      "type": "minor"
+    },
+    {
+      "a": "n169",
+      "b": "n199",
+      "type": "minor"
+    },
+    {
+      "a": "n199",
+      "b": "n77",
+      "type": "minor"
+    },
+    {
+      "a": "n160",
+      "b": "n161",
+      "type": "minor"
+    },
+    {
+      "a": "n161",
+      "b": "n162",
+      "type": "minor"
+    },
+    {
+      "a": "n160",
+      "b": "n198",
+      "type": "minor"
+    },
+    {
+      "a": "n160",
+      "b": "n169",
+      "type": "minor"
+    },
+    {
+      "a": "n178",
+      "b": "n177",
+      "type": "minor"
+    },
+    {
+      "a": "n177",
+      "b": "n11",
+      "type": "minor"
+    },
+    {
+      "a": "n177",
+      "b": "n154",
+      "type": "minor"
+    },
+    {
+      "a": "n70",
+      "b": "n76",
+      "type": "major"
+    },
+    {
+      "a": "n147",
+      "b": "n297",
+      "type": "minor"
+    },
+    {
+      "a": "n148",
+      "b": "n147",
+      "type": "minor"
+    },
+    {
+      "a": "n147",
+      "b": "n146",
+      "type": "minor"
+    },
+    {
+      "a": "n144",
+      "b": "n296",
+      "type": "minor"
+    },
+    {
+      "a": "n296",
+      "b": "n149",
+      "type": "minor"
+    },
+    {
+      "a": "n149",
+      "b": "n148",
+      "type": "minor"
+    },
+    {
+      "a": "n151",
+      "b": "n150",
+      "type": "minor"
+    },
+    {
+      "a": "n150",
+      "b": "n149",
+      "type": "minor"
+    },
+    {
+      "a": "n288",
+      "b": "n290",
+      "type": "minor"
+    },
+    {
+      "a": "n290",
+      "b": "n197",
+      "type": "minor"
+    },
+    {
+      "a": "n288",
+      "b": "n289",
+      "type": "minor"
+    },
+    {
+      "a": "n289",
+      "b": "n150",
+      "type": "minor"
+    },
+    {
+      "a": "n10",
+      "b": "n198",
+      "type": "minor"
+    },
+    {
+      "a": "n168",
+      "b": "n167",
+      "type": "minor"
+    },
+    {
+      "a": "n166",
+      "b": "n174",
+      "type": "minor"
+    },
+    {
+      "a": "n174",
+      "b": "n173",
+      "type": "minor"
+    },
+    {
+      "a": "n173",
+      "b": "n139",
+      "type": "minor"
+    },
+    {
+      "a": "n174",
+      "b": "n175",
+      "type": "minor"
+    },
+    {
+      "a": "n175",
+      "b": "n142",
+      "type": "minor"
+    },
+    {
+      "a": "n175",
+      "b": "n143",
+      "type": "minor"
+    },
+    {
+      "a": "n85",
+      "b": "n78",
+      "type": "minor"
+    },
+    {
+      "a": "n78",
+      "b": "n77",
+      "type": "minor"
+    },
+    {
+      "a": "n77",
+      "b": "n200",
+      "type": "minor"
+    },
+    {
+      "a": "n200",
+      "b": "n78",
+      "type": "minor"
+    },
+    {
+      "a": "n78",
+      "b": "n79",
+      "type": "minor"
+    },
+    {
+      "a": "n79",
+      "b": "n80",
+      "type": "minor"
+    },
+    {
+      "a": "n80",
+      "b": "n81",
+      "type": "minor"
+    },
+    {
+      "a": "n79",
+      "b": "n86",
+      "type": "minor"
+    },
+    {
+      "a": "n80",
+      "b": "n88",
+      "type": "minor"
+    },
+    {
+      "a": "n200",
+      "b": "n81",
+      "type": "minor"
+    },
+    {
+      "a": "n200",
+      "b": "n168",
+      "type": "minor"
+    },
+    {
+      "a": "n120",
+      "b": "n126",
+      "type": "minor"
+    },
+    {
+      "a": "n126",
+      "b": "n127",
+      "type": "minor"
+    },
+    {
+      "a": "n127",
+      "b": "n85",
+      "type": "minor"
+    },
+    {
+      "a": "n121",
+      "b": "n122",
+      "type": "minor"
+    },
+    {
+      "a": "n122",
+      "b": "n123",
+      "type": "minor"
+    },
+    {
+      "a": "n123",
+      "b": "n124",
+      "type": "minor"
+    },
+    {
+      "a": "n124",
+      "b": "n125",
+      "type": "minor"
+    },
+    {
+      "a": "n125",
+      "b": "n87",
+      "type": "minor"
+    },
+    {
+      "a": "n125",
+      "b": "n86",
+      "type": "minor"
+    },
+    {
+      "a": "n116",
+      "b": "n117",
+      "type": "minor"
+    },
+    {
+      "a": "n117",
+      "b": "n131",
+      "type": "minor"
+    },
+    {
+      "a": "n128",
+      "b": "n129",
+      "type": "minor"
+    },
+    {
+      "a": "n129",
+      "b": "n244",
+      "type": "minor"
+    },
+    {
+      "a": "n244",
+      "b": "n243",
+      "type": "minor"
+    },
+    {
+      "a": "n243",
+      "b": "n245",
+      "type": "minor"
+    },
+    {
+      "a": "n245",
+      "b": "n123",
+      "type": "minor"
+    },
+    {
+      "a": "n126",
+      "b": "n124",
+      "type": "minor"
+    },
+    {
+      "a": "n243",
+      "b": "n242",
+      "type": "minor"
+    },
+    {
+      "a": "n242",
+      "b": "n240",
+      "type": "minor"
+    },
+    {
+      "a": "n242",
+      "b": "n250",
+      "type": "minor"
+    },
+    {
+      "a": "n245",
+      "b": "n246",
+      "type": "minor"
+    },
+    {
+      "a": "n246",
+      "b": "n247",
+      "type": "minor"
+    },
+    {
+      "a": "n247",
+      "b": "n260",
+      "type": "minor"
+    },
+    {
+      "a": "n260",
+      "b": "n259",
+      "type": "minor"
+    },
+    {
+      "a": "n247",
+      "b": "n248",
+      "type": "minor"
+    },
+    {
+      "a": "n246",
+      "b": "n124",
+      "type": "minor"
+    },
+    {
+      "a": "n124",
+      "b": "n86",
+      "type": "minor"
+    },
+    {
+      "a": "n138",
+      "b": "n136",
+      "type": "minor"
+    },
+    {
+      "a": "n136",
+      "b": "n132",
+      "type": "minor"
+    },
+    {
+      "a": "n136",
+      "b": "n137",
+      "type": "minor"
+    },
+    {
+      "a": "n137",
+      "b": "n225",
+      "type": "minor"
+    },
+    {
+      "a": "n225",
+      "b": "n136",
+      "type": "minor"
+    },
+    {
+      "a": "n225",
+      "b": "n224",
+      "type": "minor"
+    },
+    {
+      "a": "n137",
+      "b": "n226",
+      "type": "minor"
+    },
+    {
+      "a": "n226",
+      "b": "n135",
+      "type": "minor"
+    },
+    {
+      "a": "n226",
+      "b": "n227",
+      "type": "minor"
+    },
+    {
+      "a": "n227",
+      "b": "n228",
+      "type": "minor"
+    },
+    {
+      "a": "n228",
+      "b": "n229",
+      "type": "minor"
+    },
+    {
+      "a": "n229",
+      "b": "n230",
+      "type": "minor"
+    },
+    {
+      "a": "n230",
+      "b": "n231",
+      "type": "minor"
+    },
+    {
+      "a": "n130",
+      "b": "n241",
+      "type": "minor"
+    },
+    {
+      "a": "n241",
+      "b": "n228",
+      "type": "minor"
+    },
+    {
+      "a": "n241",
+      "b": "n239",
+      "type": "minor"
+    },
+    {
+      "a": "n129",
+      "b": "n130",
+      "type": "minor"
+    },
+    {
+      "a": "n224",
+      "b": "n223",
+      "type": "minor"
+    },
+    {
+      "a": "n222",
+      "b": "n224",
+      "type": "minor"
+    },
+    {
+      "a": "n229",
+      "b": "n236",
+      "type": "minor"
+    },
+    {
+      "a": "n235",
+      "b": "n237",
+      "type": "minor"
+    },
+    {
+      "a": "n237",
+      "b": "n215",
+      "type": "minor"
+    },
+    {
+      "a": "n237",
+      "b": "n213",
+      "type": "minor"
+    },
+    {
+      "a": "n214",
+      "b": "n217",
+      "type": "minor"
+    },
+    {
+      "a": "n250",
+      "b": "n251",
+      "type": "minor"
+    },
+    {
+      "a": "n251",
+      "b": "n233",
+      "type": "minor"
+    },
+    {
+      "a": "n252",
+      "b": "n233",
+      "type": "minor"
+    },
+    {
+      "a": "n252",
+      "b": "n253",
+      "type": "minor"
+    },
+    {
+      "a": "n253",
+      "b": "n254",
+      "type": "minor"
+    },
+    {
+      "a": "n254",
+      "b": "n255",
+      "type": "minor"
+    },
+    {
+      "a": "n255",
+      "b": "n256",
+      "type": "minor"
+    },
+    {
+      "a": "n256",
+      "b": "n257",
+      "type": "minor"
+    },
+    {
+      "a": "n256",
+      "b": "n276",
+      "type": "minor"
+    },
+    {
+      "a": "n276",
+      "b": "n261",
+      "type": "minor"
+    },
+    {
+      "a": "n261",
+      "b": "n262",
+      "type": "minor"
+    },
+    {
+      "a": "n262",
+      "b": "n211",
+      "type": "minor"
+    },
+    {
+      "a": "n211",
+      "b": "n263",
+      "type": "minor"
+    },
+    {
+      "a": "n263",
+      "b": "n262",
+      "type": "minor"
+    },
+    {
+      "a": "n263",
+      "b": "n264",
+      "type": "minor"
+    },
+    {
+      "a": "n207",
+      "b": "n268",
+      "type": "minor"
+    },
+    {
+      "a": "n268",
+      "b": "n266",
+      "type": "minor"
+    },
+    {
+      "a": "n266",
+      "b": "n265",
+      "type": "minor"
+    },
+    {
+      "a": "n266",
+      "b": "n267",
+      "type": "minor"
+    },
+    {
+      "a": "n267",
+      "b": "n206",
+      "type": "minor"
+    },
+    {
+      "a": "n267",
+      "b": "n271",
+      "type": "minor"
+    },
+    {
+      "a": "n271",
+      "b": "n270",
+      "type": "minor"
+    },
+    {
+      "a": "n270",
+      "b": "n269",
+      "type": "minor"
+    },
+    {
+      "a": "n269",
+      "b": "n153",
+      "type": "minor"
+    },
+    {
+      "a": "n271",
+      "b": "n284",
+      "type": "minor"
+    },
+    {
+      "a": "n284",
+      "b": "n283",
+      "type": "minor"
+    },
+    {
+      "a": "n283",
+      "b": "n282",
+      "type": "minor"
+    },
+    {
+      "a": "n282",
+      "b": "n203",
+      "type": "minor"
+    },
+    {
+      "a": "n282",
+      "b": "n281",
+      "type": "minor"
+    },
+    {
+      "a": "n281",
+      "b": "n280",
+      "type": "minor"
+    },
+    {
+      "a": "n280",
+      "b": "n279",
+      "type": "minor"
+    },
+    {
+      "a": "n279",
+      "b": "n278",
+      "type": "minor"
+    },
+    {
+      "a": "n278",
+      "b": "n153",
+      "type": "minor"
+    },
+    {
+      "a": "n278",
+      "b": "n293",
+      "type": "minor"
+    },
+    {
+      "a": "n293",
+      "b": "n140",
+      "type": "minor"
+    },
+    {
+      "a": "n293",
+      "b": "n152",
+      "type": "minor"
+    },
+    {
+      "a": "n293",
+      "b": "n291",
+      "type": "minor"
+    },
+    {
+      "a": "n291",
+      "b": "n292",
+      "type": "minor"
+    },
+    {
+      "a": "n292",
+      "b": "n295",
+      "type": "minor"
+    },
+    {
+      "a": "n295",
+      "b": "n142",
+      "type": "minor"
+    },
+    {
+      "a": "n291",
+      "b": "n279",
+      "type": "minor"
+    },
+    {
+      "a": "n282",
+      "b": "n285",
+      "type": "minor"
+    },
+    {
+      "a": "n285",
+      "b": "n288",
+      "type": "minor"
+    },
+    {
+      "a": "n286",
+      "b": "n285",
+      "type": "minor"
+    },
+    {
+      "a": "n286",
+      "b": "n291",
+      "type": "minor"
+    },
+    {
+      "a": "n286",
+      "b": "n287",
+      "type": "minor"
+    },
+    {
+      "a": "n287",
+      "b": "n151",
+      "type": "minor"
+    },
+    {
+      "a": "n151",
+      "b": "n296",
+      "type": "minor"
+    },
+    {
+      "a": "n294",
+      "b": "n143",
+      "type": "minor"
+    },
+    {
+      "a": "n294",
+      "b": "n296",
+      "type": "minor"
+    },
+    {
+      "a": "n294",
+      "b": "n295",
+      "type": "minor"
+    },
+    {
+      "a": "n292",
+      "b": "n287",
+      "type": "minor"
+    },
+    {
+      "a": "n258",
+      "b": "n277",
+      "type": "minor"
+    },
+    {
+      "a": "n277",
+      "b": "n152",
+      "type": "minor"
+    },
+    {
+      "a": "n275",
+      "b": "n256",
+      "type": "minor"
+    },
+    {
+      "a": "n275",
+      "b": "n153",
+      "type": "minor"
+    },
+    {
+      "a": "n275",
+      "b": "n274",
+      "type": "minor"
+    },
+    {
+      "a": "n190",
+      "b": "n188",
+      "type": "minor"
+    },
+    {
+      "a": "n298",
+      "b": "n299",
+      "type": "minor"
+    },
+    {
+      "a": "n299",
+      "b": "n229",
+      "type": "minor"
+    },
+    {
+      "a": "n298",
+      "b": "n218",
+      "type": "minor"
+    },
+    {
+      "a": "n298",
+      "b": "n226",
+      "type": "minor"
+    }
+  ],
+  "generals": [
+    {
+      "id": "Mongol-g1",
+      "name": "General Mongol-g1",
+      "nation": "Mongol"
+    },
+    {
+      "id": "Wei-g1",
+      "name": "General Wei-g1",
+      "nation": "Wei"
+    },
+    {
+      "id": "Shu-g1",
+      "name": "General Shu-g1",
+      "nation": "Shu"
+    },
+    {
+      "id": "Wu-g1",
+      "name": "General Wu-g1",
+      "nation": "Wu"
+    },
+    {
+      "id": "Yue-g1",
+      "name": "General Yue-g1",
+      "nation": "Yue"
+    },
+    {
+      "id": "Viet-g1",
+      "name": "General Viet-g1",
+      "nation": "Viet"
+    },
+    {
+      "id": "Mongol-g2",
+      "name": "General Mongol-g2",
+      "nation": "Mongol"
+    },
+    {
+      "id": "Mongol-g3",
+      "name": "General Mongol-g3",
+      "nation": "Mongol"
+    },
+    {
+      "id": "Shu-g2",
+      "name": "General Shu-g2",
+      "nation": "Shu"
+    },
+    {
+      "id": "Shu-g3",
+      "name": "General Shu-g3",
+      "nation": "Shu"
+    },
+    {
+      "id": "Wei-g2",
+      "name": "General Wei-g2",
+      "nation": "Wei"
+    },
+    {
+      "id": "Wei-g3",
+      "name": "General Wei-g3",
+      "nation": "Wei"
+    },
+    {
+      "id": "Wu-g2",
+      "name": "General Wu-g2",
+      "nation": "Wu"
+    },
+    {
+      "id": "Wu-g3",
+      "name": "General Wu-g3",
+      "nation": "Wu"
+    },
+    {
+      "id": "Yue-g2",
+      "name": "General Yue-g2",
+      "nation": "Yue"
+    },
+    {
+      "id": "Viet-g2",
+      "name": "General Viet-g2",
+      "nation": "Viet"
+    }
+  ],
+  "armies": [
+    {
+      "id": "Mongol-army1",
+      "nation": "Mongol",
+      "node": "n46",
+      "generals": [
+        "Mongol-g1"
+      ],
+      "units": {
+        "cavalry": 4,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 2
+      }
+    },
+    {
+      "id": "Wei-army1",
+      "nation": "Wei",
+      "node": "n10",
+      "generals": [
+        "Wei-g1"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 5,
+        "artillery": 3,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Shu-army1",
+      "nation": "Shu",
+      "node": "n89",
+      "generals": [
+        "Shu-g1"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Wu-army1",
+      "nation": "Wu",
+      "node": "n143",
+      "generals": [
+        "Wu-g1"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 5,
+        "artillery": 3,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Yue-army1",
+      "nation": "Yue",
+      "node": "n283",
+      "generals": [
+        "Yue-g1"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Viet-army1",
+      "nation": "Viet",
+      "node": "n227",
+      "generals": [
+        "Viet-g1"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Mongol-army2",
+      "nation": "Mongol",
+      "node": "n56",
+      "generals": [
+        "Mongol-g2"
+      ],
+      "units": {
+        "cavalry": 5,
+        "infantry": 0,
+        "artillery": 0,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Mongol-army3",
+      "nation": "Mongol",
+      "node": "n41",
+      "generals": [
+        "Mongol-g3"
+      ],
+      "units": {
+        "cavalry": 3,
+        "infantry": 2,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Shu-army2",
+      "nation": "Shu",
+      "node": "n82",
+      "generals": [
+        "Shu-g2"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 5,
+        "artillery": 3,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Shu-army3",
+      "nation": "Shu",
+      "node": "n115",
+      "generals": [
+        "Shu-g3"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 4,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Wei-army2",
+      "nation": "Wei",
+      "node": "n156",
+      "generals": [
+        "Wei-g2"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 4,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Wei-army3",
+      "nation": "Wei",
+      "node": "n7",
+      "generals": [
+        "Wei-g3"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Wu-army2",
+      "nation": "Wu",
+      "node": "n210",
+      "generals": [
+        "Wu-g2"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Wu-army3",
+      "nation": "Wu",
+      "node": "n87",
+      "generals": [
+        "Wu-g3"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 4,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Yue-army2",
+      "nation": "Yue",
+      "node": "n267",
+      "generals": [
+        "Yue-g2"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "Viet-army2",
+      "nation": "Viet",
+      "node": "n221",
+      "generals": [
+        "Viet-g2"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    }
+  ],
+  "text": {
+    "zh": {
+      "node.n1": "襄武",
+      "node.n2": "武都",
+      "node.n3": "上邽",
+      "node.n4": "街亭",
+      "node.n5": "陈仓",
+      "node.n6": "长安",
+      "node.n7": "潼关",
+      "node.n8": "渑池",
+      "node.n9": "洛阳",
+      "node.n10": "邺",
+      "node.n11": "元城",
+      "node.n12": "聊城",
+      "node.n13": "东平陵",
+      "node.n14": "乐安",
+      "node.n15": "平郭",
+      "node.n16": "临渝",
+      "node.n17": "肥如",
+      "node.n18": "蓟",
+      "node.n19": "涿",
+      "node.n20": "方城",
+      "node.n21": "乐成",
+      "node.n22": "武邑",
+      "node.n23": "平阳",
+      "node.n24": "阳曲",
+      "node.n25": "晋阳",
+      "node.n26": "阴馆",
+      "node.n27": "广武",
+      "node.n28": "涅",
+      "node.n29": "阳城",
+      "node.n30": "潞",
+      "node.n31": "娘子关",
+      "node.n32": "井陉",
+      "node.n33": "邯郸",
+      "node.n34": "真定",
+      "node.n35": "卢奴",
+      "node.n36": "代",
+      "node.n37": "居庸关",
+      "node.n38": "狐奴",
+      "node.n39": "泉州",
+      "node.n40": "高城",
+      "node.n41": "离石",
+      "node.n42": "高奴",
+      "node.n43": "下邽",
+      "node.n44": "漆",
+      "node.n45": "临泾",
+      "node.n46": "泥阳",
+      "node.n47": "雕阴",
+      "node.n48": "肤施",
+      "node.n49": "鸿门",
+      "node.n50": "九原",
+      "node.n51": "朔方",
+      "node.n52": "廉县",
+      "node.n53": "灵武",
+      "node.n54": "鹯阴",
+      "node.n55": "媪围",
+      "node.n56": "金城",
+      "node.n57": "河关",
+      "node.n58": "平襄",
+      "node.n59": "萧关",
+      "node.n60": "彭阳",
+      "node.n61": "高望",
+      "node.n62": "阳乐",
+      "node.n63": "下辨",
+      "node.n64": "阳平关",
+      "node.n65": "成固",
+      "node.n66": "西城",
+      "node.n67": "定军山",
+      "node.n68": "上庸",
+      "node.n69": "武关",
+      "node.n70": "武当",
+      "node.n71": "上洛",
+      "node.n72": "陕",
+      "node.n73": "蓝田",
+      "node.n74": "宛",
+      "node.n75": "虎牢关",
+      "node.n76": "襄阳",
+      "node.n77": "宜城",
+      "node.n78": "新市",
+      "node.n79": "竟陵",
+      "node.n80": "云杜",
+      "node.n81": "夏口",
+      "node.n82": "永安",
+      "node.n83": "巫",
+      "node.n84": "夷陵",
+      "node.n85": "江陵",
+      "node.n86": "公安",
+      "node.n87": "巴丘",
+      "node.n88": "赤壁",
+      "node.n89": "成都",
+      "node.n90": "朐忍",
+      "node.n91": "枳",
+      "node.n92": "江州",
+      "node.n93": "江阳",
+      "node.n94": "南溪",
+      "node.n95": "僰道",
+      "node.n96": "南安",
+      "node.n97": "严道",
+      "node.n98": "朱提",
+      "node.n99": "临邛",
+      "node.n100": "汶山",
+      "node.n101": "阴平",
+      "node.n102": "白水关",
+      "node.n103": "剑阁",
+      "node.n104": "阆中",
+      "node.n105": "垫江",
+      "node.n106": "涪",
+      "node.n107": "广汉",
+      "node.n108": "德阳",
+      "node.n109": "资中",
+      "node.n110": "汉安",
+      "node.n111": "宕渠",
+      "node.n112": "汉昌",
+      "node.n113": "南郑",
+      "node.n114": "汉丰",
+      "node.n115": "符节",
+      "node.n116": "鳖",
+      "node.n117": "且兰",
+      "node.n118": "汉阳",
+      "node.n119": "谈稿",
+      "node.n120": "临江",
+      "node.n121": "涪陵",
+      "node.n122": "酉阳",
+      "node.n123": "沅陵",
+      "node.n124": "索",
+      "node.n125": "华容",
+      "node.n126": "零阳",
+      "node.n127": "秭归",
+      "node.n130": "毋敛",
+      "node.n131": "母掇",
+      "node.n132": "同并",
+      "node.n133": "夜郎",
+      "node.n134": "贲古",
+      "node.n135": "广谈",
+      "node.n136": "宛温",
+      "node.n137": "句町",
+      "node.n138": "兴古",
+      "node.n139": "武昌",
+      "node.n140": "寻阳",
+      "node.n141": "皖",
+      "node.n142": "襄安",
+      "node.n143": "建业",
+      "node.n144": "丹阳",
+      "node.n145": "毗陵",
+      "node.n146": "无锡",
+      "node.n147": "海盐",
+      "node.n148": "吴",
+      "node.n149": "余杭",
+      "node.n150": "富春",
+      "node.n151": "泾",
+      "node.n152": "南昌",
+      "node.n153": "海昏",
+      "node.n154": "无盐",
+      "node.n155": "沛",
+      "node.n156": "下邳",
+      "node.n157": "凌",
+      "node.n158": "广陵",
+      "node.n159": "海陵",
+      "node.n160": "昆阳",
+      "node.n161": "项",
+      "node.n162": "谯",
+      "node.n163": "下蔡",
+      "node.n164": "钟离",
+      "node.n165": "盱眙",
+      "node.n166": "寿春",
+      "node.n168": "弋阳",
+      "node.n169": "汝南",
+      "node.n170": "平舆",
+      "node.n171": "新蔡",
+      "node.n172": "安丰",
+      "node.n173": "六安",
+      "node.n174": "逍遥津",
+      "node.n175": "合肥",
+      "node.n176": "堂邑",
+      "node.n177": "陈留",
+      "node.n178": "杞",
+      "node.n179": "酂",
+      "node.n180": "符离",
+      "node.n181": "厚丘",
+      "node.n182": "莒",
+      "node.n183": "高密",
+      "node.n184": "掖",
+      "node.n185": "临淄",
+      "node.n186": "剧",
+      "node.n187": "即墨",
+      "node.n188": "成山",
+      "node.n189": "牟平",
+      "node.n190": "黄",
+      "node.n191": "海西",
+      "node.n192": "盐渎",
+      "node.n194": "娄",
+      "node.n195": "山阴",
+      "node.n196": "鄞",
+      "node.n197": "章安",
+      "node.n198": "许昌",
+      "node.n199": "博望",
+      "node.n200": "随",
+      "node.n201": "永宁",
+      "node.n202": "横阳",
+      "node.n203": "罗江",
+      "node.n204": "侯官",
+      "node.n205": "东安",
+      "node.n206": "龙溪",
+      "node.n207": "揭阳",
+      "node.n208": "博罗",
+      "node.n209": "增城",
+      "node.n210": "番禺",
+      "node.n211": "中宿",
+      "node.n212": "高要",
+      "node.n213": "高凉",
+      "node.n214": "徐闻",
+      "node.n215": "合浦",
+      "node.n217": "徐闻港",
+      "node.n218": "龙编",
+      "node.n219": "安定",
+      "node.n220": "曲易",
+      "node.n221": "铜柱",
+      "node.n222": "西于",
+      "node.n223": "新昌",
+      "node.n224": "封溪",
+      "node.n225": "进桑",
+      "node.n228": "增食",
+      "node.n229": "领方",
+      "node.n230": "潭中",
+      "node.n231": "布山",
+      "node.n232": "临贺",
+      "node.n233": "封阳",
+      "node.n234": "含洭",
+      "node.n235": "中溜",
+      "node.n236": "宁浦",
+      "node.n237": "朱卢",
+      "node.n238": "荔浦",
+      "node.n239": "始安",
+      "node.n241": "定周",
+      "node.n242": "都梁",
+      "node.n243": "镡成",
+      "node.n244": "无阳",
+      "node.n245": "辰阳",
+      "node.n246": "昭陵",
+      "node.n247": "重安",
+      "node.n248": "承阳",
+      "node.n249": "泉陵",
+      "node.n250": "零陵",
+      "node.n251": "冯乘",
+      "node.n252": "谢沐",
+      "node.n253": "临武",
+      "node.n254": "郴",
+      "node.n255": "攸",
+      "node.n256": "宜春",
+      "node.n257": "长沙",
+      "node.n258": "浏阳",
+      "node.n259": "下隽",
+      "node.n260": "罗",
+      "node.n261": "南野",
+      "node.n262": "曲江",
+      "node.n263": "浈阳",
+      "node.n264": "龙川",
+      "node.n265": "赣",
+      "node.n267": "新罗",
+      "node.n268": "海阳",
+      "node.n269": "南城",
+      "node.n270": "昭武",
+      "node.n271": "将乐",
+      "node.n272": "雩都",
+      "node.n273": "石城",
+      "node.n274": "临汝",
+      "node.n275": "新淦",
+      "node.n276": "庐陵",
+      "node.n277": "艾",
+      "node.n278": "鄱阳",
+      "node.n279": "葛阳",
+      "node.n280": "汉兴",
+      "node.n281": "建安",
+      "node.n282": "建平",
+      "node.n283": "南平",
+      "node.n284": "东平",
+      "node.n285": "吴兴",
+      "node.n286": "太末",
+      "node.n287": "歙",
+      "node.n288": "松阳",
+      "node.n289": "长山",
+      "node.n290": "乌伤",
+      "node.n291": "余干",
+      "node.n292": "黟",
+      "node.n293": "柴桑",
+      "node.n294": "芜湖",
+      "node.n295": "舒",
+      "node.n296": "乌程",
+      "node.n297": "由拳",
+      "node.n298": "北带",
+      "node.n299": "临尘",
+      "map.name": "三国"
+    }
+  },
+  "languageNames": {
+    "zh": "中文"
+  },
+  "decks": {
+    "general": [
+      {
+        "card": "roll+1",
+        "count": 10
+      },
+      {
+        "card": "roll+2",
+        "count": 10
+      },
+      {
+        "card": "roll-1",
+        "count": 10
+      },
+      {
+        "card": "retreat",
+        "count": 10
+      },
+      {
+        "card": "blockRetreat",
+        "count": 5
+      },
+      {
+        "card": "moves+1",
+        "count": 15
+      }
+    ],
+    "event": [
+      {
+        "card": "recruit1",
+        "count": 10
+      },
+      {
+        "card": "recruit2",
+        "count": 3
+      },
+      {
+        "card": "recruitGeneral",
+        "count": 3
+      },
+      {
+        "card": "endGame",
+        "count": 1
+      },
+      {
+        "card": "exhaustion1",
+        "count": 10
+      },
+      {
+        "card": "exhaustion2",
+        "count": 5
+      },
+      {
+        "card": "exhaustion5",
+        "count": 1
+      },
+      {
+        "card": "spies",
+        "count": 5
+      },
+      {
+        "card": "enemySpies",
+        "count": 5
+      },
+      {
+        "card": "sabotage",
+        "count": 5
+      },
+      {
+        "card": "sabotaged",
+        "count": 5
+      },
+      {
+        "card": "nothing",
+        "count": 20
+      }
+    ]
+  },
+  "theme": "imperial-china"
+}
