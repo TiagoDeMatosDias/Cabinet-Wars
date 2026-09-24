@@ -101,6 +101,9 @@ export function newId(state: GameState, prefix: string): string {
   return `${prefix}${state.nextId++}`;
 }
 
+/** Log entries about how a battle is fought, as opposed to what everyone watching sees happen. */
+const BATTLE_DETAILS = new Set<MessageKey>(['log.dice', 'log.round', 'log.retreatBlocked']);
+
 /** Records a log entry from a message key; the English text is kept alongside for tools and tests. */
 export function log(
   state: GameState,
@@ -111,6 +114,11 @@ export function log(
   const text = formatMessage(MESSAGES[key], params, (kind, id) => (kind === 'nation' ? state.nations.find((n) => n.id === id)?.name ?? id : nodeName(state, id)));
   const entry: HistoryEntry = { turn: state.turn, round: state.round, text, msg: { key, params } };
   for (const [k, v] of Object.entries(meta)) if (v !== undefined) (entry as unknown as Record<string, unknown>)[k] = v;
+  // Battle entries are seen only by those who could see the battle; its dice and choices only by those fighting it.
+  if (meta.kind === 'battle' && state.battle && !entry.teams && !entry.side) {
+    entry.teams = [...state.battle.witnesses];
+    if (BATTLE_DETAILS.has(key)) entry.nations = [state.battle.start.attacker.nation, state.battle.start.defender.nation];
+  }
   state.history.push(entry);
 }
 

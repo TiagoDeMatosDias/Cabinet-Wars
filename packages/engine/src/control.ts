@@ -42,18 +42,40 @@ export function updateControl(state: GameState, nationId: NationId) {
   }
 }
 
-export function willingness(state: GameState, nationId: NationId): number {
+/** How close a nation is to collapse: the numbers behind its willingness. */
+export interface WarStatus {
+  /** Victory points of the towns the nation owns. */
+  vpOwned: number;
+  /** Of those, the ones it still controls (occupied towns don't count). */
+  vpHeld: number;
+  /** Percentage of its victory points it holds. */
+  held: number;
+  warExhaustion: number;
+  /** Held percentage minus war exhaustion (never below 0). */
+  willingness: number;
+  /** Knocked out when willingness drops below this. */
+  threshold: number;
+  /** Percentage points left above the threshold (negative: below it). */
+  margin: number;
+}
+
+export function warStatus(state: GameState, nationId: NationId): WarStatus {
   const nat = nation(state, nationId);
-  let total = 0;
-  let held = 0;
+  let vpOwned = 0;
+  let vpHeld = 0;
   for (const n of Object.values(state.nodes)) {
     if (n.owner !== nationId) continue;
-    total += n.vp;
-    if (n.controller === nationId) held += n.vp;
+    vpOwned += n.vp;
+    if (n.controller === nationId) vpHeld += n.vp;
   }
+  const held = vpOwned === 0 ? 100 : (100 * vpHeld) / vpOwned;
   // War exhaustion takes percentage points off willingness.
-  const base = total === 0 ? 100 : (100 * held) / total;
-  return Math.max(0, base - nat.warExhaustion);
+  const will = Math.max(0, held - nat.warExhaustion);
+  return { vpOwned, vpHeld, held, warExhaustion: nat.warExhaustion, willingness: will, threshold: nat.threshold, margin: will - nat.threshold };
+}
+
+export function willingness(state: GameState, nationId: NationId): number {
+  return warStatus(state, nationId).willingness;
 }
 
 /** Knocks out nations below their threshold and sets the winner once a single team is left. */

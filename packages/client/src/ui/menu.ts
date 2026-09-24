@@ -4,7 +4,7 @@ import {
 } from '../maps';
 import { HostSession } from '../net/host';
 import { PeerSession } from '../net/peer';
-import type { MapRef } from '../net/protocol';
+import type { MapRef, SeatInfo } from '../net/protocol';
 import { hostRoom } from '../net/rtc';
 import type { Session } from '../net/session';
 import { unpackBundle } from '../storage/bundle';
@@ -43,21 +43,19 @@ function chosenMode(): GameMode | null {
  * Starts a game. A new game (no log) takes the mode chosen in the menu; it is written into the
  * map's rules, so saves and online players get the same rules.
  */
-export async function startGame(map: MapBundle, online: boolean, actions: MenuActions, log: LogEntry[] = []) {
+export async function startGame(map: MapBundle, online: boolean, actions: MenuActions, log: LogEntry[] = [], aiSeats: string[] = []) {
   try {
     const mode = log.length ? null : chosenMode();
     if (mode) map = { ...map, config: { ...map.config, rules: { ...(map.config.rules as object ?? {}), mode } } };
     const config = parseConfig(map.config);
-    const session = new HostSession(map, config, await mapRef(map), log);
+    const session = new HostSession(map, config, await mapRef(map), log, aiSeats);
     if (online) {
       const room = await hostRoom((ch) => session.addChannel(ch));
       session.room = room.room;
-      for (const s of session.seats()) session.release(s.nation);
-      actions.lobby(session);
-    } else {
-      session.start();
-      actions.play(session);
+      for (const s of session.seats()) if (s.holder !== 'ai') session.release(s.nation);
     }
+    // The lobby is where the host picks which nations the computer plays.
+    actions.lobby(session);
   } catch (e) {
     toast((e as Error).message, 'error');
   }
@@ -194,7 +192,7 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions) {
     const saveRows = saves.map((s) => {
       const open = async (online: boolean) => {
         const b = await unpackBundle(s.blob, `save:${s.id}`);
-        void startGame(b.map, online, actions, b.log ?? []);
+        void startGame(b.map, online, actions, b.log ?? [], savedAiSeats(b.meta?.seats));
       };
       return h('div', { class: 'item' },
         h('div', {}, h('strong', {}, s.title), h('span', { class: 'muted' }, ` · ${new Date(s.date).toLocaleString()}`)),
@@ -212,7 +210,7 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions) {
             onclick: async () => {
               const blob = await fetch(`/api/saves/${encodeURIComponent(s.file)}`).then((r) => r.blob());
               const b = await unpackBundle(blob, `save:${s.file}`);
-              void startGame(b.map, false, actions, b.log ?? []);
+              void startGame(b.map, false, actions, b.log ?? [], savedAiSeats(b.meta?.seats));
             },
           }, t('menu.continueHotseat')))));
     }
@@ -221,12 +219,28 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions) {
   await refresh();
 }
 
-/** Seat selection before an online game starts. */
+/** Nations a save says the computer played. */
+function savedAiSeats(seats: Record<string, string> | undefined): string[] {
+  return Object.entries(seats ?? {}).filter(([, h]) => h === 'ai').map(([n]) => n);
+}
+
+function holderText(session: Session, s: SeatInfo): string {
+  switch (s.holder) {
+    case 'you': return session.isHost ? t('lobby.playedHere') : t('lobby.you');
+    case 'host': return t('lobby.host');
+    case 'other': return s.label ?? t('lobby.anotherPlayer');
+    case 'ai': return t(s.aiRole === 'defensive' ? 'lobby.aiDefensive' : 'lobby.aiOffensive');
+    default: return t('lobby.open');
+  }
+}
+
+/** Seat selection before a game starts: who plays each nation, here, remotely or by computer. */
 export function lobbyScreen(root: HTMLElement, session: Session, onStart: () => void, onExit: () => void) {
   void useThemeForMap(session.map.config);
   useMapText(session.map.config);
   setDefaultNames(session.map.config);
   const emblems = buildEmblems(session.config.nations, session.map);
+  const host = session instanceof HostSession ? session : null;
   const render = () => {
     if (session.started()) { unsub(); onStart(); return; }
     const link = `${location.origin}${location.pathname}#join=${session.room}`;
@@ -242,12 +256,13 @@ export function lobbyScreen(root: HTMLElement, session: Session, onStart: () => 
         session.seats().map((s) => h('div', { class: 'item' },
           h('div', { class: 'row' }, emblemEl(emblems.get(s.nation), 30), h('strong', {}, nationText(s.nation)), h('span', { class: 'muted' }, ` · ${t(`role.${s.side}`)}`)),
           h('div', { class: 'row' },
-            h('span', {}, s.holder === 'you' ? (session.isHost ? t('lobby.playedHere') : t('lobby.you')) : s.holder === 'host' ? t('lobby.host') : s.holder === 'other' ? (s.label ?? t('lobby.anotherPlayer')) : t('lobby.open')),
-            s.holder === null ? h('button', { onclick: () => session.claim(s.nation) }, session.isHost ? t('lobby.playHere') : t('lobby.take')) : null,
-            s.holder === 'you' ? h('button', { onclick: () => session.release(s.nation) }, session.isHost ? t('lobby.openRemote') : t('lobby.release')) : null)))),
+            h('span', { title: s.holder === 'ai' ? t(s.aiRole === 'defensive' ? 'lobby.aiDefensiveTitle' : 'lobby.aiOffensiveTitle') : undefined }, holderText(session, s)),
+            s.holder === null || (host && s.holder === 'ai') ? h('button', { onclick: () => session.claim(s.nation) }, session.isHost ? t('lobby.playHere') : t('lobby.take')) : null,
+            s.holder === 'you' && (!host || session.room) ? h('button', { onclick: () => session.release(s.nation) }, session.isHost ? t('lobby.openRemote') : t('lobby.release')) : null,
+            host && (s.holder === 'you' || s.holder === null) ? h('button', { title: t(s.aiRole === 'defensive' ? 'lobby.aiDefensiveTitle' : 'lobby.aiOffensiveTitle'), onclick: () => host.setAi(s.nation) }, t('lobby.playAi')) : null)))),
       h('p', { class: 'muted' }, session.status()),
       h('div', { class: 'row' },
-        session.isHost ? h('button', { class: 'primary', onclick: () => (session as HostSession).start() }, t('lobby.start')) : h('span', { class: 'waiting' }, t('lobby.waitingHost')),
+        host ? h('button', { class: 'primary', onclick: () => host.start() }, t(session.room ? 'lobby.start' : 'lobby.startLocal')) : h('span', { class: 'waiting' }, t('lobby.waitingHost')),
         h('button', { onclick: () => { unsub(); onExit(); } }, t('lobby.leave'))),
     ));
   };

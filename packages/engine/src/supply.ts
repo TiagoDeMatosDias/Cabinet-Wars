@@ -1,9 +1,12 @@
 import type { GameState, NodeId, Team } from './types';
 import { distances, sideOf } from './graph';
 
+/** How far supply reaches past friendly land. */
 export const SUPPLY_RANGE = 2;
+/** How far a supplied supply wagon carries supply. */
+export const WAGON_SUPPLY_RANGE = 4;
 
-/** Nodes in supply for a side: within 2 of a friendly-controlled node or of a supplied supply unit. */
+/** Nodes in supply for a side: within 2 of a friendly-controlled node, or within 4 of a supplied supply unit. */
 export function suppliedNodes(state: GameState, side: Team): Set<NodeId> {
   const sources = Object.values(state.nodes)
     .filter((n) => sideOf(state, n.controller) === side)
@@ -18,7 +21,7 @@ export function suppliedNodes(state: GameState, side: Team): Set<NodeId> {
     for (const a of supplyArmies) {
       if (used.has(a.id) || !supplied.has(a.node)) continue;
       used.add(a.id);
-      for (const n of distances(state, [a.node], SUPPLY_RANGE).keys()) supplied.add(n);
+      for (const n of distances(state, [a.node], WAGON_SUPPLY_RANGE).keys()) supplied.add(n);
       changed = true;
     }
   }
@@ -35,4 +38,16 @@ export function unsuppliedArmies(state: GameState, nationId: string): string[] {
   return Object.values(state.armies)
     .filter((a) => a.nation === nationId && !supplied.has(a.node))
     .map((a) => a.id);
+}
+
+/**
+ * Whether these armies would be in supply after moving to `node`, every other army staying where
+ * it is (their own supply units count, but only if they are supplied there themselves).
+ */
+export function suppliedAt(state: GameState, armyIds: string[], node: NodeId): boolean {
+  if (!armyIds.length) return true;
+  const armies = { ...state.armies };
+  for (const id of armyIds) if (armies[id]) armies[id] = { ...armies[id], node };
+  const moved = { ...state, armies };
+  return suppliedNodes(moved, sideOf(state, state.armies[armyIds[0]].nation)).has(node);
 }

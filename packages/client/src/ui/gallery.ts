@@ -123,7 +123,7 @@ export async function galleryScreen(root: HTMLElement, back: () => void): Promis
 
   function renderMap() {
     if (!map) return;
-    const nation = { id: 'n', name: t('gallery.title'), color, side: 'attacker', threshold: 0, warExhaustion: 0, knockedOut: false } satisfies Nation;
+    const nation = { id: 'n', name: t('gallery.title'), color, side: 'attacker', threshold: 0, warExhaustion: 0, knockedOut: false, unitCap: 0 } satisfies Nation;
     const nodes: MapNode[] = SAMPLE.map((s, i) => ({ id: `s${i}`, name: t(`gallery.army.${s.key}`), color: '#000000', x: s.x, y: s.y, owner: 'n', controller: 'n', vp: 0 }));
     const armies: Army[] = SAMPLE.map((s, i) => ({
       id: `a${i}`, nation: 'n', node: `s${i}`,

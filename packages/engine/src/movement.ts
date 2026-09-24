@@ -8,6 +8,18 @@ export function isFriendlyNode(state: GameState, a: Army, node: NodeId = a.node)
   return areFriends(state, state.nodes[node].controller, a.nation);
 }
 
+/**
+ * In enemy territory an army needs a general to move, unless it is made of supply wagons only:
+ * they find their own way.
+ */
+export function canMoveWithoutGeneral(a: Army): boolean {
+  return a.units.length > 0 && a.units.every((u) => u.type === 'supply');
+}
+
+function stuckInEnemyLand(state: GameState, a: Army): boolean {
+  return a.generals.length === 0 && !canMoveWithoutGeneral(a) && !isFriendlyNode(state, a);
+}
+
 export function armySpeed(a: Army): number {
   return baseSpeed(a.units, a.generals.length) + a.moved.bonus;
 }
@@ -26,7 +38,7 @@ export function moveArmy(state: GameState, armyId: string, path: NodeId[]): stri
   if (a.nation !== state.current) fail('Not your army');
   if (!path.length) fail('Empty path');
   if (a.moved.stopped) fail('This army cannot move further this turn');
-  if (a.generals.length === 0 && !isFriendlyNode(state, a)) fail('An army without a general cannot leave enemy territory');
+  if (stuckInEnemyLand(state, a)) fail('An army without a general cannot leave enemy territory');
 
   let edges = a.moved.edges;
   let allMajor = a.moved.allMajor;
@@ -55,7 +67,8 @@ export function moveArmy(state: GameState, armyId: string, path: NodeId[]): stri
     const enemies = enemyArmiesAdjacent(state, a);
     if (enemies.length) {
       a.moved.stopped = true;
-      log(state, 'log.engages', { nation: a.nation, army: a.id, node }, { kind: 'battle', nation: a.nation, node });
+      // Only the mover's side: whoever can see the battle learns of it when it starts.
+      log(state, 'log.engages', { nation: a.nation, army: a.id, node }, { kind: 'battle', nation: a.nation, node, side: sideOf(state, a.nation) });
       return enemies.map((e) => e.id);
     }
   }
@@ -164,7 +177,7 @@ export function reachable(state: GameState, a: Army): Map<NodeId, NodeId[]> {
   const speed = armySpeed(a);
   const out = new Map<NodeId, NodeId[]>();
   if (a.moved.stopped) return out;
-  if (a.generals.length === 0 && !isFriendlyNode(state, a)) return out;
+  if (stuckInEnemyLand(state, a)) return out;
   const stack: { node: NodeId; path: NodeId[]; edges: number; allMajor: boolean }[] = [
     { node: a.node, path: [], edges: a.moved.edges, allMajor: a.moved.allMajor },
   ];

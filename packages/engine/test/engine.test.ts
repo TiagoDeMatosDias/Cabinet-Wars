@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   armySpeed, checkConfig, checkVictory, filterForSeats, fitsSpeed, sideOf, initialState, isProtected, MapConfigSchema, parseConfig, reachable, replay,
-  retreatPlan, suppliedNodes, visibleNodes, willingness, type Card, type CardPlacement, type GeneralCardType,
+  retreatPlan, suppliedAt, suppliedNodes, musterBlocked, musterNodes, unitCount, warStatus, visibleNodes, willingness, type BattleChoice, type Card, type CardPlacement, type GeneralCardType,
 } from '../src';
 import { TestGame, testConfig } from './helpers';
 
@@ -152,11 +153,11 @@ describe('movement', () => {
     g.act('red', { type: 'move', army: 'R', path: ['a2', 'a3', 'n1', 'd3'] });
     expect(g.state.armies.R.node).toBe('n1');
     expect(g.state.phase).toBe('battle');
-    expect(g.state.pending.map((p) => p.kind)).toEqual(['battleUnits', 'battleUnits']);
+    expect(g.state.pending.map((p) => p.kind)).toEqual(['battleChoice', 'battleChoice']);
   });
 });
 
-function battleGame(red = { cavalry: 3, infantry: 0, artillery: 0, supply: 0 }, blue = { cavalry: 0, infantry: 3, artillery: 0, supply: 0 }) {
+function battleGame(red = { cavalry: 3, infantry: 0, artillery: 0, supply: 0 }, blue = { cavalry: 0, infantry: 3, artillery: 0, supply: 0 }, keepHands = false) {
   const g = new TestGame(testConfig({
     armies: [
       { id: 'R', nation: 'red', node: 'a3', generals: ['gr'], units: red },
@@ -164,106 +165,118 @@ function battleGame(red = { cavalry: 3, infantry: 0, artillery: 0, supply: 0 }, 
     ],
   }));
   g.act('red', { type: 'move', army: 'R', path: ['n1'] });
+  // No cards unless a test hands them out.
+  if (!keepHands) g.state.hands = { red: [], blue: [] };
   return g;
 }
 
-/**
- * Plays one battle round: both sides commit their first units, plan (units in die order, plus
- * cards), and blue opposes attacker dice as given.
- */
-function fight(g: TestGame, o: { assign: number[]; redCards?: CardPlacement[]; blueCards?: CardPlacement[] }) {
-  const commit = (nat: 'red' | 'blue', army: string) => {
-    const p = g.prompt(nat);
-    if (p?.kind !== 'battleUnits') throw new Error(`${nat} is not committing units`);
-    const units = unitsOf(g, army).filter((id) => !id.includes('.s')).slice(0, p.count);
-    g.act(nat, { type: 'battleUnits', units });
-    return units;
-  };
-  const ru = commit('red', 'R');
-  const bu = commit('blue', 'B');
-  g.act('red', { type: 'battlePlan', units: ru, cards: o.redCards ?? [] });
-  g.act('blue', { type: 'battlePlan', units: bu, cards: o.blueCards ?? [] });
-  g.act('blue', { type: 'defenderAssign', assign: o.assign });
-  return { ru, bu };
+/** Plays one battle round: both sides choose (fight by default), then play any roll cards. */
+function fight(g: TestGame, o: { red?: BattleChoice; blue?: BattleChoice; redCards?: CardPlacement[]; blueCards?: CardPlacement[] } = {}) {
+  const units = structuredClone(g.state.battle!.units);
+  g.act('red', { type: 'battleChoice', choice: o.red ?? 'fight' });
+  g.act('blue', { type: 'battleChoice', choice: o.blue ?? 'fight' });
+  if (g.prompt('red')?.kind === 'battleCards') g.act('red', { type: 'battleCards', cards: o.redCards ?? [] });
+  if (g.prompt('blue')?.kind === 'battleCards') g.act('blue', { type: 'battleCards', cards: o.blueCards ?? [] });
+  return { ru: units.attacker, bu: units.defender };
 }
 
 const ART3 = { cavalry: 0, infantry: 0, artillery: 3, supply: 0 };
+const duels = (g: TestGame) => g.state.battle!.lastRound!.duels;
 
 describe('battle', () => {
-  it('both sides commit one combat unit per die before rolling', () => {
+  it('picks the fighting units at random, one per die, and whom each attacking unit faces', () => {
     const g = battleGame({ cavalry: 4, infantry: 0, artillery: 0, supply: 0 });
-    expect(g.prompt('red')).toMatchObject({ kind: 'battleUnits', count: 2 });
-    expect(g.prompt('blue')).toMatchObject({ kind: 'battleUnits', count: 1 });
-    expect(() => g.act('red', { type: 'battleUnits', units: [unitsOf(g, 'R')[0]] })).toThrow(/Commit 2/);
-    g.act('red', { type: 'battleUnits', units: unitsOf(g, 'R').slice(0, 2) });
-    expect(g.state.oracle).toBeNull();
-    g.act('blue', { type: 'battleUnits', units: unitsOf(g, 'B').slice(0, 1) });
-    expect(g.state.battle!.step).toBe('plan');
+    expect(g.log.at(-1)?.intent).toMatchObject({ type: 'select', attacker: [0, 1], defender: [0], targets: [0, 0] });
+    const b = g.state.battle!;
+    expect(b.units.attacker).toEqual(unitsOf(g, 'R').slice(0, 2));
+    expect(b.units.defender).toEqual(unitsOf(g, 'B').slice(0, 1));
+    expect(b.step).toBe('choose');
+    expect(g.state.pending.map((p) => p.kind)).toEqual(['battleChoice', 'battleChoice']);
   });
 
-  it('each side sees only its own roll and plan until the dice are shown', () => {
+  it('defending units that no attacking unit faces sit the round out', () => {
+    const g = battleGame({ cavalry: 1, infantry: 0, artillery: 0, supply: 0 }, { cavalry: 0, infantry: 5, artillery: 0, supply: 0 });
+    g.picks = [{ attacker: [0], defender: [2, 3], targets: [1] }];
+    g.dice = [6, 1];
+    fight(g); // round 1 with the default picks: blue is down to 4 units, so 2 of them are picked
+    expect(g.state.battle!.units.defender).toEqual([unitsOf(g, 'B')[3]]);
+    expect(g.state.battle!.targets).toEqual([0]);
+  });
+
+  it('keeps each choice secret until both sides have chosen', () => {
     const g = battleGame(ART3, ART3);
-    g.dice = [5, 2];
-    g.act('red', { type: 'battleUnits', units: unitsOf(g, 'R').slice(0, 1) });
-    g.act('blue', { type: 'battleUnits', units: unitsOf(g, 'B').slice(0, 1) });
-    let red = filterForSeats(g.state, ['red']).battle!;
-    expect(red.dice).toEqual({ attacker: [5], defender: [0] });
-    expect(red.units.defender).toEqual(['?']);
-    const [plus] = giveCards(g, 'blue', ['roll+1']);
-    g.act('red', { type: 'battlePlan', units: unitsOf(g, 'R').slice(0, 1), cards: [] });
-    g.act('blue', { type: 'battlePlan', units: unitsOf(g, 'B').slice(0, 1), cards: [{ cardId: plus, role: 'defender', die: 0 }] });
-    red = filterForSeats(g.state, ['red']).battle!;
-    expect(red.step).toBe('defenderAssign');
-    expect(red.dice).toEqual({ attacker: [5], defender: [2] });
-    expect(red.plan.defender!.units).toEqual(unitsOf(g, 'B').slice(0, 1));
-    expect(red.plan.defender!.cards).toEqual([{ cardId: '?' }]);
+    g.act('red', { type: 'battleChoice', choice: 'fight' });
+    expect(filterForSeats(g.state, ['blue']).battle!.choice.attacker).toBe('hidden');
+    expect(filterForSeats(g.state, ['red']).battle!.choice.attacker).toBe('fight');
   });
 
-  it('winning units remain and losing units are destroyed', () => {
+  it('the higher total wins each duel, ties go to the defender, and the loser is destroyed', () => {
     const g = battleGame(ART3, ART3);
     g.dice = [6, 3];
-    const { ru, bu } = fight(g, { assign: [0] });
+    const { ru, bu } = fight(g);
     expect(unitsOf(g, 'B')).not.toContain(bu[0]);
     expect(unitsOf(g, 'R')).toContain(ru[0]);
+    expect(g.state.battle!.lost).toEqual({ attacker: [], defender: ['artillery'] });
     expect(g.state.battle!.round).toBe(2);
-    expect(g.state.battle!.step).toBe('units');
+    expect(g.state.battle!.step).toBe('choose');
+    g.dice = [4, 4];
+    const second = fight(g);
+    expect(duels(g)[0].winner).toBe('defender');
+    expect(unitsOf(g, 'R')).not.toContain(second.ru[0]);
   });
 
-  it('ties go to the defender; an unopposed attacker die destroys nothing', () => {
-    const g = battleGame({ cavalry: 0, infantry: 0, artillery: 4, supply: 0 }, ART3); // 2 dice vs 1
-    g.dice = [5, 2, 2];
-    const { ru } = fight(g, { assign: [1] });
-    expect(g.state.battle!.lastRound!.results.map((r) => r.winner)).toEqual(['attacker', 'defender']);
-    expect(g.state.battle!.lastRound!.results[0].destroyed).toEqual([]);
-    expect(unitsOf(g, 'B')).toHaveLength(3);
+  it('several attacking units can face the same unit', () => {
+    const g = battleGame({ cavalry: 0, infantry: 0, artillery: 4, supply: 0 }, ART3); // 2 units vs 1
+    g.dice = [5, 2, 3];
+    const { ru, bu } = fight(g);
+    expect(duels(g).map((d) => d.winner)).toEqual(['attacker', 'defender']);
+    expect(unitsOf(g, 'B')).not.toContain(bu[0]);
     expect(unitsOf(g, 'R')).not.toContain(ru[1]);
+    expect(unitsOf(g, 'R')).toContain(ru[0]);
   });
 
   it('unit types matter: cavalry beats artillery, infantry beats cavalry, artillery beats infantry', () => {
     const g = battleGame({ cavalry: 3, infantry: 0, artillery: 0, supply: 0 }, ART3);
     g.dice = [3, 3];
-    fight(g, { assign: [0] });
-    expect(g.state.battle!.lastRound!.results[0]).toMatchObject({ attackerPoints: 4, defenderPoints: 3, attackerBonus: 1, winner: 'attacker' });
+    fight(g);
+    expect(duels(g)[0]).toMatchObject({ attackerPoints: 4, defenderPoints: 3, attackerBonus: 1, winner: 'attacker' });
 
     const h = battleGame(); // red cavalry vs blue infantry
     h.dice = [4, 3];
-    fight(h, { assign: [0] });
-    expect(h.state.battle!.lastRound!.results[0]).toMatchObject({ attackerPoints: 4, defenderPoints: 4, defenderBonus: 1, winner: 'defender' });
+    fight(h);
+    expect(duels(h)[0]).toMatchObject({ attackerPoints: 4, defenderPoints: 4, defenderBonus: 1, winner: 'defender' });
 
     const k = battleGame(ART3, { cavalry: 0, infantry: 3, artillery: 0, supply: 0 });
     k.dice = [3, 3];
-    fight(k, { assign: [0] });
-    expect(k.state.battle!.lastRound!.results[0]).toMatchObject({ attackerBonus: 1, winner: 'attacker' });
+    fight(k);
+    expect(duels(k)[0]).toMatchObject({ attackerBonus: 1, winner: 'attacker' });
   });
 
-  it('applies roll cards to the die they are placed on', () => {
+  it('after the roll, roll cards go on a chosen die and stay face down until both sides are done', () => {
     const g = battleGame(ART3, ART3);
     const [plus2] = giveCards(g, 'blue', ['roll+2']);
+    const [minus] = giveCards(g, 'red', ['roll-1']);
     g.dice = [4, 3];
-    fight(g, { assign: [0], blueCards: [{ cardId: plus2, role: 'defender', die: 0 }] });
-    expect(g.state.battle!.lastRound!.results[0]).toMatchObject({ attackerPoints: 4, defenderPoints: 5, winner: 'defender' });
+    g.act('red', { type: 'battleChoice', choice: 'fight' });
+    g.act('blue', { type: 'battleChoice', choice: 'fight' });
+    expect(g.state.battle!.dice).toEqual({ attacker: [4], defender: [3] });
+    g.act('blue', { type: 'battleCards', cards: [{ cardId: plus2, role: 'defender', die: 0 }] });
+    expect(filterForSeats(g.state, ['red']).battle!.cards.defender).toBeNull();
+    expect(filterForSeats(g.state, ['red']).counts.committed.defender).toBe(1);
+    g.act('red', { type: 'battleCards', cards: [{ cardId: minus, role: 'defender', die: 0 }] });
+    expect(duels(g)[0]).toMatchObject({ attackerPoints: 4, defenderPoints: 4, winner: 'defender' });
     expect(g.state.armies.R.units).toHaveLength(2);
-    expect(g.state.hands.blue.map((c) => c.id)).not.toContain(plus2);
+    expect(g.state.hands.blue).toEqual([]);
+    expect(g.state.generalDeck.discard.map((c) => c.id)).toEqual(expect.arrayContaining([plus2, minus]));
+  });
+
+  it('only sides holding roll cards are asked to play them', () => {
+    const g = battleGame(ART3, ART3);
+    giveCards(g, 'red', ['roll+1', 'retreat']);
+    g.act('red', { type: 'battleChoice', choice: 'fight' });
+    g.act('blue', { type: 'battleChoice', choice: 'fight' });
+    expect(g.state.pending).toEqual([{ nation: 'red', kind: 'battleCards' }]);
+    expect(() => g.act('red', { type: 'battleCards', cards: [{ cardId: g.state.hands.red[1].id, role: 'attacker', die: 0 }] })).toThrow(/cannot be put on a die/);
   });
 
   it('destroys an army that runs out of combat units', () => {
@@ -272,109 +285,206 @@ describe('battle', () => {
       { cavalry: 0, infantry: 1, artillery: 0, supply: 0 },
     );
     g.dice = [6, 1];
-    fight(g, { assign: [0] });
+    fight(g);
     expect(g.state.armies.B).toBeUndefined();
     expect(g.state.generals.gb).toBeUndefined();
     expect(g.state.battle).toBeNull();
     expect(g.state.phase).toBe('movement');
   });
 
-  it('a Retreat card takes the army away after the round', () => {
+  it('a Retreat card ends the battle before the roll and the army falls back', () => {
     const g = battleGame(ART3, ART3);
     const [ret] = giveCards(g, 'blue', ['retreat']);
-    g.dice = [6, 1];
-    fight(g, { assign: [0], blueCards: [{ cardId: ret }] });
-    // Blue lost the die (1 unit gone), then retreats 2 nodes, as far from the enemy (on n1) as possible.
-    expect(g.state.armies.B.units).toHaveLength(2);
+    fight(g, { blue: 'retreat' });
+    expect(g.state.armies.B.units).toHaveLength(3);
     expect(g.state.armies.B.node).toBe('d1');
     expect(g.state.battle).toBeNull();
+    expect(g.state.generalDeck.discard.map((c) => c.id)).toContain(ret);
+    expect(g.log.some((e) => e.intent.type === 'roll')).toBe(false);
     expect(g.prompt('red')?.kind).toBe('movement');
   });
 
-  it('Block Retreat turns an enemy retreat into a panic retreat', () => {
+  it('needs the card to retreat or block', () => {
     const g = battleGame(ART3, ART3);
-    const [ret] = giveCards(g, 'blue', ['retreat']);
-    const [block] = giveCards(g, 'red', ['blockRetreat']);
-    g.dice = [1, 6];
-    fight(g, { assign: [0], redCards: [{ cardId: block }], blueCards: [{ cardId: ret }] });
-    expect(g.state.history.some((h) => h.msg?.key === 'log.retreatBlocked')).toBe(true);
-    // Red lost its die; blue flees in panic: red picks as many blue units as it has dice (1).
-    expect(g.prompt('red')).toMatchObject({ kind: 'panicTargets', army: 'B', count: 1 });
-    g.act('red', { type: 'panicTargets', units: [unitsOf(g, 'B')[0]] });
-    expect(g.state.armies.B.units).toHaveLength(2);
+    expect(() => g.act('blue', { type: 'battleChoice', choice: 'retreat' })).toThrow(/no retreat card/);
+    expect(() => g.act('red', { type: 'battleChoice', choice: 'block' })).toThrow(/no blockRetreat card/);
+  });
+
+  it('panic costs one of the fighting units, then the army falls back', () => {
+    const g = battleGame(ART3, ART3);
+    const { bu } = fight(g, { blue: 'panic' });
+    expect(unitsOf(g, 'B')).toHaveLength(2);
+    expect(unitsOf(g, 'B')).not.toContain(bu[0]);
     expect(g.state.armies.B.node).toBe('d1');
     expect(g.state.battle).toBeNull();
+  });
+
+  it('Block Retreat stops a retreat or a panic from doing anything: the fight goes on', () => {
+    const g = battleGame(ART3, ART3);
+    const [ret] = giveCards(g, 'blue', ['retreat']);
+    const [block, block2] = giveCards(g, 'red', ['blockRetreat', 'blockRetreat']);
+    g.dice = [1, 6];
+    fight(g, { red: 'block', blue: 'retreat' });
+    expect(g.state.history.some((h) => h.msg?.key === 'log.retreatBlocked')).toBe(true);
+    expect(duels(g)[0].winner).toBe('defender');
+    expect(g.state.armies.B.node).toBe('d3');
+    expect(g.state.generalDeck.discard.map((c) => c.id)).toEqual(expect.arrayContaining([ret, block]));
+
+    fight(g, { red: 'block', blue: 'panic' });
+    expect(unitsOf(g, 'B')).toHaveLength(3);
+    expect(g.state.generalDeck.discard.map((c) => c.id)).toContain(block2);
+    expect(g.state.battle!.round).toBe(3);
   });
 
   it('both sides can retreat', () => {
     const g = battleGame();
-    const [rr] = giveCards(g, 'red', ['retreat']);
-    const [br] = giveCards(g, 'blue', ['retreat']);
-    fight(g, { assign: [0], redCards: [{ cardId: rr }], blueCards: [{ cardId: br }] });
+    giveCards(g, 'red', ['retreat']);
+    giveCards(g, 'blue', ['retreat']);
+    fight(g, { red: 'retreat', blue: 'retreat' });
     // Red: a2 and x2 are both 3 from blue; red controls a2, so it goes there. Then blue goes to d1.
     expect(g.state.armies.R.node).toBe('a2');
     expect(g.state.armies.B.node).toBe('d1');
     expect(g.state.battle).toBeNull();
   });
 
-  it('slow units that cannot keep up with a retreat are lost', () => {
+  it('the whole army falls back, supply wagons included', () => {
     const g = battleGame(
       { cavalry: 3, infantry: 0, artillery: 0, supply: 0 },
       { cavalry: 0, infantry: 2, artillery: 0, supply: 1 },
     );
-    const [ret] = giveCards(g, 'blue', ['retreat']);
-    g.dice = [1, 6];
-    fight(g, { assign: [0], blueCards: [{ cardId: ret }] });
-    // d3 → d2 → d1 is all major road: supply (speed 1) manages 2 nodes.
+    giveCards(g, 'blue', ['retreat']);
+    fight(g, { blue: 'retreat' });
+    // d3 → d2 → d1: every unit, wagons included (speed 2), manages 2 nodes.
     expect(g.state.armies.B.node).toBe('d1');
     expect(unitsOf(g, 'B', 'supply')).toHaveLength(1);
   });
-});
 
-describe('panic retreat', () => {
-  it('the panicking side loses the units the enemy picks, then retreats', () => {
-    const g = battleGame(
-      { cavalry: 4, infantry: 0, artillery: 0, supply: 0 }, // 2 dice
-      { cavalry: 0, infantry: 3, artillery: 0, supply: 0 },
-    );
-    g.act('red', { type: 'battleUnits', units: unitsOf(g, 'R').slice(0, 2) });
-    g.act('blue', { type: 'panic' });
-    expect(g.prompt('red')).toMatchObject({ kind: 'panicTargets', army: 'B', count: 2 });
-    const [u0, u1] = unitsOf(g, 'B');
-    expect(() => g.act('red', { type: 'panicTargets', units: [u0] })).toThrow(/Choose 2/);
-    g.act('red', { type: 'panicTargets', units: [u0, u1] });
-    expect(g.state.armies.B.units).toHaveLength(1);
-    expect(g.state.armies.B.node).toBe('d1');
-    expect(g.state.battle).toBeNull();
-  });
-
-  it('cannot panic after committing units', () => {
-    const g = battleGame();
-    g.act('blue', { type: 'battleUnits', units: unitsOf(g, 'B').slice(0, 1) });
-    expect(() => g.act('blue', { type: 'panic' })).toThrow(/not your move|before committing/i);
-  });
-
-  it('a +1 Moves card can save members that would be left behind', () => {
+  it('supply wagons, at artillery speed, keep up with a 2-node retreat', () => {
     const g = battleGame({ cavalry: 3, infantry: 0, artillery: 0, supply: 1 });
-    const [moves] = giveCards(g, 'red', ['moves+1']);
-    g.act('red', { type: 'panic' });
-    g.act('blue', { type: 'panicTargets', units: [unitsOf(g, 'R', 'cavalry')[0]] });
-    // n1 → a3 is a minor road, so the supply unit (speed 1) can't do 2 nodes: red is asked first.
-    expect(g.prompt('red')).toMatchObject({ kind: 'retreat', army: 'R' });
-    g.act('red', { type: 'playMoves', army: 'R', card: moves });
-    g.act('red', { type: 'retreat' });
+    fight(g, { red: 'panic' });
+    // n1 → a3 is a minor road: 2 nodes is within a wagon's speed of 2.
     expect(g.state.armies.R.node).toBe('a2');
     expect(unitsOf(g, 'R', 'supply')).toHaveLength(1);
+    expect(unitsOf(g, 'R', 'cavalry')).toHaveLength(2);
+  });
+});
+
+/** Free for all: red attacks blue at d2 from d3; green watches from x1 (or from x3, out of sight of the battle). */
+function watchedBattle(greenAt: 'x1' | 'x3') {
+  const g = new TestGame(testConfig({
+    rules: { mode: 'freeForAll' },
+    nations: [
+      { id: 'red', name: 'Red', color: '#f00', side: 'attacker', threshold: 50 },
+      { id: 'blue', name: 'Blue', color: '#00f', side: 'defender', threshold: 50 },
+      { id: 'green', name: 'Green', color: '#0f0', side: 'attacker', threshold: 50 },
+    ],
+    nodes: testConfig().nodes!.map((n) => (n.id.startsWith('x') ? { ...n, owner: 'green' } : n)),
+    generals: [{ id: 'gr', name: 'R', nation: 'red' }, { id: 'gb', name: 'B', nation: 'blue' }, { id: 'gg', name: 'G', nation: 'green' }],
+    armies: [
+      { id: 'R', nation: 'red', node: 'a3', generals: ['gr'], units: { cavalry: 3, infantry: 0, artillery: 0, supply: 0 } },
+      { id: 'B', nation: 'blue', node: greenAt === 'x1' ? 'd3' : 'd2', generals: ['gb'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 1 } },
+      { id: 'G', nation: 'green', node: greenAt, generals: ['gg'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 0 } },
+    ],
+  }));
+  g.act('red', { type: 'move', army: 'R', path: greenAt === 'x1' ? ['n1'] : ['n1', 'd3'] });
+  // From n1 red also touches green on x1: it fights blue first.
+  if (greenAt === 'x1') g.act('red', { type: 'chooseBattle', defender: 'B' });
+  g.state.hands = { red: [], blue: [], green: [] };
+  return g;
+}
+
+describe('who sees a battle', () => {
+  it('a battle in the fog of war is hidden entirely, with its log and its outcome', () => {
+    const g = watchedBattle('x3');
+    expect(g.state.battle!.witnesses.sort()).toEqual(['blue', 'red']);
+    const green = filterForSeats(g.state, ['green']);
+    expect(green.battle).toBeNull();
+    expect(green.armies.R).toBeUndefined();
+    expect(green.armies.B).toBeUndefined();
+    g.dice = [6, 1, 6, 1, 6, 1];
+    while (g.state.battle) fight(g);
+    const report = (seat: string) => filterForSeats(g.state, [seat]).history.filter((e) => e.report);
+    expect(report('red')).toHaveLength(1);
+    expect(report('blue')).toHaveLength(1);
+    expect(report('green')).toHaveLength(0);
+    expect(report('red')[0].report!.finalRound).toBeTruthy();
+    expect(filterForSeats(g.state, ['green']).history.some((e) => e.kind === 'battle')).toBe(false);
   });
 
-  it('without the card, slow members stay behind and the rest retreat at once', () => {
-    const g = battleGame({ cavalry: 3, infantry: 0, artillery: 0, supply: 1 });
-    g.state.hands.red = []; // no +1 Moves card to play
-    g.act('red', { type: 'panic' });
-    g.act('blue', { type: 'panicTargets', units: [unitsOf(g, 'R', 'cavalry')[0]] });
-    expect(g.state.armies.R.node).toBe('a2');
-    expect(unitsOf(g, 'R', 'supply')).toHaveLength(0);
-    expect(unitsOf(g, 'R', 'cavalry')).toHaveLength(2);
+  it('onlookers see the battle and its losses, but not how it is fought', () => {
+    const g = watchedBattle('x1');
+    expect(g.state.battle!.witnesses.sort()).toEqual(['blue', 'green', 'red']);
+    g.dice = [6, 1];
+    g.act('red', { type: 'battleChoice', choice: 'fight' });
+    const green = filterForSeats(g.state, ['green']);
+    expect(green.battle!.units).toEqual({ attacker: [], defender: [] });
+    expect(green.battle!.choice).toEqual({ attacker: null, defender: null });
+    expect(green.armies.R).toBeDefined();
+    g.act('blue', { type: 'battleChoice', choice: 'fight' });
+    expect(filterForSeats(g.state, ['green']).battle!.lost.defender).toEqual(['infantry']);
+    expect(filterForSeats(g.state, ['green']).battle!.lastRound).toBeNull();
+    expect(filterForSeats(g.state, ['red']).battle!.lastRound).not.toBeNull();
+    const keys = (seat: string) => filterForSeats(g.state, [seat]).history.map((e) => e.msg?.key);
+    expect(keys('green')).toContain('log.battle');
+    expect(keys('green')).not.toContain('log.dice');
+    expect(keys('blue')).toContain('log.dice');
+    g.dice = [6, 1, 6, 1];
+    // Red then goes on to fight green, which it also touches.
+    while (g.state.battle?.defenderArmy === 'B') fight(g);
+    const seen = (seat: string) => filterForSeats(g.state, [seat]).history.find((e) => e.report)!.report!;
+    expect(seen('green').finalRound).toBeUndefined();
+    expect(seen('red').finalRound!.duels.length).toBeGreaterThan(0);
+  });
+
+  it('an ally that is not fighting is an onlooker too', () => {
+    const g = new TestGame(testConfig({
+      nations: [
+        { id: 'red', name: 'Red', color: '#f00', side: 'attacker', threshold: 50 },
+        { id: 'blue', name: 'Blue', color: '#00f', side: 'defender', threshold: 50 },
+        { id: 'pink', name: 'Pink', color: '#f0f', side: 'attacker', threshold: 50 },
+      ],
+      nodes: testConfig().nodes!.map((n) => (n.id === 'a1' ? { ...n, owner: 'pink' } : n)),
+      generals: [{ id: 'gr', name: 'R', nation: 'red' }, { id: 'gb', name: 'B', nation: 'blue' }],
+      armies: [
+        { id: 'R', nation: 'red', node: 'a3', generals: ['gr'], units: { cavalry: 3, infantry: 0, artillery: 0, supply: 0 } },
+        { id: 'B', nation: 'blue', node: 'd3', generals: ['gb'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 0 } },
+      ],
+    }));
+    g.act('red', { type: 'move', army: 'R', path: ['n1'] });
+    g.state.hands = { red: [], blue: [], pink: [] };
+    g.dice = [6, 1];
+    fight(g);
+    const pink = filterForSeats(g.state, ['pink']);
+    expect(pink.battle!.units.attacker).toEqual([]);
+    expect(pink.history.some((e) => e.msg?.key === 'log.dice')).toBe(false);
+    expect(filterForSeats(g.state, ['red']).history.some((e) => e.msg?.key === 'log.dice')).toBe(true);
+  });
+});
+
+describe('battle report', () => {
+  it('records both sides, their losses, the winner and how the loser left', () => {
+    const g = battleGame(ART3, { cavalry: 0, infantry: 2, artillery: 0, supply: 1 });
+    giveCards(g, 'blue', ['retreat']);
+    g.dice = [6, 1];
+    fight(g);
+    fight(g, { blue: 'retreat' });
+    const entry = g.state.history.find((e) => e.report)!;
+    expect(entry.msg).toMatchObject({ key: 'log.battleWon', params: { nation: 'red', node: 'd3' } });
+    expect(entry.report).toMatchObject({
+      winner: 'attacker', rounds: 2,
+      attacker: { nation: 'red', units: ['artillery', 'artillery', 'artillery'], lost: [], fate: 'held', generals: 1 },
+      defender: { nation: 'blue', units: ['infantry', 'infantry', 'supply'], lost: ['infantry'], fate: 'retreated' },
+      finalRound: { round: 2, choices: { attacker: 'fight', defender: 'retreat' }, dice: null },
+    });
+  });
+
+  it('a destroyed army loses everything it had', () => {
+    const g = battleGame({ cavalry: 1, infantry: 0, artillery: 0, supply: 0 }, { cavalry: 0, infantry: 1, artillery: 0, supply: 1 });
+    g.dice = [6, 1];
+    fight(g);
+    expect(g.state.history.find((e) => e.report)!.report).toMatchObject({
+      winner: 'attacker', defender: { fate: 'destroyed', lost: ['infantry', 'supply'] },
+    });
   });
 });
 
@@ -490,8 +600,8 @@ describe('retreat', () => {
     // Without a battle there is no enemy to flee from; with one, see below.
     expect(plan?.path).toHaveLength(2);
     g.act('red', { type: 'move', army: 'R', path: ['n1', 'x1'] });
-    g.act('red', { type: 'panic' });
-    g.act('blue', { type: 'panicTargets', units: [unitsOf(g, 'R')[0]] });
+    g.act('red', { type: 'battleChoice', choice: 'panic' });
+    g.act('blue', { type: 'battleChoice', choice: 'fight' });
     // Red on x1, blue on x2. Red's 2-node options: n1→a3 (dist 3 from x2), n1→d3 (3). Tie → red controls a3.
     expect(g.state.armies.R.node).toBe('a3');
   });
@@ -506,9 +616,8 @@ describe('retreat', () => {
       ],
     }));
     g.act('red', { type: 'move', army: 'R', path: ['n1'] });
-    g.act('red', { type: 'battleUnits', units: unitsOf(g, 'R').slice(0, 1) });
-    g.act('blue', { type: 'panic' });
-    g.act('red', { type: 'panicTargets', units: [unitsOf(g, 'B')[0]] });
+    g.act('red', { type: 'battleChoice', choice: 'fight' });
+    g.act('blue', { type: 'battleChoice', choice: 'panic' });
     // Blue on d3 is boxed in: n1 (red R) and d2 (red R2) are both occupied.
     expect(g.state.armies.B).toBeUndefined();
     expect(g.state.history.some((h) => h.msg?.key === 'log.destroyed' && h.msg.params.reason === 'reason.noRoute')).toBe(true);
@@ -539,6 +648,23 @@ describe('supply', () => {
     expect(chained.has('d1')).toBe(true);
   });
 
+  it('tells whether a move would leave an army out of supply', () => {
+    const g = new TestGame(testConfig({
+      armies: [
+        { id: 'R', nation: 'red', node: 'a3', generals: ['gr'], units: { cavalry: 3, infantry: 0, artillery: 0, supply: 0 } },
+        { id: 'S', nation: 'red', node: 'a1', generals: [], units: { cavalry: 0, infantry: 0, artillery: 0, supply: 1 } },
+        { id: 'B', nation: 'blue', node: 'x3', generals: ['gb'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 0 } },
+      ],
+    }));
+    // Red land reaches n1 and d3 (2 nodes); the wagon on a1 reaches 4 nodes, to d3 as well. d2 is out.
+    expect(suppliedAt(g.state, ['R'], 'd3')).toBe(true);
+    expect(suppliedAt(g.state, ['R'], 'd2')).toBe(false);
+    // A wagon moving along helps only if it is supplied itself where it ends up.
+    expect(suppliedAt(g.state, ['R', 'S'], 'd1')).toBe(false);
+    g.state.armies.S.node = 'd3';
+    expect(suppliedAt(g.state, ['R'], 'd1')).toBe(true);
+  });
+
   it('attrition removes a unit at the end of the turn', () => {
     const g = new TestGame(testConfig({
       armies: [
@@ -551,6 +677,133 @@ describe('supply', () => {
     g.act('red', { type: 'attrition', unit: unitsOf(g, 'R', 'cavalry')[0] });
     expect(g.state.armies.R.units).toHaveLength(2);
     expect(g.state.current).toBe('blue');
+  });
+});
+
+describe('supply wagons', () => {
+  it('carry supply 4 nodes', () => {
+    const g = new TestGame(testConfig({
+      armies: [
+        { id: 'R', nation: 'red', node: 'a3', generals: ['gr'], units: { cavalry: 1, infantry: 0, artillery: 0, supply: 1 } },
+        { id: 'B', nation: 'blue', node: 'x3', generals: ['gb'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 0 } },
+      ],
+    }));
+    const supplied = suppliedNodes(g.state, 'attacker');
+    // From the wagon on a3: n1, d3, d2 and d1 (4 nodes); red land alone reaches d3.
+    expect(supplied.has('d1')).toBe(true);
+    expect(supplied.has('x3')).toBe(true);
+  });
+
+  it('move as fast as artillery', () => {
+    const g = new TestGame(testConfig({
+      armies: [
+        { id: 'R', nation: 'red', node: 'a3', generals: [], units: { cavalry: 0, infantry: 0, artillery: 0, supply: 1 } },
+        { id: 'B', nation: 'blue', node: 'x3', generals: ['gb'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 0 } },
+      ],
+    }));
+    expect(armySpeed(g.state.armies.R)).toBe(2);
+  });
+
+  it('and they alone move through enemy territory without a general', () => {
+    const g = new TestGame(testConfig({
+      generals: [{ id: 'gb', name: 'B', nation: 'blue' }],
+      armies: [
+        { id: 'W', nation: 'red', node: 'd3', generals: [], units: { cavalry: 0, infantry: 0, artillery: 0, supply: 2 } },
+        { id: 'C', nation: 'red', node: 'd2', generals: [], units: { cavalry: 1, infantry: 0, artillery: 0, supply: 1 } },
+        { id: 'B', nation: 'blue', node: 'x3', generals: ['gb'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 0 } },
+      ],
+    }));
+    expect(reachable(g.state, g.state.armies.W).size).toBeGreaterThan(0);
+    expect(reachable(g.state, g.state.armies.C).size).toBe(0);
+    g.act('red', { type: 'move', army: 'W', path: ['n1'] });
+    expect(g.state.armies.W.node).toBe('n1');
+    expect(() => g.act('red', { type: 'move', army: 'C', path: ['d1'] })).toThrow(/without a general/);
+  });
+});
+
+describe('unit cap and muster', () => {
+  /** Red owns a1 (8 VP, a muster town) and a2 (4 VP): a cap of 6 units. */
+  function musterGame(redUnits = 4) {
+    return new TestGame(testConfig({
+      nodes: testConfig().nodes!.map((n) => (n.id === 'a1' ? { ...n, vp: 8 } : n.id === 'a2' ? { ...n, vp: 4 } : n)),
+      armies: [
+        { id: 'R', nation: 'red', node: 'a3', generals: ['gr'], units: { cavalry: redUnits, infantry: 0, artillery: 0, supply: 0 } },
+        { id: 'B', nation: 'blue', node: 'd1', generals: ['gb'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 0 } },
+      ],
+    }));
+  }
+
+  it('caps units at half the starting victory points', () => {
+    const g = musterGame();
+    expect(g.state.nations.find((n) => n.id === 'red')!.unitCap).toBe(6);
+    expect(g.state.nations.find((n) => n.id === 'blue')!.unitCap).toBe(2);
+  });
+
+  it('musters one unit per turn in a town worth more than 5 VP', () => {
+    const g = musterGame();
+    expect(musterNodes(g.state, 'red')).toEqual(['a1']);
+    expect(() => g.act('red', { type: 'muster', node: 'a2', unit: 'infantry' })).toThrow(/worth more than 5 VP/);
+    g.act('red', { type: 'muster', node: 'a1', unit: 'infantry' });
+    const army = Object.values(g.state.armies).find((a) => a.nation === 'red' && a.node === 'a1')!;
+    expect(army.units.map((u) => u.type)).toEqual(['infantry']);
+    expect(unitCount(g.state, 'red')).toBe(5);
+    expect(() => g.act('red', { type: 'muster', node: 'a1', unit: 'infantry' })).toThrow(/already mustered/);
+    // Next turn it can muster again.
+    g.act('red', { type: 'endTurn' });
+    while (g.state.current !== 'red' || g.prompt('red')?.kind !== 'movement') {
+      const p = g.state.pending[0];
+      if (p.kind === 'movement') g.act(p.nation, { type: 'endTurn' });
+      else if (p.kind === 'recruit') g.act(p.nation, { type: 'recruit', node: p.options[0], unit: 'infantry' });
+      else if (p.kind === 'sabotage') g.act(p.nation, { type: 'sabotage', army: p.options[0] });
+      else throw new Error(`unexpected ${p.kind}`);
+    }
+    expect(musterBlocked(g.state, 'red')).toBeNull();
+  });
+
+  it('without a town worth more than 5 VP, any own town with victory points will do', () => {
+    const g = musterGame();
+    // a1 occupied by blue: red falls back to a2 (4 VP); a3 (0 VP) never counts.
+    g.state.nodes.a1.controller = 'blue';
+    expect(musterNodes(g.state, 'red')).toEqual(['a2']);
+    g.act('red', { type: 'muster', node: 'a2', unit: 'infantry' });
+    expect(unitCount(g.state, 'red')).toBe(5);
+  });
+
+  it('gives every nation on the China map a place to muster', () => {
+    const cfg = parseConfig(JSON.parse(readFileSync(new URL('../../../Map/China/config.json', import.meta.url), 'utf8')));
+    const s = initialState(cfg);
+    expect(musterNodes(s, 'Mongol')).toHaveLength(3);
+    for (const n of s.nations) expect(musterNodes(s, n.id).length).toBeGreaterThan(0);
+  });
+
+  it('reports how close a nation is to collapse', () => {
+    const g = musterGame();
+    g.state.nodes.a1.controller = 'blue';
+    g.state.nations[0].warExhaustion = 3;
+    // Red owns 8 + 4 VP and holds 4: 33.3% held, minus 3 exhaustion, against a threshold of 50.
+    expect(warStatus(g.state, 'red')).toMatchObject({ vpOwned: 12, vpHeld: 4, warExhaustion: 3, threshold: 50 });
+    expect(warStatus(g.state, 'red').willingness).toBeCloseTo(30.33, 1);
+    expect(warStatus(g.state, 'red').margin).toBeCloseTo(-19.67, 1);
+  });
+
+  it('a nation with no armies left stays in the war and can muster again', () => {
+    const g = musterGame();
+    delete g.state.armies.R;
+    checkVictory(g.state);
+    expect(g.state.nations.find((n) => n.id === 'red')!.knockedOut).toBe(false);
+    expect(g.state.winner).toBeNull();
+    g.act('red', { type: 'muster', node: 'a1', unit: 'cavalry' });
+    expect(unitCount(g.state, 'red')).toBe(1);
+  });
+
+  it('stops at the cap, which events can go past', () => {
+    const g = musterGame(6);
+    expect(musterBlocked(g.state, 'red')).toBe('cap');
+    expect(() => g.act('red', { type: 'muster', node: 'a1', unit: 'infantry' })).toThrow(/unit cap/);
+    // A Recruit event still adds units beyond the cap.
+    g.state.pending = [{ nation: 'red', kind: 'recruit', what: 'unit', remaining: 1, options: ['a1'] }];
+    g.act('red', { type: 'recruit', node: 'a1', unit: 'cavalry' });
+    expect(unitCount(g.state, 'red')).toBe(7);
   });
 });
 
@@ -703,9 +956,10 @@ describe('decks', () => {
 
 describe('log and views', () => {
   it('replaying the log reproduces the live state', () => {
-    const g = battleGame();
+    const g = battleGame(undefined, undefined, true);
     g.dice = [6, 1, 2, 5];
-    fight(g, { assign: [0] });
+    fight(g);
+    fight(g);
     const replayed = replay(g.initial, JSON.parse(JSON.stringify(g.log)));
     expect(replayed).toEqual(g.state);
   });

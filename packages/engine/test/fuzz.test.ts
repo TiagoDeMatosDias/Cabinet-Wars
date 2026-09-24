@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import {
-  advanceCopy, apply, parseConfig, initialState, reachable, combatUnits, replay, filterForSeats,
-  BATTLE_CARDS, type GameState, type Intent, type LogEntry,
+  advanceCopy, apply, parseConfig, initialState, reachable, replay, filterForSeats,
+  ROLL_CARDS, type BattleChoice, type GameState, type Intent, type LogEntry,
 } from '../src';
 import { testConfig } from './helpers';
 
@@ -46,25 +46,20 @@ function choose(s: GameState, nation: string): Intent {
       return { type: 'endTurn' };
     }
     case 'chooseBattle': return { type: 'chooseBattle', defender: pick(p.options) };
-    case 'panicTargets': {
-      const units = s.armies[p.army].units.filter((u) => u.type !== 'supply').slice(0, p.count).map((u) => u.id);
-      return { type: 'panicTargets', units };
+    case 'battleChoice': {
+      const hand = s.hands[nation];
+      const options: BattleChoice[] = ['fight', 'fight', 'fight', 'panic'];
+      if (hand.some((c) => c.type === 'retreat')) options.push('retreat');
+      if (hand.some((c) => c.type === 'blockRetreat')) options.push('block');
+      return { type: 'battleChoice', choice: pick(options) };
     }
-    case 'battleUnits': {
-      if (rnd(8) === 0) return { type: 'panic' };
-      const role = s.armies[b!.attackerArmy].nation === nation ? 'attacker' : 'defender';
-      const own = combatUnits(s.armies[role === 'attacker' ? b!.attackerArmy : b!.defenderArmy]);
-      return { type: 'battleUnits', units: fyPick(own, p.count).map((u) => u.id) };
-    }
-    case 'battlePlan': {
-      const role = s.armies[b!.attackerArmy].nation === nation ? 'attacker' : 'defender';
-      const cards = s.hands[nation].filter((c) => BATTLE_CARDS.includes(c.type) && rnd(3) === 0).map((c) => {
+    case 'battleCards': {
+      const cards = s.hands[nation].filter((c) => ROLL_CARDS.includes(c.type) && rnd(2) === 0).map((c) => {
         const r = pick(['attacker', 'defender'] as const);
         return { cardId: c.id, role: r, die: rnd(b!.dice![r].length) };
       });
-      return { type: 'battlePlan', units: fyPick(b!.units[role]!, b!.units[role]!.length), cards };
+      return { type: 'battleCards', cards };
     }
-    case 'defenderAssign': return { type: 'defenderAssign', assign: b!.dice!.defender.map(() => rnd(b!.dice!.attacker.length)) };
     case 'retreat': {
       const moves = s.hands[nation].find((c) => c.type === 'moves+1');
       if (moves && rnd(2) === 0) return { type: 'playMoves', army: p.army, card: moves.id };
@@ -94,7 +89,9 @@ it('random games never crash or stall', () => {
     const push = (e: LogEntry) => { s = apply(s, e); log.push(e); };
     const oracle = () => { while (s.oracle) { const o = s.oracle; push(o.kind === 'shuffle'
       ? { seq: log.length, by: 'host', intent: { type: 'shuffle', deck: o.deck, order: fy(o.n) } }
-      : { seq: log.length, by: 'host', intent: { type: 'roll', attacker: Array.from({ length: o.attacker }, () => rnd(6) + 1), defender: Array.from({ length: o.defender }, () => rnd(6) + 1) } }); } };
+      : o.kind === 'select'
+        ? { seq: log.length, by: 'host', intent: { type: 'select', attacker: fy(o.attacker).slice(0, o.attackerPick), defender: fy(o.defender).slice(0, o.defenderPick), targets: Array.from({ length: o.attackerPick }, () => rnd(o.defenderPick)) } }
+        : { seq: log.length, by: 'host', intent: { type: 'roll', attacker: Array.from({ length: o.attacker }, () => rnd(6) + 1), defender: Array.from({ length: o.defender }, () => rnd(6) + 1) } }); } };
     oracle();
     let steps = 0;
     while (s.phase !== 'gameOver' && steps < 3000) {
@@ -106,7 +103,7 @@ it('random games never crash or stall', () => {
         if (p.kind === 'movement') push({ seq: log.length, by: p.nation, intent: { type: 'endTurn' } });
         else throw e;
       }
-      if (s.battle && s.battle.round === 1 && s.battle.step === 'units') stats.battles++;
+      if (s.battle && s.battle.round === 1 && s.battle.step === 'choose') stats.battles++;
       oracle();
       filterForSeats(s, [p.nation]);
       steps++;

@@ -179,6 +179,11 @@ function buildDeck<T extends string>(prefix: string, spec: { card: T; count: num
   return cards;
 }
 
+/** A nation's soft cap on units: half the victory points it owns at the start, rounded down. */
+export function startingUnitCap(nodes: { owner: string; vp: number }[], nationId: string): number {
+  return Math.floor(nodes.filter((n) => n.owner === nationId).reduce((sum, n) => sum + n.vp, 0) / 2);
+}
+
 export function initialState(cfg: MapConfig): GameState {
   const armies: Record<string, Army> = {};
   for (const a of cfg.armies) {
@@ -198,6 +203,7 @@ export function initialState(cfg: MapConfig): GameState {
     // In a free-for-all game every nation is an attacker.
     nations: cfg.nations.map(({ emblem: _emblem, ...n }) => ({
       ...n, side: cfg.rules.mode === 'freeForAll' ? 'attacker' as const : n.side, warExhaustion: 0, knockedOut: false,
+      unitCap: startingUnitCap(cfg.nodes, n.id),
     })),
     nodes: Object.fromEntries(cfg.nodes.map((n) => [n.id, { ...n, controller: n.controller ?? n.owner }])),
     edges: cfg.edges.map((e) => ({ ...e })),
@@ -219,6 +225,7 @@ export function initialState(cfg: MapConfig): GameState {
     pending: [],
     oracle: null,
     reveals: [],
+    mustered: false,
     winner: null,
     nextId: 1,
     history: [],

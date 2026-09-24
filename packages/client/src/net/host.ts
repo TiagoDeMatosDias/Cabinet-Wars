@@ -1,6 +1,6 @@
 import {
-  advanceCopy, apply, filterForSeats, initialState, replay, type GameState, type GameView, type Intent, type LogEntry,
-  type MapConfig, type NationId, type OracleEntry,
+  advanceCopy, aiFallback, aiIntent, aiRole, apply, filterForSeats, initialState, newAiMemory, replay,
+  type AiMemory, type GameState, type GameView, type Intent, type LogEntry, type MapConfig, type NationId, type OracleEntry,
 } from '@krieg/engine';
 import type { MapBundle } from '../maps';
 import { packBundle, type SaveMeta } from '../storage/bundle';
@@ -11,6 +11,10 @@ import { t } from '../i18n/i18n';
 import { Emitter, pickActingSeat, type Session } from './session';
 
 const LOCAL = 'local';
+/** Holder of a seat played by the computer. */
+const AI = 'ai';
+/** Pause between computer moves, so people can follow them. */
+const AI_DELAY_MS = 350;
 
 function randomInt(max: number): number {
   const buf = new Uint32Array(1);
@@ -44,19 +48,23 @@ export class HostSession implements Session {
   private state: GameState;
   private log: LogEntry[];
   private readonly initial: GameState;
-  /** nation → 'local' | peer token | null (free) */
+  /** nation → 'local' | 'ai' | peer token | null (free) */
   private holders: Record<NationId, string | null>;
+  private aiMemory = new Map<NationId, AiMemory>();
+  private aiTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Refused computer moves in a row: stops a confused AI from looping forever. */
+  private aiFailures = 0;
   private peers = new Map<string, Peer>();
   private isStarted = false;
   private acting: NationId | null = null;
   private cachedView: GameView | null = null;
   private emitter = new Emitter();
 
-  constructor(readonly map: MapBundle, readonly config: MapConfig, private mapRef: MapRef, log: LogEntry[] = []) {
+  constructor(readonly map: MapBundle, readonly config: MapConfig, private mapRef: MapRef, log: LogEntry[] = [], aiSeats: NationId[] = []) {
     this.initial = initialState(config);
     this.log = [...log];
     this.state = log.length ? replay(this.initial, log) : advanceCopy(this.initial);
-    this.holders = Object.fromEntries(config.nations.map((n) => [n.id, LOCAL]));
+    this.holders = Object.fromEntries(config.nations.map((n) => [n.id, aiSeats.includes(n.id) ? AI : LOCAL]));
     this.runOracle();
   }
 
@@ -69,9 +77,12 @@ export class HostSession implements Session {
   private seatsFor(token: string | null): SeatInfo[] {
     return this.config.nations.map((n) => {
       const h = this.holders[n.id];
-      const holder: SeatInfo['holder'] = h === null ? null : h === LOCAL ? (token ? 'host' : 'you') : h === token ? 'you' : 'other';
-      const label = h && h !== LOCAL ? this.peers.get(h)?.name : undefined;
-      return { nation: n.id, name: n.name, color: n.color, side: this.config.rules.mode === 'freeForAll' ? 'attacker' : n.side, holder, label };
+      const holder: SeatInfo['holder'] = h === null ? null : h === AI ? 'ai' : h === LOCAL ? (token ? 'host' : 'you') : h === token ? 'you' : 'other';
+      const label = h && h !== LOCAL && h !== AI ? this.peers.get(h)?.name : undefined;
+      return {
+        nation: n.id, name: n.name, color: n.color, side: this.config.rules.mode === 'freeForAll' ? 'attacker' : n.side, holder, label,
+        aiRole: aiRole(this.state, n.id),
+      };
     });
   }
 
@@ -79,7 +90,13 @@ export class HostSession implements Session {
 
   /** Host toggles a seat between local play and open for a remote player. */
   claim(nation: NationId) { this.holders[nation] = LOCAL; this.changed(); }
-  release(nation: NationId) { if (this.holders[nation] === LOCAL) this.holders[nation] = null; this.changed(); }
+  release(nation: NationId) { if (this.holders[nation] === LOCAL || this.holders[nation] === AI) this.holders[nation] = null; this.changed(); }
+  /** Host hands a seat that is played here or still open to the computer. */
+  setAi(nation: NationId) {
+    const h = this.holders[nation];
+    if (h === LOCAL || h === null) this.holders[nation] = AI;
+    this.changed();
+  }
 
   start() {
     for (const n of Object.keys(this.holders)) if (this.holders[n] === null) this.holders[n] = LOCAL;
@@ -143,6 +160,10 @@ export class HostSession implements Session {
     return Object.keys(this.holders).filter((n) => this.holders[n] === LOCAL);
   }
 
+  aiSeats(): NationId[] {
+    return Object.keys(this.holders).filter((n) => this.holders[n] === AI);
+  }
+
   actingSeat() {
     return this.acting;
   }
@@ -174,7 +195,15 @@ export class HostSession implements Session {
       const o = this.state.oracle;
       const intent: OracleEntry = o.kind === 'shuffle'
         ? { type: 'shuffle', deck: o.deck, order: shuffleOrder(o.n) }
-        : {
+        : o.kind === 'select'
+          ? {
+              // The fighting units, and a random enemy unit for each attacking one to face.
+              type: 'select',
+              attacker: shuffleOrder(o.attacker).slice(0, o.attackerPick),
+              defender: shuffleOrder(o.defender).slice(0, o.defenderPick),
+              targets: Array.from({ length: o.attackerPick }, () => randomInt(o.defenderPick)),
+            }
+          : {
             type: 'roll',
             attacker: Array.from({ length: o.attacker }, () => randomInt(6) + 1),
             defender: Array.from({ length: o.defender }, () => randomInt(6) + 1),
@@ -185,10 +214,47 @@ export class HostSession implements Session {
     }
   }
 
+  // ---- computer players ----------------------------------------------------
+
+  /** The first computer seat with something to do, if any. */
+  private aiPending(): NationId | null {
+    if (!this.isStarted || this.state.phase === 'gameOver' || this.state.oracle) return null;
+    return this.state.pending.find((p) => this.holders[p.nation] === AI)?.nation ?? null;
+  }
+
+  private scheduleAi() {
+    if (this.aiTimer || !this.aiPending()) return;
+    this.aiTimer = setTimeout(() => { this.aiTimer = null; this.aiStep(); }, AI_DELAY_MS);
+  }
+
+  /** One computer move, decided from that nation's own view (it sees no more than a player would). */
+  private aiStep() {
+    const nation = this.aiPending();
+    if (!nation) return;
+    let memory = this.aiMemory.get(nation);
+    if (!memory) this.aiMemory.set(nation, memory = newAiMemory());
+    const view = filterForSeats(this.state, [nation]);
+    const intent = aiIntent(view, nation, memory);
+    try {
+      this.act(nation, intent);
+      this.aiFailures = 0;
+    } catch (e) {
+      // A hidden army can block a planned move; the AI has already moved on from that army.
+      console.warn(`AI ${nation}: ${(e as Error).message}`, intent);
+      if (++this.aiFailures > 20) { console.error(`AI ${nation} is stuck`); return; }
+      if (intent.type !== 'move' && intent.type !== 'split' && intent.type !== 'merge') {
+        try { this.act(nation, aiFallback(view, nation)); } catch (e2) { console.error(`AI ${nation}: ${(e2 as Error).message}`); }
+      }
+      this.scheduleAi();
+    }
+  }
+
   private changed() {
     const local = this.localSeats();
     this.acting = pickActingSeat(this.state as GameView, local, this.acting);
-    this.cachedView = filterForSeats(this.state, this.acting ? [this.acting] : local);
+    // Nobody plays here (only computers): watch the whole game.
+    const watching = local.length ? (this.acting ? [this.acting] : local) : Object.keys(this.holders);
+    this.cachedView = filterForSeats(this.state, watching);
     for (const peer of this.peers.values()) {
       if (!peer.channel) continue;
       this.sendTo(peer, { t: 'lobby', seats: this.seatsFor(peer.token), started: this.isStarted });
@@ -196,6 +262,7 @@ export class HostSession implements Session {
       if (this.isStarted && seats.length) this.sendTo(peer, { t: 'view', view: filterForSeats(this.state, seats), seats });
     }
     this.emitter.emit();
+    this.scheduleAi();
   }
 
   status() {
@@ -217,7 +284,7 @@ export class HostSession implements Session {
       mapName: this.config.name,
       turn: this.state.turn,
       current: this.state.current,
-      seats: Object.fromEntries(Object.entries(this.holders).map(([n, h]) => [n, h === LOCAL ? 'host' : this.peers.get(h ?? '')?.name ?? 'open'])),
+      seats: Object.fromEntries(Object.entries(this.holders).map(([n, h]) => [n, h === LOCAL ? 'host' : h === AI ? 'ai' : this.peers.get(h ?? '')?.name ?? 'open'])),
     };
     return { blob: await packBundle({ map: this.map, log: this.log, meta }), meta };
   }

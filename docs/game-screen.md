@@ -26,7 +26,7 @@ It complements the [design system](design-system.md), which defines colors, font
 5. [The army card](#5-the-army-card)
 6. [Orders and steps](#6-orders-and-steps)
 7. [End Turn and Next Step](#7-end-turn-and-next-step)
-8. [The battle popup](#8-the-battle-popup)
+8. [The battle panel](#8-the-battle-panel)
 9. [Fog of war](#9-fog-of-war)
 10. [The log](#10-the-log)
 11. [Engine and code changes](#11-engine-and-code-changes)
@@ -40,15 +40,19 @@ The map fills the whole window below the top bar. Every other element floats ove
 
 | Region | Position | Contents | Visible |
 |---|---|---|---|
-| Top bar | Top, full width | Acting player's emblem, name and "your turn · orders" status; turn number; each nation's emblem with its willingness bar and threshold mark; deck counters | Always |
+| Top bar | Top, full width | Acting player's emblem, name and "your turn · orders" status; the player's own **collapse pill**; turn number; each nation's emblem with its willingness bar, threshold mark and willingness chip; deck counters | Always |
 | Map | Full window under the top bar | Background art, roads, nodes, 3D army miniatures, highlights, planned-order arrows | Always |
 | Army card | Bottom left | Details and actions of the selected army or armies ([section 5](#5-the-army-card)) | When an army is selected |
 | Hand | Bottom centre | The acting player's cards ([section 3](#3-cards-in-hand)) | Always during a player's own turn and in battles |
 | Turn controls | Bottom right | **End Turn** (large) and **Next Step** (smaller, to its left) ([section 7](#7-end-turn-and-next-step)) | During the player's own turn |
 | Orders | Right side, below the top bar | The step list ([section 6](#6-orders-and-steps)) | During the player's own turn; collapses to a header otherwise |
 | Log | Right edge, as a vertical tab | Full history ([section 10](#10-the-log)) | Collapsed by default; expands over the orders panel |
-| Battle popup | Centred modal | The current battle ([section 8](#8-the-battle-popup)) | While a battle is running |
+| Battle panel | Docked at the bottom centre | The current battle ([section 8](#8-the-battle-panel)) | While a battle is running |
 | Handoff screen | Full screen | "Pass the device to …" (hotseat only) | When the acting player changes in hotseat |
+
+**How close each nation is to collapse.** Every nation's willingness bar shades the part below its threshold (the collapse zone) and ticks the threshold. Its chip shows the willingness percentage, coloured by how close the nation is to collapse: green with 25 or more points to spare, amber within 25 points, filled red within 10 points or once knocked out. The tooltip gives the numbers behind it (victory points held and owned, war exhaustion, threshold). Under the acting player's name, a pill of the same colour says it plainly: "Willingness 88% (collapse below 50%) · 38 points to spare". It pulses when the nation is within 10 points.
+
+Clicking the nations, or that pill, opens the **War status** panel. It has one row per nation: victory points held out of owned (with how many are occupied), war exhaustion, the willingness bar, the collapse threshold and the distance to collapse. The player's own row is tinted and allies are marked. A line explains how willingness works. On phones each nation becomes a small card of labelled lines.
 
 **Phone width (≤ 720 px).** The top bar shrinks to the emblem, turn and a willingness summary. The army card and hand become a bottom sheet with two tabs ("Army" / "Hand"). The orders panel and the log become drawers opened from buttons in the top bar. End Turn and Next Step stay pinned bottom-right above the sheet.
 
@@ -62,7 +66,7 @@ Every nation has an **emblem**: a small, unique badge used everywhere the game r
 - the banners on army miniatures and the army card
 - card backs and the corner of face-down cards
 - order entries and log entries
-- the battle popup's sides, stepper and actor banner
+- the battle panel's sides, wings and phase chips
 
 Wherever the game names a nation, the emblem appears next to the name, so players can tell nations apart without relying on color alone.
 
@@ -146,7 +150,7 @@ Symbols come from the theme (`icons.card.*`) and are language-neutral pictograms
 | Not playable now | Face washed out; frame keeps its color | e.g. battle cards outside a battle |
 | Hovered / focused | Lifted 24 px, larger shadow, tooltip shown | Pointer over the card, or keyboard focus |
 | Selected | Lifted and outlined in `color.focus` | Clicked, waiting for a target (an army or a die) |
-| Committed | Moves out of the hand into the battle popup, face down | After the commit step |
+| Committed | Leaves the hand; shown as a badge on its die, face down to the enemy until both sides are done | After it is played in a battle |
 
 ### 3.4 Tooltip
 
@@ -160,7 +164,7 @@ The tooltip uses the theme's inverse surface (ink background, paper text in Impe
 
 ### 3.5 Playing a card
 
-- **Drag and drop:** drag +1 Moves onto an army miniature or the army card; drag battle cards onto dice in the battle popup.
+- **Drag and drop:** drag +1 Moves onto an army miniature or the army card; battle cards are played from the battle panel (click a card, then a die).
 - **Click alternative** (and for keyboard and touch): click the card to select it; valid targets light up; click a target. Escape cancels.
 - **+1 Moves** played outside a battle becomes an **order** in the step list (it takes effect when executed), so it can be reordered like any other order.
 
@@ -176,6 +180,7 @@ Armies are shown as **3D miniatures standing on their node**, like the wooden pi
 - a **banner** on a pole, in the nation color, carrying the nation's emblem glyph. An army with a general has a larger banner with a gold finial; an army without a general (supply only) has no banner, just a supply crate on the plinth.
 - a **soft ground shadow**, so the piece sits on the painting.
 - a small **count pill** below it with the number of combat units (supply shown as `+n` when present).
+- a red **"!" badge** next to the pill when one of the player's own (or allied) armies is **out of supply**, i.e. it will lose a unit at the end of its turn. Ghosts of planned positions get the badge too when the planned move ends out of supply.
 
 **Current implementation.** A theme with 3D models (`army.model`, see the [design system](design-system.md#49-game-screen-components)) shows each army as a small group of animated miniatures: one figure per `unitsPerFigure` combat units (at most `maxFigures`), shared out between infantry, cavalry and artillery in proportion to the army's composition (every type present gets a figure while there are enough), plus supply wagons and a figure per general (`render/formation.ts`). The glTF models are pre-rendered with three.js into sprite sheets per nation color, then played by Pixi (`render/miniatures.ts`): figures stand idle, walk when their army moves to another node, and fight while their army is in a battle, facing the enemy. The count pill carries the nation's emblem glyph. A theme without models (or before its sprites are ready, or without WebGL) gets the procedural pieces: shaded blocks in the nation color, a banner with the emblem glyph, a supply crate, and a ground shadow.
 
@@ -194,7 +199,7 @@ Up to 3 armies stand side by side around the node's centre; with more, they fan 
 | Action | Result |
 |---|---|
 | Hover a miniature | It lifts slightly; a tooltip shows nation, army name and unit summary |
-| Click own army | Selects it: selection ring around the plinth, red **"here" ring** on its node, reachable nodes highlighted, army card opens |
+| Click own army | Selects it: selection ring around the plinth, red **"here" ring** on its node, reachable nodes highlighted, army card opens. Reachable nodes where the army would end the turn **out of supply** also get a red ring and the "!" badge (`suppliedAt` in the engine; supply units travelling with the army count only if they are supplied there themselves) |
 | Shift/Ctrl + click, or drag a box | Adds armies to the selection (needed for Merge) |
 | Click an enemy army | Selects it read-only: the army card shows what is known about it; no highlights, no actions |
 | Click a highlighted node | Adds a **Move** order for the selected army (see [section 6](#6-orders-and-steps)) |
@@ -217,7 +222,7 @@ A card in the bottom-left corner appears when an army is selected. Its frame use
 
 ### 5.1 Contents
 
-1. **Header:** nation emblem, army name, generals (★ Bai Qi), current node and supply status ("in supply" in `state.success`, or "out of supply — will lose a unit" in `state.warning`).
+1. **Header:** nation emblem, army name, generals (★ Bai Qi), current node and "in supply" (in `state.success`). An army **out of supply** instead gets an alert box under the header, with the same "!" badge as the map: "Out of supply: loses one unit at the end of the turn", plus how supply reaches. When some highlighted destinations would cut the army off, a line explains the "!" marks on the map.
 2. **Units, one row per type:** type icon (horse, soldier, cannon, grain sack), type name, count (×4), and **movement pips**, one dot per point of movement that unit type has: filled ● for moves still available this turn, hollow ○ for moves used. Each unit type shows its own pips, so the player can see who is holding the army back. For example:
    - Cavalry ●●●○ (3 of 4 left)
    - Supply ○ (0 of 1 left) → the army can't move until the supply is split off.
@@ -257,6 +262,7 @@ Clicking a town circle (rather than the army piece standing on it) opens a **nod
 - **Victory points**, and whether they currently count for the owner or are lost to the occupation.
 - **Protected**: whether an army of the controller is within 2 nodes, so an enemy army ending its turn there would *not* take control.
 - **Your supply**: whether the node is within reach of the viewing player's supply.
+- **Muster** (own towns worth more than 5 VP): the nation's unit count against its cap ("Your units: 23 of 27"), and, during the player's orders, one button per unit type to raise a unit there. Otherwise a line says why not: already used this turn, at the cap, not the player's turn, or the town is occupied or has another army in it.
 - **Roads**: one chip per connected node, drawn solid for major and dashed for minor roads; clicking a chip moves to that node's card.
 - **Armies here**: every army the player can see on the node; clicking one opens its army card.
 
@@ -322,7 +328,7 @@ Each entry shows:
 Pressing **Next Step** executes the top planned order:
 
 1. The client sends the order's engine intent(s) to the host (or the local engine in hotseat), and the map animates the result.
-2. If the order triggers a **battle**, the order stays "running" and the [battle popup](#8-the-battle-popup) opens. Next Step is disabled until the battle ends.
+2. If the order triggers a **battle**, the order stays "running" and the [battle panel](#8-the-battle-panel) opens. Next Step is disabled until the battle ends.
 3. The client **re-projects** the remaining planned orders from the new real state. Any order that is no longer possible is marked **Removed** with a reason, together with every order that depends on it. Examples:
    - the army was destroyed or retreated in a battle
    - a move was stopped early by a previously hidden enemy (the engine truncates such moves), so the rest of that army's path is gone
@@ -349,7 +355,7 @@ Both buttons sit in the **bottom-right corner**: End Turn is large, and Next Ste
 | **End Turn** | It's your turn and nothing is running | "runs 4 remaining orders" when orders remain | Executes all remaining planned orders in order, then ends the turn |
 
 End Turn behaves like pressing Next Step repeatedly:
-- It **stops for battles**: the battle popup opens, and afterwards the recap asks what to do next. **Continue** runs the remaining orders and ends the turn. **Stop here** leaves the remaining orders planned, so the player can give new orders, go step by step with Next Step, or press End Turn again.
+- It **stops for battles**: the battle panel opens, and afterwards the recap asks what to do next. **Continue** runs the remaining orders and ends the turn. **Stop here** leaves the remaining orders planned, so the player can give new orders, go step by step with Next Step, or press End Turn again.
 - **Instant battles** are shown too, in the same recap. These are battles decided without any rolls, such as an army without combat units running into the enemy. The orders list warns about them in advance ("meets the enemy with no combat units: it will be destroyed").
 - It **skips orders that become invalid** (shown as Removed).
 - It sends `endTurn` once the list is empty.
@@ -360,60 +366,43 @@ Keyboard: **N** runs the next step, **L** opens or closes the log, **M** minimiz
 
 ---
 
-## 8. The battle popup
+## 8. The battle panel
 
-A battle opens a **modal popup** centred over the dimmed map. It opens for both players: the attacker when their order triggers it, and the defender whenever it starts (in online games the defender's screen opens it immediately; in hotseat after the handoff screen).
-
-![Battle popup mockup](images/battle-popup-mockup.jpg)
-
-*Mockup of the battle popup, not a screenshot, drawn for an earlier version of the battle steps. It is round 2 at the step where the defender assigns dice:*
-- *The stepper shows who acts in each step, and the actor banner is in Qi's color.*
-- *Qi's panel (right) is active. Qin's lost cavalry unit is struck through, its dice show their targets, and both sides' committed cards are face down.*
-- *Qi's controls to oppose attacker dice sit under its panel.*
+A battle opens a **compact panel docked at the bottom of the screen**. There is no dimming, so the fight stays visible on the map. The map pans to the battle so the two armies, fighting as miniatures, sit above the panel. The panel opens for both players: the attacker when their order triggers it, and the defender whenever it starts (in online games the defender's screen opens it immediately; in hotseat after the handoff screen). The hand is hidden during a battle, because its cards are played from the panel.
 
 ### 8.1 Structure
 
-1. **Title:** crossed-swords icon and "Battle at Town 25", with "Round 2 · Qin attacks from Town 20 · Qi defends Town 25".
-2. **Stepper:** the battle's steps in order, following the rules in the README:
-   **1 Commit units** (one combat unit per die, face down) → **2 Roll** → **3 Plan** (each side sees only its own roll, puts a unit on each die and commits cards) → **4 Defender assigns** (both rolls and units are shown) → **5 Reveal** → **6 Result** (and **Retreat** when an army flees).
-   - Done steps show ✓, the current step is large and filled with the **acting nation's color**, and later steps are hollow.
-   - Under each step, the **emblem(s) of who acts in it** (both emblems for simultaneous steps such as Commit units and Plan).
-3. **Actor banner:** a full-width bar in the acting nation's color, with its emblem and a plain sentence, e.g. "Qi is choosing which attacker dice to oppose". The other side's status is on the right: "Qin: waiting · cards are face down". On the acting player's own screen the sentence starts with "Your move:".
-4. **Two side panels: attacker on the left, defender on the right.** Each has:
-   - a header in the nation color with emblem, name, role and army
-   - **combat units** as small tokens (type glyph on the nation color); units committed to the round are outlined, and units lost in the last round are washed out and struck through
-   - how many units are committed this round ("hidden" while the enemy's choice is still secret)
-   - **dice** with a ring in the side's color. Enemy dice show "?" until both sides have planned. Each die then shows the unit fighting with it, and each defender die shows the attacker die it opposes ("→ #2")
-   - **committed cards** face down (card back with the owner's color), flipping face up at Reveal
-   The **acting side's panel** gets a bold border and a solid header; the waiting side's is toned down.
-5. **Action area** under the acting side's panel, only on the acting player's screen: the controls for the current step and one confirm button.
-   - **Commit units:** pick one combat unit per die, or **Panic retreat**.
-   - **Plan:** the player's own roll, a "fought by" unit choice per die, the battle cards in hand (click to commit; a roll card also gets a die, own or enemy), and notes for Retreat and Block Retreat.
-   - **Defender assigns:** for each defender die, the attacker die it opposes. Each option names the attacker die's value and unit and says when a unit-type bonus applies ("+1 for you" / "+1 for them").
-   - A legend of the unit-type advantages ("Cavalry +1 vs Artillery · Infantry +1 vs Cavalry · Artillery +1 vs Infantry") appears in each of these steps.
-6. **Last round and history** at the bottom: the previous round comparison by comparison (units, dice, type bonuses, cards, totals, winner and losses), plus an expandable list of all earlier rounds.
-7. **Minimize:** a "–" button in the corner collapses the popup to a pill at the top of the screen ("Battle at Town 25 · your move"), so the player can pan and zoom around the map. Clicking the pill, or pressing **M**, brings the popup back. Every popup works this way, including the battle recap, attrition, Sabotage and game-over dialogs.
+1. **Wings:** a narrow column on each side of the panel, attacker on the left and defender on the right, tinted in the nation's color. Each wing shows how many units that side has lost in this battle, with a struck-through token for each one.
+2. **Title:** crossed-swords icon, "Battle at Town 25" and the round number.
+3. **Sides and phases:** each nation's emblem and name, whether it attacks or defends, and its combat units left. Between them are the three phases of a round, following the rules in the README: **1 Units drawn** → **2 Stand or retreat** → **3 Dice**. The current phase is filled in.
+4. **Matchups:** one row per attacking unit, showing that unit, its die, "vs" (or the totals once the dice are rolled), the die of the defending unit it faces, and that unit. A "+1" chip marks a unit-type bonus. When several attacking units face the same unit, its rows say "same unit". Dice are empty and dashed until the roll.
+5. **Status:** a chip per side, e.g. "deciding…" or "has decided" at the retreat step, and "placing cards…" or "1 card played" after the roll. The other side's choice and cards stay hidden until both are done.
+6. **Actions**, only on the acting player's screen:
+   - **Stand or retreat:** **Fight**, **Block Retreat**, **Retreat** and **Panic retreat**. The card buttons show how many of that card the player holds, and are disabled without one.
+   - **Dice:** the player's roll cards. Click a card, then any die: your own for +1 or +2, the enemy's for −1. A placed card shows as a badge on the die, and the row totals update. Click the badge to take the card back. **Play N cards** (or **No cards**) confirms. Only players holding roll cards are asked.
+7. **Round result:** once a round is resolved, the panel shows its outcome and keeps it on screen until the player clicks **Next round**, even if the next round has already begun. It shows both sides' choices, then each duel with its dice, card badges, totals, a struck-through token for the unit that fell, and the winner's emblem. An expandable battle log sits at the bottom.
+8. **Minimize:** a "–" button collapses the panel to a pill at the top of the screen ("Battle at Town 25 · your move"). Clicking the pill, or pressing **M**, brings it back. Every popup works this way, including the battle recap, attrition, Sabotage and game-over dialogs.
 
-### 8.2 Reveal and result
+### 8.2 Retreat
 
-- At **Reveal**, the face-down cards flip and slide onto the dice they were placed on.
-- Lines connect each attacker die to the defender dice opposing it, and each comparison shows the totals and the winner.
-- Destroyed units shake and fade.
-- The **Result** step summarizes the round, then either starts the next round (back to Commit units) or ends the battle.
+When a retreat takes effect, the panel **shrinks to a banner** at the top of the screen. The destination is not chosen by the player: the army always falls back exactly 2 nodes, to the node farthest from the enemy (see the README's retreat rules). The banner names that node, which is highlighted in the retreat color, and says how many members get away. If some members are too slow and the player holds a +1 Moves card, the banner offers **Play +1 Moves** next to **Retreat now**. Otherwise the retreat happens at once; an army with no route out is destroyed.
 
-### 8.3 Retreat
+### 8.3 Who sees what
 
-When a retreat takes effect, the popup **shrinks to a banner** at the top of the screen. The destination is not chosen by the player: the army always falls back exactly 2 nodes, to the node farthest from the enemy (see the README's retreat rules). The banner names that node, which is highlighted in the retreat color, and says how many members get away. If some members are too slow and the player holds a +1 Moves card, the banner offers **Play +1 Moves** next to **Retreat now**. Otherwise the retreat happens at once; an army with no route out is destroyed.
+- **Fighting players** get the full panel.
+- **Onlookers** get a small banner at the top instead: "Battle at Town 25 · Qin (2 lost) vs Qi". Onlookers are players whose side can see the battle but who are not fighting it, including allies. They never see the drawn units, choices, dice or cards.
+- **Battles in the fog of war** are not shown at all (see the README).
 
-### 8.4 Panic retreat
+### 8.4 Closing
 
-At the Commit units step, each side has a **Panic retreat** button next to its commit button. A confirmation explains the cost. A Retreat card countered by an enemy Block Retreat also becomes a panic retreat.
-- If a side panics, the stepper jumps ahead and the banner names the opponent, who picks the fleeing army's losses: as many combat units as the opponent has dice.
-- The fleeing player then gets the usual retreat banner.
+Nothing closes by itself. When the battle ends:
 
-### 8.5 Closing
+1. **Fighting players** first see the panel in its final state: "Battle over", the last round, and each side's total losses in the wings. They close it with **Close**.
+2. **Everyone who could see the battle** then gets the **Battle over** popup, which holds only the core information:
+   - a one-line outcome, e.g. "Qi wins. The army of Qin retreated.";
+   - one card per side, the attacker on the left and the defender on the right, in the nation's color. Each card shows the role, a status (**Victory**, **Retreated**, **Destroyed**, or **Held its ground**), the **Troops** the army brought (counts by unit type), and the troops it **Lost**. The winner's card is outlined in its color.
 
-When the battle ends, the popup shows the outcome (winner, losses, retreat) with a **Continue** button. Continue closes it and returns to the orders list, where any orders the battle made impossible are marked Removed.
+   **Continue** closes it. If several battles ended, their popups follow one another ("Continue (2 more battles)"). Afterwards the orders list marks any orders the battle made impossible as Removed.
 
 ---
 
@@ -450,7 +439,7 @@ The rules engine barely changes; most of this is client work.
 **As built**, compared with this proposal:
 - Army miniatures are drawn procedurally rather than from sprite sheets (`army.model` is reserved for that).
 - Order planning lives in `packages/engine/src/orders.ts`: `projectOrders`, `orderToIntents`, and dependency helpers. The client's list and runner are in `packages/client/src/orders/plan.ts` and `ui/game.ts`.
-- In the battle popup, cards are placed by selecting a card and then clicking a die (a list is also offered). Drag-and-drop is used for playing +1 Moves onto armies.
+- In the battle panel, roll cards are placed by selecting a card and then clicking a die. Drag-and-drop is used for playing +1 Moves onto armies.
 
 **Engine (`packages/engine`)**
 - `config.ts`: optional `emblem` on nations (`{ glyph?, shape?, image? }`). The engine ignores it but keeps it.

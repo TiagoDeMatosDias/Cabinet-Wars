@@ -1,4 +1,4 @@
-import type { GameView, Intent, NationId, Side } from '@krieg/engine';
+import type { AiRole, GameView, Intent, NationId, Side } from '@krieg/engine';
 
 /** How a peer obtains the map: from the server by folder id, or as a bundle sent by the host. */
 export type MapRef = { kind: 'server'; id: string; hash: string } | { kind: 'bundle'; hash: string; name: string };
@@ -9,8 +9,10 @@ export interface SeatInfo {
   color: string;
   side: Side;
   /** Who plays it, from the receiver's point of view. */
-  holder: 'you' | 'host' | 'other' | null;
+  holder: 'you' | 'host' | 'other' | 'ai' | null;
   label?: string;
+  /** How the computer would play this nation. */
+  aiRole?: AiRole;
 }
 
 export type PeerMsg =

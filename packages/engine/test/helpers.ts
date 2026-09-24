@@ -35,13 +35,15 @@ export function testConfig(overrides: Partial<MapConfigInput> = {}): MapConfigIn
 }
 
 /**
- * A tiny host: records the log and answers oracle requests with scripted dice and reversed
- * shuffles (so the End Game event, built first, is drawn last).
+ * A tiny host: records the log and answers oracle requests with scripted dice and unit picks, and
+ * reversed shuffles (so the End Game event, built first, is drawn last).
  */
 export class TestGame {
   state: GameState;
   log: LogEntry[] = [];
   dice: number[] = [];
+  /** Scripted unit picks for the next battle rounds; by default the first units, each attacker facing defender i mod n. */
+  picks: { attacker: number[]; defender: number[]; targets: number[] }[] = [];
   initial: GameState;
 
   constructor(cfg: MapConfigInput = testConfig()) {
@@ -60,7 +62,14 @@ export class TestGame {
       const o = this.state.oracle;
       const seq = this.log.length;
       if (o.kind === 'shuffle') this.push({ seq, by: 'host', intent: { type: 'shuffle', deck: o.deck, order: [...Array(o.n).keys()].reverse() } });
-      else {
+      else if (o.kind === 'select') {
+        const pick = this.picks.shift() ?? {
+          attacker: [...Array(o.attackerPick).keys()],
+          defender: [...Array(o.defenderPick).keys()],
+          targets: [...Array(o.attackerPick).keys()].map((i) => i % o.defenderPick),
+        };
+        this.push({ seq, by: 'host', intent: { type: 'select', ...pick } });
+      } else {
         const take = (n: number) => { const d = this.dice.splice(0, n); while (d.length < n) d.push(3); return d; };
         this.push({ seq, by: 'host', intent: { type: 'roll', attacker: take(o.attacker), defender: take(o.defender) } });
       }

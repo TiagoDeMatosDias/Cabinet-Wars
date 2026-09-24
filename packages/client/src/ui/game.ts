@@ -1,6 +1,6 @@
 import {
-  dependentsOf, orderToIntents, reachable, retreatPlan, sideOf, visibleNodes,
-  type Army, type GameState, type GameView, type HistoryEntry, type Intent, type OrderIntent, type UnitType,
+  dependentsOf, orderToIntents, reachable, retreatPlan, sideOf, suppliedAt, unsuppliedArmies, visibleNodes,
+  type Army, type BattleReport, type GameState, type GameView, type HistoryEntry, type Intent, type OrderIntent, type UnitType,
 } from '@krieg/engine';
 import { MapView, type HighlightKind, type MapScene } from '../render/MapView';
 import { backgroundName } from '../maps';
@@ -12,12 +12,12 @@ import { onThemeChange, useThemeForMap } from '../theme/theme';
 import { errorText, logText, mapNameText, nodeText, onLanguageChange, t, tn, useMapText, setDefaultNames } from '../i18n/i18n';
 import { armyCard, reorganizeEditor, splitEditor } from './army';
 import { nodeCard } from './node';
-import { battleKey, battlePopup, battleRecap, freshBattleUi } from './battle';
+import { battleKey, battleOverPanel, battlePopup, battleRecap, freshBattleUi } from './battle';
 import { clear, download, h, toast } from './dom';
 import { buildEmblems } from './emblem';
 import { nationColor, nationName } from './labels';
 import {
-  gameOverDialog, handoffDialog, handPanel, logDrawer, ordersPanel, promptDialog, recruitBanner, topBar, turnControls, type LogFilter,
+  gameOverDialog, handoffDialog, handPanel, logDrawer, ordersPanel, promptDialog, recruitBanner, topBar, turnControls, warPanel, type LogFilter,
 } from './panels';
 
 export interface SaveRecord {
@@ -45,13 +45,14 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     orders: h('div', { class: 'slot-orders' }),
     log: h('div', { class: 'slot-log' }),
     banner: h('div', { class: 'slot-banner' }),
+    war: h('div', { class: 'slot-war' }),
     modal: h('div', { class: 'slot-modal' }),
     editor: h('div', { class: 'slot-editor' }),
     handoff: h('div', { class: 'slot-handoff' }),
   };
   const mapEl = h('div', { class: 'map' });
   clear(root, h('div', { class: 'game' }, slots.top,
-    h('div', { class: 'stage' }, mapEl, slots.army, slots.hand, slots.controls, slots.orders, slots.log, slots.banner, slots.modal, slots.editor),
+    h('div', { class: 'stage' }, mapEl, slots.army, slots.hand, slots.controls, slots.orders, slots.log, slots.banner, slots.war, slots.modal, slots.editor),
     slots.handoff));
 
   const map = await MapView.create(mapEl, session.map.files[backgroundName(session.map)] ?? null);
@@ -63,6 +64,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   let selectedNode: string | null = null;
   let selectedCard: string | null = null;
   let logOpen = false;
+  /** The war status panel (every nation's distance to collapse) is open. */
+  let warOpen = false;
   let logFilter: LogFilter = 'all';
   let logSeen = 0;
   let plan: Plan | null = null;
@@ -72,13 +75,20 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   let battleUi = freshBattleUi('none');
   /** The current popup is collapsed to a pill so the map can be explored. */
   let popupMinimized = false;
-  let battleStart: number | null = null;
-  let recap: HistoryEntry[] | null = null;
-  /** Counts recaps shown, to tell whether an order's battle was already shown. */
-  let recapCount = 0;
+  /**
+   * Finished battles this player could see, oldest first. Those who fought one first see its last
+   * round in the battle panel (`panel`), then the Battle over popup; each waits for a click.
+   */
+  let recaps: { report: BattleReport; panel: boolean }[] = [];
+  /** Per battle and seat, the last round result dismissed with Next round. */
+  const roundsSeen = new Map<string, number>();
+  /** Battle reports already queued or shown. */
+  const seenReports = new Set(session.view()?.history.flatMap((e) => (e.report ? [e.report.id] : [])) ?? []);
   let editorOpen = false;
   let recruitType: UnitType = 'infantry';
   let shownSeat: string | null = null;
+  /** The battle the map was last panned to. */
+  let shownBattle: string | null = null;
   const hotseat = session.isHost && session.localSeats().length > 1;
 
   const view = () => session.view();
@@ -122,7 +132,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       const v = view();
       if (!v) return false;
       if (v.phase === 'gameOver') return true;
-      return v.phase === 'movement' && !v.battle && v.pending.some((p) => p.kind === 'movement') && !recap;
+      return v.phase === 'movement' && !v.battle && v.pending.some((p) => p.kind === 'movement') && !recaps.length;
     };
     return new Promise((resolve) => {
       if (check()) { resolve(); return; }
@@ -170,7 +180,6 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     const v = view();
     if (!v || !plan || !plan.orders.length || running) return false;
     const historyStart = v.history.length;
-    const recapsBefore = recapCount;
     running = true;
     render();
     try {
@@ -197,17 +206,10 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
         plan.history.push({ order: o, status: 'done', ...d });
       }
       plan.save();
+      // Waits for the battle, if any, and for its Battle over popup to be closed.
       await settled();
-      // A battle that ended at once (e.g. against an army without combat units) never showed a popup:
-      // show what happened before carrying on.
       const since = view()?.history.slice(historyStart) ?? [];
       const battle = since.some((e) => e.msg?.key === 'log.battle');
-      if (battle && recapCount === recapsBefore) {
-        recap = since.filter((e) => e.kind === 'battle');
-        recapCount++;
-        render();
-        await settled();
-      }
       revalidate();
       return battle ? 'battle' : 'ok';
     } finally {
@@ -333,9 +335,9 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     if (canPlan(v) && plan && proj) addOrder({ type: 'playMoves', army: plan.refFor(army, proj), card: id });
   });
 
-  function focusNode(id: string) {
+  function focusNode(id: string, screenDy = 0) {
     const n = view()?.nodes[id];
-    if (n) map.focus(n.x, n.y);
+    if (n) map.focus(n.x, n.y, screenDy);
   }
 
   /** Pans to a node and opens its card (log entries, roads in the node card). */
@@ -371,18 +373,23 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     // Fog of war for the player at the screen (none once the game is over).
     const visible = seat && v.phase !== 'gameOver' ? visibleNodes(v, sideOf(v, seat)) : undefined;
 
-    // Battle bookkeeping: remember where it started in the log; show a recap when it ends.
-    if (v.battle && battleStart === null) {
-      const idx = [...v.history].reverse().findIndex((e) => e.text.startsWith('Battle at'));
-      battleStart = idx < 0 ? v.history.length : v.history.length - 1 - idx;
-    }
-    if (!v.battle && battleStart !== null && !v.pending.some((p) => p.kind === 'chooseBattle')) {
-      recap = v.history.slice(battleStart).filter((e) => e.kind === 'battle');
-      recapCount++;
-      battleStart = null;
+    // Every battle this player could see gets a Battle over popup once it ends.
+    for (const e of v.history) {
+      if (!e.report || seenReports.has(e.report.id)) continue;
+      seenReports.add(e.report.id);
+      // The last round is only in the view of those who fought (or watch everything).
+      recaps.push({ report: e.report, panel: Boolean(e.report.finalRound) });
     }
     const bk = battleKey(v, seat);
     if (bk !== battleUi.key) battleUi = { ...freshBattleUi(bk), historyOpen: battleUi.historyOpen };
+    // A new battle: bring it into view (the panel is docked at the bottom, so the armies stay visible).
+    const fightKey = v.battle ? `${v.battle.attackerArmy}:${v.battle.defenderArmy}` : null;
+    if (fightKey && fightKey !== shownBattle) {
+      const node = v.armies[v.battle!.defenderArmy]?.node ?? v.armies[v.battle!.attackerArmy]?.node;
+      // The battle panel is docked at the bottom: show the fight in the upper part of the map.
+      if (node) focusNode(node, Math.min(260, mapEl.clientHeight * 0.28));
+    }
+    shownBattle = fightKey;
 
     // Hotseat: hide everything behind a handoff screen when the device passes to another player.
     const handoff = hotseat && seat !== null && seat !== shownSeat && v.phase !== 'gameOver';
@@ -396,7 +403,10 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       view: v, me: seat, emblems, mapName: mapNameText(session.map.name), status: session.status(), statusLine,
       onSave: session instanceof HostSession ? () => void saveGame(session) : undefined,
       onLeave: onExit,
+      warOpen,
+      onToggleWar: () => { warOpen = !warOpen; render(); },
     }));
+    slots.war.replaceChildren(warOpen ? warPanel(v, seat, emblems, () => { warOpen = false; render(); }) : '');
 
     const cardState = selected.every((id) => state.armies[id]) ? state : v;
     const planned = Boolean(proj && selected.some((id) => {
@@ -404,9 +414,15 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       const r = v.armies[id];
       return !r || !a || a.node !== r.node || a.units.length !== r.units.length;
     }));
+    // Reachable destinations where the selected armies would end the turn out of supply.
+    const noSupplyNodes = new Set<string>();
+    if (planning) {
+      const movers = selected.filter((id) => state.armies[id]?.nation === seat);
+      for (const n of moveHighlights(state).keys()) if (!suppliedAt(state, movers, n)) noSupplyNodes.add(n);
+    }
     // The army card belongs to the planning player; it stays hidden while a battle is open.
     const card = handoff || v.battle ? null : armyCard({
-      view: v, state: cardState, selected, me: seat, planning, planned, emblems,
+      view: v, state: cardState, selected, me: seat, planning, planned, emblems, noSupplyDestinations: noSupplyNodes.size > 0,
       actions: {
         close: () => { selected = []; render(); },
         split: (a) => {
@@ -456,6 +472,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
         onSelectArmy: (id) => { selected = [id]; selectedNode = null; render(); },
         onSelectNode: showNode,
         onClose: () => { selectedNode = null; render(); },
+        canAct: canPlan(v),
+        send: (i) => void send(i),
       }) : null)
       ?? '');
 
@@ -465,7 +483,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     const handView = plannedCards.size && seat
       ? { ...v, hands: { ...v.hands, [seat]: (v.hands[seat] ?? []).filter((c) => !plannedCards.has(c.id)) } }
       : v;
-    slots.hand.replaceChildren(handoff ? '' : handPanel({
+    // During a battle its cards are played from the battle panel.
+    slots.hand.replaceChildren(handoff || v.battle ? '' : handPanel({
       view: handView, me: seat, planning, retreating, selectedCard,
       onSelect: (id) => { selectedCard = id; if (id) toast(t('game.clickArmyForCard')); render(); },
     }) ?? '');
@@ -510,18 +529,28 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     }));
 
     // Modal layer: battle (or its retreat banner), battle recap, end-of-turn prompts, game over.
-    const battleEntries = battleStart !== null ? v.history.slice(battleStart).filter((e) => e.kind === 'battle') : [];
-    const popup = handoff ? null : battlePopup({ view: v, me: seat, emblems, ui: battleUi, history: battleEntries, send: (i) => void send(i), rerender: render });
+    const battleStart = v.battle ? v.history.map((e) => e.msg?.key).lastIndexOf('log.battle') : -1;
+    const battleEntries = battleStart >= 0 ? v.history.slice(battleStart).filter((e) => e.kind === 'battle') : [];
+    const seenKey = v.battle ? `${v.battle.id}:${seat}` : '';
+    const popup = handoff ? null : battlePopup({
+      view: v, me: seat, emblems, ui: battleUi, history: battleEntries, send: (i) => void send(i), rerender: render,
+      roundSeen: roundsSeen.get(seenKey) ?? 0,
+      onRoundSeen: (round) => { roundsSeen.set(seenKey, round); render(); },
+    });
     const isBanner = Boolean(popup?.classList.contains('retreat-banner'));
     const recruit = handoff ? null : recruitBanner(v, seat, emblems, recruitType, (ty) => { recruitType = ty; render(); }, (i) => void send(i));
     slots.banner.replaceChildren((isBanner && popup) || recruit || '');
     const modalEl = (!isBanner && popup)
-      || (recap && !handoff ? battleRecap(v, recap, emblems, {
+      || (recaps.length && recaps[0].panel && !handoff
+        ? battleOverPanel(v, recaps[0].report, emblems, () => { recaps[0] = { ...recaps[0], panel: false }; render(); })
+        : null)
+      || (recaps.length && !handoff ? battleRecap(v, recaps[0].report, emblems, {
         // While End Turn is running, the player decides whether to carry on to the end of the turn.
-        running: Boolean(progress) && myTurn(v),
+        running: Boolean(progress) && myTurn(v) && recaps.length === 1,
         remaining: plan?.orders.length ?? 0,
-        onContinue: () => { recap = null; render(); },
-        onStop: () => { stopRequested = true; recap = null; render(); },
+        more: recaps.length - 1,
+        onContinue: () => { recaps = recaps.slice(1); render(); },
+        onStop: () => { stopRequested = true; recaps = []; render(); },
       }) : null)
       || (handoff ? null : promptDialog(v, seat, emblems, (i) => void send(i)))
       || gameOverDialog(v, emblems, onExit)
@@ -555,6 +584,11 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     else if (p?.kind === 'sabotage' || p?.kind === 'chooseBattle') for (const id of p.options) { if (v.armies[id]) highlights.set(v.armies[id].node, 'target'); }
     else if (p?.kind === 'recruit') for (const n of p.options) highlights.set(n, 'move');
     else if (planning) for (const [n, k] of moveHighlights(state)) highlights.set(n, k);
+    // Supply: destinations that would leave the selected armies unsupplied, and armies out of supply now.
+    const noSupply = new Set([...noSupplyNodes].filter((n) => highlights.get(n) === 'move'));
+    const unsuppliedOf = (s: GameState) => new Set(seat && v.phase !== 'gameOver'
+      ? v.nations.filter((n) => !n.knockedOut && sideOf(v, n.id) === sideOf(v, seat)).flatMap((n) => unsuppliedArmies(s, n.id))
+      : []);
     const ghosts: NonNullable<MapScene['ghosts']> = [];
     const arrows: NonNullable<MapScene['arrows']> = [];
     if (proj) {
@@ -579,6 +613,9 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       ghosts: handoff ? [] : ghosts,
       arrows: handoff ? [] : arrows,
       fighting: fighting(v),
+      unsupplied: handoff ? undefined : unsuppliedOf(v),
+      ghostsUnsupplied: handoff || !proj ? undefined : unsuppliedOf(proj.state),
+      noSupply: handoff ? undefined : noSupply,
     });
   }
 
@@ -635,6 +672,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   if (v0) {
     const own = Object.values(v0.armies).filter((a) => session.localSeats().includes(a.nation));
     map.fitTo((own.length ? own.map((a) => v0.nodes[a.node]) : Object.values(v0.nodes)).filter(Boolean));
+    // A game loaded mid-battle pans to the battle after that.
+    shownBattle = null;
   }
   const unsubLang = onLanguageChange(() => render());
   render();

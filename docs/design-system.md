@@ -297,7 +297,7 @@ Purely decorative, and safe to leave out.
 
 ### 4.9 Game screen components
 
-Tokens for the components described in the [game screen specification](game-screen.md): emblems, cards, 3D army miniatures, the orders list, turn controls, the battle popup and the log drawer.
+Tokens for the components described in the [game screen specification](game-screen.md): emblems, cards, 3D army miniatures, the orders list, turn controls, the battle panel and the log drawer.
 
 | Token | Used for |
 |---|---|
@@ -317,7 +317,7 @@ Tokens for the components described in the [game screen specification](game-scre
 | `map.order.arrow` / `map.order.arrowWidth` / `map.order.badge` | Dotted planned-order arrows and their numbered step badges |
 | `orders.next` / `orders.done` / `orders.removed` | Order entry states: the "next" border, done fill, removed fill and text |
 | `controls.endTurn` / `controls.nextStep` | Styles for the two turn buttons, as `{ fill, text, border }` |
-| `battle.scrim` | Dimming behind the battle popup |
+| `battle.scrim` | Dimming behind modal dialogs (choosing which enemy to fight, the battle recap) |
 | `battle.stepDone` / `battle.stepTodo` | Stepper colors; the current step is always filled with the acting nation's color |
 | `battle.lostUnit` | Wash for units lost in earlier rounds |
 | `drawer.tab` / `drawer.width` / `drawer.unreadDot` | The log drawer's tab, expanded width and "new entries" dot |

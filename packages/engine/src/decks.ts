@@ -1,4 +1,4 @@
-import type { Card, Deck, EventCardType, GameState } from './types';
+import type { Army, Card, Deck, EventCardType, GameState } from './types';
 import { areFriends, fail, log, nation, newId, removeArmy, sideOf } from './graph';
 import { UNIT_TYPES, type UnitType } from './types';
 import { endGameWinner } from './control';
@@ -96,6 +96,58 @@ export function recruitNodes(state: GameState, nationId: string): string[] {
     .map((n) => n.id);
 }
 
+/** The nation's army on a node (the first one, if there are several), or a new army there. */
+function armyToJoin(state: GameState, nat: string, node: string): Army {
+  const found = Object.values(state.armies).find((x) => x.nation === nat && x.node === node);
+  if (found) return found;
+  const id = newId(state, `${nat}-a`);
+  return state.armies[id] = { id, nation: nat, node, generals: [], units: [], moved: { edges: 0, allMajor: true, bonus: 0, stopped: false } };
+}
+
+function addUnit(state: GameState, a: Army, type: UnitType) {
+  // "r" keeps recruit ids apart from the map's starting units ("R.c1" vs "R.cr12").
+  a.units.push({ id: `${a.id}.${type.charAt(0)}r${state.nextId++}`, type });
+}
+
+/** Units a nation has in the field (supply wagons included, generals not). */
+export function unitCount(state: GameState, nationId: string): number {
+  return Object.values(state.armies).filter((a) => a.nation === nationId).reduce((sum, a) => sum + a.units.length, 0);
+}
+
+/** A town must be worth more than this many victory points to muster in. */
+export const MUSTER_MIN_VP = 5;
+
+/**
+ * Towns a nation can muster in: its own free towns worth more than 5 victory points. A nation with
+ * none of those to use may muster in any of its free towns worth at least 1 victory point.
+ */
+export function musterNodes(state: GameState, nationId: string): string[] {
+  const towns = recruitNodes(state, nationId).filter((id) => state.nodes[id].vp > 0);
+  const major = towns.filter((id) => state.nodes[id].vp > MUSTER_MIN_VP);
+  return major.length ? major : towns;
+}
+
+/** Why the nation cannot muster now, or null when it can. */
+export function musterBlocked(state: GameState, nationId: string): 'used' | 'cap' | 'noTown' | null {
+  if (state.mustered) return 'used';
+  if (unitCount(state, nationId) >= nation(state, nationId).unitCap) return 'cap';
+  if (!musterNodes(state, nationId).length) return 'noTown';
+  return null;
+}
+
+/** Once per turn, below its unit cap, a nation raises one unit in a town worth more than 5 VP. */
+export function applyMuster(state: GameState, nationId: string, node: string, type: UnitType) {
+  if (state.current !== nationId) fail('Not your turn');
+  const blocked = musterBlocked(state, nationId);
+  if (blocked === 'used') fail('You have already mustered a unit this turn');
+  if (blocked === 'cap') fail('Your nation has reached its unit cap');
+  if (!musterNodes(state, nationId).includes(node)) fail('Muster only in your own free towns worth more than 5 VP (or, if you have none, worth at least 1 VP)');
+  if (!UNIT_TYPES.includes(type)) fail('Choose a unit type');
+  addUnit(state, armyToJoin(state, nationId, node), type);
+  state.mustered = true;
+  log(state, 'log.muster', { nation: nationId, unit: `unit.${type}`, node }, { kind: 'event', nation: nationId, node, side: sideOf(state, nationId) });
+}
+
 /**
  * Places one recruit. New units and generals join the nation's army on that node (the first one,
  * if there are several), or form a new army there.
@@ -106,19 +158,14 @@ export function applyRecruit(state: GameState, node: string, unitType: UnitType 
   if (!p.options.includes(node)) fail('Recruit only in your own towns');
   if (p.what === 'unit' && (!unitType || !UNIT_TYPES.includes(unitType))) fail('Choose a unit type');
   const nat = p.nation;
-  let a = Object.values(state.armies).find((x) => x.nation === nat && x.node === node);
-  if (!a) {
-    const id = newId(state, `${nat}-a`);
-    a = state.armies[id] = { id, nation: nat, node, generals: [], units: [], moved: { edges: 0, allMajor: true, bonus: 0, stopped: false } };
-  }
+  const a = armyToJoin(state, nat, node);
   if (p.what === 'general') {
     const gid = newId(state, `${nat}-g`);
     state.generals[gid] = { id: gid, name: '', nation: nat };
     a.generals.push(gid);
     log(state, 'log.recruitGeneral', { nation: nat, node }, { kind: 'event', nation: nat, node, side: sideOf(state, nat) });
   } else {
-    // "r" keeps recruit ids apart from the map's starting units ("R.c1" vs "R.cr12").
-    a.units.push({ id: `${a.id}.${unitType!.charAt(0)}r${state.nextId++}`, type: unitType! });
+    addUnit(state, a, unitType!);
     log(state, 'log.recruitUnit', { nation: nat, unit: `unit.${unitType}`, node }, { kind: 'event', nation: nat, node, side: sideOf(state, nat) });
   }
   p.remaining -= 1;

@@ -1,5 +1,5 @@
 import {
-  checkConfig, configWarnings, DEFAULT_EVENT_DECK, DEFAULT_GENERAL_DECK, DEFAULT_RULES, MapConfigSchema, type RoadType, type Side,
+  checkConfig, configWarnings, DEFAULT_EVENT_DECK, DEFAULT_GENERAL_DECK, DEFAULT_RULES, MapConfigSchema, startingUnitCap, type RoadType, type Side,
 } from '@krieg/engine';
 import { MapView } from '../render/MapView';
 import { saveBrowserMap, type MapBundle } from '../maps';
@@ -557,7 +557,7 @@ export async function editorScreen(root: HTMLElement, source: MapBundle | null, 
       emblems,
       nodes: cfg.nodes.map((n) => ({ ...n, controller: n.controller ?? n.owner })),
       edges: cfg.edges,
-      nations: cfg.nations.map(({ emblem: _e, ...n }) => ({ ...n, warExhaustion: 0, knockedOut: false })),
+      nations: cfg.nations.map(({ emblem: _e, ...n }) => ({ ...n, warExhaustion: 0, knockedOut: false, unitCap: startingUnitCap(cfg.nodes, n.id) })),
       armies: cfg.armies.map((a) => ({
         id: a.id, nation: a.nation, node: a.node, generals: a.generals,
         units: (['cavalry', 'infantry', 'artillery', 'supply'] as const).flatMap((t) => Array.from({ length: a.units[t] }, (_, i) => ({ id: `${a.id}.${t}${i}`, type: t }))),

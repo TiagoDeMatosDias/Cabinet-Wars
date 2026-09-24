@@ -12,8 +12,10 @@ It is a multiplayer strategy game in which players control nations and their arm
 - [Battles](#battles)
 - [Fog of war](#fog-of-war)
 - [Control of nodes](#control-of-nodes)
+- [Raising units](#raising-units)
 - [Card decks](#card-decks)
 - [Maps and custom content](#maps-and-custom-content)
+- [Computer players](#computer-players)
 - [Saves and replays](#saves-and-replays)
 - [Running the game](#running-the-game)
 - [Documentation](#documentation)
@@ -60,7 +62,7 @@ A game can be played **free for all** instead of attackers against defenders: ev
 - **Generals** are non-combat members, like supply units: they don't fight, and they can be detached, merged and reorganized like any unit. A general may even travel on its own.
 - An army may contain multiple generals, and can therefore divide into multiple armies that operate independently.
 - Separate armies may merge into one army, as long as they are on the same node.
-- An army doesn't need a general to exist or to move in friendly territory. In enemy territory, an army without a general cannot move; a general must reach it before it can relocate.
+- An army doesn't need a general to exist or to move in friendly territory. In enemy territory, an army without a general cannot move; a general must reach it before it can relocate. The exception is an army made only of supply units: supply wagons may move through enemy territory on their own.
 
 ### Movement
 
@@ -73,7 +75,7 @@ A game can be played **free for all** instead of attackers against defenders: ev
   | General   | 4              |
   | Infantry  | 3              |
   | Artillery | 2              |
-  | Supply    | 1              |
+  | Supply    | 2              |
 
 - If an army moves only along major roads, it can move three times as far in a single turn.
 - An army may not move onto a node where a different army is present, unless that army belongs to the same nation.
@@ -86,7 +88,7 @@ An army is within reach of supply if it is:
 
 - on a friendly node (a node owned by the army's nation or an ally), or
 - within 2 nodes of a friendly node, or
-- within 2 nodes of a supply unit that is itself supplied.
+- within 4 nodes of a supply unit that is itself supplied.
 
 This forces armies advancing into enemy territory to leave supply units behind, or suffer attrition. It also allows "chains" of supply units that provide a path to an army.
 
@@ -94,27 +96,27 @@ This forces armies advancing into enemy territory to leave supply units behind, 
 
 If an army moves to a node directly connected to a node holding an enemy army, a battle occurs. The army that moved is the **attacker**; the other army is the **defender**.
 
-A battle is fought in rounds. Each round proceeds as follows:
+A battle is fought in rounds. Supply units and generals never fight; the other units are "combat units". Each round proceeds as follows:
 
-1. Count the units and their types in each army. Supply units and generals are ignored in all combat calculations; the remaining units are "combat units". Each player gets a number of six-sided dice (D6) depending on their army's total number of combat units:
+1. **Units are drawn.** Each side fights with a number of its combat units, picked at random. How many depends on the army's total number of combat units:
 
-   | Combat units | Dice |
-   |--------------|------|
-   | 1 to 3       | 1    |
-   | 4 to 6       | 2    |
-   | 7 to 9       | 3    |
-   | More than 9  | 4    |
+   | Combat units | Fighting units |
+   |--------------|----------------|
+   | 1 to 3       | 1              |
+   | 4 to 6       | 2              |
+   | 7 to 9       | 3              |
+   | More than 9  | 4              |
 
-2. **Commit units.** Both players secretly commit one combat unit per die to the round. Either player may **panic retreat** instead (see below).
-3. **Roll.** Both players roll their dice, but each sees only their own roll.
-4. **Plan.** After seeing their own roll, each player secretly puts one of their committed units on each of their dice and commits any cards face down. Roll cards are placed on a specific die, their own or the enemy's; Retreat and Block Retreat cards need no die.
-5. **Defender assigns.** Both rolls, and the unit on each die, are shown. The defender assigns each of their dice to one of the attacker's dice (several dice may go to a single attacker die, or be split however they want).
-6. **Reveal and resolve.** The cards are revealed. For each attacker die, the attacker's points (die + cards + unit bonus) are compared with the sum of the points of the defender dice assigned to it. Whoever has the most points wins; ties go to the defender.
-    - The winning units remain; the losing units in that comparison are destroyed. If the attacker wins, every defending unit on the dice opposing that die is destroyed; if the defender wins, the attacking unit on that die is destroyed.
-    - An attacker die that no defender die opposes faces 0 points and destroys nothing.
-    - Then any retreat happens. An army that played a Retreat card retreats. If the enemy played a Block Retreat card, the Retreat card is countered and the army makes a **panic retreat** instead.
-    - If an army has no combat units left, it is destroyed.
-7. If the battle isn't over, start again from step 1.
+   Each attacking unit is then matched, also at random, with one of the defender's drawn units. Several attacking units may face the same unit. A drawn defending unit that no attacking unit faces sits the round out. Both players see the matchups.
+2. **Stand or retreat.** Each player secretly chooses one of the following, and the choices are then revealed together:
+   - **Fight.**
+   - **Retreat card:** the battle ends and the army retreats.
+   - **Block Retreat card:** the enemy's Retreat card or panic retreat this round does nothing, and the fight goes on.
+   - **Panic retreat** (no card needed): one of the army's fighting units is destroyed, then the army retreats.
+
+   A blocked Retreat card is still spent. If a retreat or panic goes through, the battle ends. If both sides get away, both retreat.
+3. **Roll.** Each fighting unit rolls one six-sided die (D6), and both players see every die. Each player may then secretly put roll cards on any die: +1 or +2 on their own dice, −1 on the enemy's. For each matchup, the attacker's total (die + cards + unit bonus) is compared with the total of the defending unit it faces. The higher total wins; ties go to the defender. The losing unit is destroyed. A defending unit that faces several attackers uses the same die against each of them, and is destroyed if it loses any of those comparisons.
+4. If an army has no combat units left, it is destroyed. Otherwise, start again from step 1.
 
 **Unit types.** A unit gets **+1** when it fights a unit type it has the advantage over. This applies to both the attacker and the defender:
 
@@ -128,13 +130,15 @@ A battle is fought in rounds. Each round proceeds as follows:
 
 **Retreat distance.** A retreat always moves exactly 2 nodes, through nodes the army could legally enter, and the destination is chosen automatically: the node farthest from the enemy army it fought. If several are equally far, the one where the most units survive wins, then a node controlled by the army's own side. If no such route exists, the army is destroyed.
 
-**Panic retreat.** At step 2, instead of committing units, a player may flee without fighting. A blocked Retreat card also becomes a panic retreat. The enemy picks as many of the fleeing army's combat units as the enemy has dice, and those units are destroyed. Then the fleeing army retreats following the normal retreat rules. This lets an army escape without a Retreat card, at a higher cost.
+**Panic retreat.** Panicking lets an army escape without a Retreat card, at the cost of one of its units. The destroyed unit is the first of the units drawn for that round.
 
 ## Fog of war
 
 - Each player sees armies only in the towns their side (their nation and its allies) owns or controls, in towns next to those, and in and next to towns where their own armies stand.
 - Everything else is under fog of war. The map, roads and towns remain visible, but enemy armies there are hidden. Fogged areas are shaded and hatched on the map; each town covers the part of the map closest to it (a Voronoi area). An area more than 3 times the average size is split, and the part far from the town counts as wilderness that is always fogged, so empty map edges don't stay clear.
-- Spy events and battles reveal enemy armies as described in the Event deck.
+- Spy events reveal enemy armies as described in the Event deck.
+- **Battles in the fog.** A player learns of a battle only if their side could see the town of either army when it began, or if their side is fighting it. Nobody else sees the battle, its log entries or its outcome.
+- **Onlookers.** Players who can see a battle but are not fighting it see who fights whom and the losses, but not the units drawn, the choices, the dice or the cards. This includes the allies of either side.
 
 ## Control of nodes
 
@@ -144,6 +148,14 @@ A battle is fought in rounds. Each round proceeds as follows:
 - An army that enters a node its own nation owns, even just passing through, ends any occupation there immediately: the node goes back under its control. Protection does not stop this.
 - A node's color shows its controller, to highlight that it is under occupation.
 - To return the node to its owner, the owner or an ally must occupy it again (which may or may not involve defeating the occupying army).
+
+## Raising units
+
+- **Unit cap.** Each nation has a soft cap on its number of units (supply units included, generals not): half the victory points it owns at the start of the game, rounded down. The cap doesn't change during the game.
+- **Muster.** Once per turn, during its orders, a nation below its cap may raise one unit (cavalry, infantry, artillery or supply) in one of its own towns worth **more than 5 victory points**. The town must be under its control, with no other nation's army in it. A nation with no such town to use may muster in any of its own towns worth at least 1 victory point, under the same conditions. The unit joins the nation's army there, or forms a new army. Open the town's card to muster.
+- **War status.** Click the nations in the top bar to see, for every nation, the victory points it holds and owns, its war exhaustion, its willingness and how far it is from collapse.
+- **Recruit events** from the Event deck ignore the cap: they can take a nation past it.
+- Running out of units, or of armies, does not knock a nation out. Only its willingness does (see [Nations and victory](#nations-and-victory)).
 
 ## Card decks
 
@@ -225,6 +237,16 @@ All text in the game is English by default. A map can add any number of language
 - Players choose their language on the main menu or in the game's top bar, from the languages the map offers.
 - Icons contain no text, so they look the same in every language.
 
+## Computer players
+
+Before a game starts, the lobby lists every nation of the map. The host can choose **Computer plays** for any nation that is played here or still open. In a hotseat game, any nation not played by the computer is played on this device. How the computer plays depends on the nation's role:
+
+- **Defenders play defensively.** Their armies stay within 2 nodes of their own threatened victory points, so the enemy cannot take them, and they free any occupied towns. They attack only with a clear advantage (1.5 times the enemy's combat units). Otherwise they stand in the enemy's way to hold it up.
+- **Attackers play offensively.** They march on the enemy victory points they can reach and go first for nations close to being knocked out. They attack armies they outnumber and leave their slow supply units behind to form a supply chain.
+- In a **free for all** game, every nation is an attacker, so the computer always plays offensively.
+
+The computer decides only from what its nation can see, fog of war included. It pauses briefly between moves, so players can follow them. Saves remember which nations the computer played.
+
 ## Saves and replays
 
 The game is transactional: every move by every player, every dice roll, and every card draw and play is recorded in a JSON file.
@@ -253,4 +275,4 @@ During development, run `npm run server` and `npm run dev` (Vite, proxies /api a
 ## Documentation
 
 - [Design system: themeable UI](docs/design-system.md): how each map can have its own interface style, the design tokens a theme must define, how to write a theme, and the canonical Imperial China theme.
-- [Game screen: layout and interaction](docs/game-screen.md): the in-game layout, nation emblems, cards, 3D armies, the army card, the orders (step) list, turn controls, the battle popup and the log.
+- [Game screen: layout and interaction](docs/game-screen.md): the in-game layout, nation emblems, cards, 3D armies, the army card, the orders (step) list, turn controls, the battle panel and the log.

@@ -35,6 +35,12 @@ export interface MapScene {
   fighting?: Map<string, string>;
   /** Plays this animation on every miniature (the theme gallery). */
   animation?: AnimName;
+  /** Armies out of supply: their count pill gets a warning badge. */
+  unsupplied?: Set<string>;
+  /** The same for planned positions (ghosts). */
+  ghostsUnsupplied?: Set<string>;
+  /** Reachable nodes where the selected armies would end up out of supply. */
+  noSupply?: Set<string>;
 }
 
 export interface MapClick {
@@ -245,8 +251,9 @@ export class MapView {
     }
   }
 
-  focus(x: number, y: number) {
-    this.viewport.animate({ position: { x, y }, time: this.theme.motion.map });
+  /** Pans to a point; `screenDy` puts it that many screen pixels above the centre (to clear a docked panel). */
+  focus(x: number, y: number, screenDy = 0) {
+    this.viewport.animate({ position: { x, y: y + screenDy / this.viewport.scale.y }, time: this.theme.motion.map });
   }
 
   /** Zoom to the bounding box of the given points. */
@@ -333,6 +340,14 @@ export class MapView {
       hl.circle(n.x, n.y, R + 11).fill({ color: hex(m.highlight[kind]), alpha: m.highlight.alpha });
       hl.circle(n.x, n.y, R + 11).stroke({ width: 3, color: hex(m.highlight.casing) });
     }
+    // Destinations that would cut the army off from supply: a warning ring and badge on top of the move highlight.
+    const danger = hex(this.theme.color.state.danger);
+    for (const id of scene.noSupply ?? []) {
+      const n = nodes.get(id);
+      if (!n) continue;
+      hl.circle(n.x, n.y, R + 11).stroke({ width: 4, color: danger });
+      hl.circle(n.x, n.y, R + 14).stroke({ width: 1.5, color: hex(m.highlight.casing) });
+    }
     for (const id of scene.here ?? []) {
       const n = nodes.get(id);
       if (!n) continue;
@@ -383,6 +398,10 @@ export class MapView {
         txt.position.set(n.x, n.y + R + 3);
         group.addChild(txt);
       }
+    }
+    for (const id of scene.noSupply ?? []) {
+      const n = nodes.get(id);
+      if (n) this.supplyBadge(this.nodeLayer, n.x - R - 6, n.y - R - 4);
     }
     this.renderArmies(scene);
   }
@@ -609,14 +628,14 @@ export class MapView {
         top = Math.min(top, ry - f.sheet.height * f.sheet.anchor.y);
       });
     });
-    this.countPill(c, army, x, y + 4 * k, scene);
+    this.countPill(c, army, x, y + 4 * k, scene, ghost);
     this.armyLayer.addChild(c);
     this.armyHitboxes.push({ id: ghost ? `ghost:${army.id}` : army.id, x: left, y: top, w: right - left, h: y + 30 - top });
     return c;
   }
 
   /** The number of combat units (and +supply) under a piece, with the nation's emblem glyph. */
-  private countPill(c: Container, army: Army, x: number, y: number, scene: MapScene) {
+  private countPill(c: Container, army: Army, x: number, y: number, scene: MapScene, ghost = false) {
     const t = this.theme;
     const outline = hex(t.map.node.outline);
     const combat = army.units.filter((u) => u.type !== 'supply').length;
@@ -639,6 +658,18 @@ export class MapView {
       g.position.set(bx + s / 2, y + 20);
       c.addChild(g);
     }
+    // Out of supply: it will lose a unit at the end of its turn.
+    if ((ghost ? scene.ghostsUnsupplied : scene.unsupplied)?.has(army.id)) this.supplyBadge(c, x + 4 + pw / 2 + 10, y + 20);
+  }
+
+  /** The "out of supply" mark: a warning disc with an exclamation mark, on the danger color. */
+  private supplyBadge(c: Container, x: number, y: number) {
+    const t = this.theme;
+    c.addChild(new Graphics().circle(x, y, 9).fill(hex(t.color.state.danger)).stroke({ width: 1.5, color: hex(t.map.node.outline) }));
+    const mark = new Text({ text: '!', style: { fontFamily: t.type.family.numeric, fontWeight: '900', fontSize: 14, fill: hex(t.color.surface.raised) } });
+    mark.anchor.set(0.5);
+    mark.position.set(x, y);
+    c.addChild(mark);
   }
 
   /** A block miniature: ground shadow, a stack of lit blocks in the nation color, and a banner with the emblem glyph. */
@@ -702,7 +733,7 @@ export class MapView {
       txt.position.set(x + 20, bannerTop + 12);
       c.addChild(txt);
     }
-    this.countPill(c, army, x, y, scene);
+    this.countPill(c, army, x, y, scene, ghost);
     this.armyLayer.addChild(c);
     const top = Math.min(bannerTop - 6, yt - dp);
     this.armyHitboxes.push({ id: ghost ? `ghost:${army.id}` : army.id, x: x0 - 4, y: top, w: w + dp + 22, h: y + 30 - top });

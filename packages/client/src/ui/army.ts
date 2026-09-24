@@ -1,5 +1,5 @@
 import {
-  armySpeed, GENERAL_SPEED, isFriendlyNode, MAJOR_ROAD_MULTIPLIER, isSupplied, UNIT_SPEED, UNIT_TYPES,
+  armySpeed, canMoveWithoutGeneral, GENERAL_SPEED, isFriendlyNode, MAJOR_ROAD_MULTIPLIER, isSupplied, UNIT_SPEED, UNIT_TYPES,
   type Army, type GameState, type GameView, type Unit, type UnitType,
 } from '@krieg/engine';
 import { add, clear, h } from './dom';
@@ -34,6 +34,8 @@ export function armyCard(opts: {
   planning: boolean;
   planned: boolean;
   emblems: Map<string, Emblem>;
+  /** Some of the highlighted destinations would leave the selected armies out of supply. */
+  noSupplyDestinations?: boolean;
   actions: ArmyCardActions;
 }): HTMLElement | null {
   const { state, view, selected, me, emblems, actions } = opts;
@@ -52,9 +54,20 @@ export function armyCard(opts: {
         h('div', { class: 'muted' },
           generals.length ? h('span', {}, iconEl(currentTheme().icons.general, 14), ` ${generals.join(', ')}`) : t('army.noGeneral'),
           ` · ${t('army.at', { node: a.node })}`,
-          mine ? (isSupplied(state, a.id) ? h('span', { class: 'ok' }, ` · ${t('army.inSupply')}`) : h('span', { class: 'warn' }, ` · ${t('army.outOfSupply')}`)) : null)),
+          mine && isSupplied(state, a.id) ? h('span', { class: 'ok' }, ` · ${t('army.inSupply')}`) : null)),
       h('button', { class: 'icon-btn', title: t('common.close'), 'aria-label': t('common.close'), onclick: actions.close }, '×')));
   if (opts.planned && mine) add(card, h('div', { class: 'planned-note' }, t('army.planned')));
+  // Supply, spelled out: the map marks the same with a "!" badge.
+  const cutOff = mine ? armies.filter((x) => !isSupplied(state, x.id)) : [];
+  if (cutOff.length) {
+    add(card, h('div', { class: 'supply-alert', role: 'alert' },
+      h('span', { class: 'supply-badge', 'aria-hidden': 'true' }, '!'),
+      h('div', {}, h('strong', {}, t(armies.length > 1 ? 'army.outOfSupplySome' : 'army.outOfSupplyTitle', { count: cutOff.length })),
+        h('div', { class: 'small' }, t('army.outOfSupplyBody')))));
+  }
+  if (mine && opts.planning && opts.noSupplyDestinations) {
+    add(card, h('div', { class: 'supply-legend small' }, h('span', { class: 'supply-badge', 'aria-hidden': 'true' }, '!'), t('army.noSupplyLegend')));
+  }
 
   // One row per unit type: icon, count and movement pips (● available, ○ used).
   const byType = new Map<UnitType, Unit[]>();
@@ -84,7 +97,7 @@ export function armyCard(opts: {
       mine ? h('span', { class: 'muted small' }, t('army.pips', { left, speed })) : null));
   }
   add(card, rows);
-  if (mine && !a.generals.length && !isFriendlyNode(state, a)) add(card, h('div', { class: 'warn small' }, t('army.noGeneralEnemy')));
+  if (mine && !a.generals.length && !canMoveWithoutGeneral(a) && !isFriendlyNode(state, a)) add(card, h('div', { class: 'warn small' }, t('army.noGeneralEnemy')));
 
   if (mine) {
     const m = movesLeft(a);

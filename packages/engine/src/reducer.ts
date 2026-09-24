@@ -1,12 +1,10 @@
-import type { CardPlacement, GameState, NationId, NodeId, Prompt, UnitType } from './types';
+import type { BattleChoice, CardPlacement, GameState, NationId, NodeId, Prompt, UnitType } from './types';
 import { fail, log, nation, removeArmy, sideOf } from './graph';
 import { mergeArmies, moveArmy, resetMovement, splitArmy, transferArmies, type TransferGroup } from './movement';
-import {
-  applyRoll, assignDefender, chooseBattle, commitUnits, panic, panicTargets, queueBattles, retreat, roleOf, submitPlan,
-} from './battle';
+import { applyRoll, applySelect, chooseBattle, chooseInBattle, queueBattles, retreat, roleOf, submitCards } from './battle';
 import { unsuppliedArmies } from './supply';
 import { checkVictory, finish, updateControl } from './control';
-import { applyRecruit, applySabotage, applyShuffle, drawCard, resolveEvent } from './decks';
+import { applyMuster, applyRecruit, applySabotage, applyShuffle, drawCard, resolveEvent } from './decks';
 import { playMovesCard } from './orders';
 
 export type Intent =
@@ -17,20 +15,22 @@ export type Intent =
   | { type: 'playMoves'; army: string; card: string }
   | { type: 'endTurn' }
   | { type: 'chooseBattle'; defender: string }
-  | { type: 'battleUnits'; units: string[] }
-  | { type: 'panic' }
-  | { type: 'panicTargets'; units: string[] }
-  | { type: 'battlePlan'; units: string[]; cards: CardPlacement[] }
-  | { type: 'defenderAssign'; assign: number[] }
+  /** Before the roll: fight on, play Retreat or Block Retreat, or flee in panic. */
+  | { type: 'battleChoice'; choice: BattleChoice }
+  /** After the roll: roll cards put on dice (possibly none). */
+  | { type: 'battleCards'; cards: CardPlacement[] }
   /** Confirms a retreat; the destination is always chosen by the rules (see retreatPlan). */
   | { type: 'retreat' }
   | { type: 'attrition'; unit: string }
   | { type: 'sabotage'; army: string }
-  | { type: 'recruit'; node: NodeId; unit?: UnitType };
+  | { type: 'recruit'; node: NodeId; unit?: UnitType }
+  /** Once per turn, during movement: raise a unit in an own town worth more than 5 VP (below the unit cap). */
+  | { type: 'muster'; node: NodeId; unit: UnitType };
 
 export type OracleEntry =
   | { type: 'shuffle'; deck: 'general' | 'event'; order: number[] }
-  | { type: 'roll'; attacker: number[]; defender: number[] };
+  | { type: 'roll'; attacker: number[]; defender: number[] }
+  | { type: 'select'; attacker: number[]; defender: number[]; targets: number[] };
 
 export type LogEntry =
   | { seq: number; by: NationId; intent: Intent }
@@ -44,15 +44,13 @@ const PROMPT_FOR: Record<Intent['type'], Prompt['kind'][]> = {
   playMoves: ['movement', 'retreat'],
   endTurn: ['movement'],
   chooseBattle: ['chooseBattle'],
-  battleUnits: ['battleUnits'],
-  panic: ['battleUnits'],
-  panicTargets: ['panicTargets'],
-  battlePlan: ['battlePlan'],
-  defenderAssign: ['defenderAssign'],
+  battleChoice: ['battleChoice'],
+  battleCards: ['battleCards'],
   retreat: ['retreat'],
   attrition: ['attrition'],
   sabotage: ['sabotage'],
   recruit: ['recruit'],
+  muster: ['movement'],
 };
 
 /** Applies one log entry and runs the automatic steps that follow. Pure: returns a new state. */
@@ -84,6 +82,8 @@ function applyOracle(state: GameState, o: OracleEntry) {
     if (req.kind !== 'shuffle' || req.deck !== o.deck) fail('Unexpected shuffle');
     applyShuffle(o.deck === 'general' ? state.generalDeck : state.eventDeck, o.order);
     state.oracle = null;
+  } else if (o.type === 'select') {
+    applySelect(state, o.attacker, o.defender, o.targets);
   } else {
     applyRoll(state, o.attacker, o.defender);
   }
@@ -113,11 +113,8 @@ function applyIntent(state: GameState, by: NationId, intent: Intent) {
       state.turnEnd = { step: 'attrition', attrition: unsuppliedArmies(state, by) };
       return;
     case 'chooseBattle': state.pending = []; chooseBattle(state, intent.defender); return;
-    case 'battleUnits': commitUnits(state, roleOf(state, by)!, intent.units); return;
-    case 'panic': state.pending = []; panic(state, roleOf(state, by)!); return;
-    case 'panicTargets': panicTargets(state, intent.units); return;
-    case 'battlePlan': submitPlan(state, roleOf(state, by)!, intent.units, intent.cards); return;
-    case 'defenderAssign': assignDefender(state, intent.assign); return;
+    case 'battleChoice': chooseInBattle(state, roleOf(state, by)!, intent.choice); return;
+    case 'battleCards': submitCards(state, roleOf(state, by)!, intent.cards ?? []); return;
     case 'retreat': retreat(state); return;
     case 'attrition': {
       if (prompt.kind !== 'attrition') fail('No attrition pending');
@@ -130,6 +127,7 @@ function applyIntent(state: GameState, by: NationId, intent: Intent) {
     }
     case 'sabotage': applySabotage(state, intent.army); return;
     case 'recruit': applyRecruit(state, intent.node, intent.unit ?? null); return;
+    case 'muster': applyMuster(state, by, intent.node, intent.unit); return;
   }
 }
 
@@ -171,6 +169,7 @@ export function advance(state: GameState) {
       case 'turnStart': {
         if (!state.turnStart) {
           resetMovement(state, state.current);
+          state.mustered = false;
           state.reveals = state.reveals.filter((r) => r.untilTurn >= state.turn);
           log(state, 'log.turnBegins', { nation: state.current }, { kind: 'turn', nation: state.current });
           state.turnStart = { step: 'general', event: null };

@@ -1,4 +1,4 @@
-import { sideOf, UNIT_TYPES, willingness, type GameView, type HistoryEntry, type Intent, type UnitType } from '@krieg/engine';
+import { sideOf, UNIT_TYPES, warStatus, type GameView, type WarStatus, type HistoryEntry, type Intent, type UnitType } from '@krieg/engine';
 import { add, h } from './dom';
 import { cardEl } from './cards';
 import { emblemEl, type Emblem } from './emblem';
@@ -10,30 +10,58 @@ import { availableLanguages, language, logText, setPreferredLanguage, t, tn } fr
 
 // ---- top bar -------------------------------------------------------------------
 
+/** How close to collapse: 'danger' within 10 points of the threshold, 'warn' within 25. */
+export function collapseLevel(w: WarStatus): 'ko' | 'danger' | 'warn' | 'safe' {
+  return w.margin < 0 ? 'ko' : w.margin < 10 ? 'danger' : w.margin < 25 ? 'warn' : 'safe';
+}
+
+/** Willingness bar: the part below the knock-out threshold is shaded, with a tick at the threshold. */
+function willBar(w: WarStatus, color: string, wide = false): HTMLElement {
+  return h('span', { class: `bar ${wide ? 'wide' : ''}` },
+    h('span', { class: 'zone', style: `width:${w.threshold}%` }),
+    h('span', { class: 'fill', style: `width:${Math.min(100, w.willingness)}%;background:${color}` }),
+    h('span', { class: 'mark', style: `left:${w.threshold}%` }));
+}
+
+const pct = (x: number) => Math.round(x);
+
 export function topBar(opts: {
   view: GameView; me: string | null; emblems: Map<string, Emblem>; mapName: string; status: string;
   statusLine: string; onSave?: () => void; onLeave: () => void;
+  /** The war status panel is open. */
+  warOpen: boolean;
+  onToggleWar(): void;
 }): HTMLElement {
   const { view: v, me, emblems } = opts;
   const ic = currentTheme().icons;
   const acting = me ?? v.current;
   const langs = availableLanguages();
+  const own = v.nations.find((n) => n.id === acting);
+  const ownStatus = own && !own.knockedOut ? warStatus(v, own.id) : null;
   return h('header', { class: 'topbar' },
     h('div', { class: 'tb-player', style: `--c:${nationColor(v, acting)}` },
       emblemEl(emblems.get(acting), 40, nationName(v, acting)),
-      h('div', {}, h('div', { class: 'tb-name' }, nationName(v, acting)), h('div', { class: 'tb-status' }, opts.statusLine))),
+      h('div', {}, h('div', { class: 'tb-name' }, nationName(v, acting)), h('div', { class: 'tb-status' }, opts.statusLine),
+        // The player's own nation: how far it is from collapse, in plain words.
+        ownStatus ? h('button', { class: `tb-own ${collapseLevel(ownStatus)}`, onclick: opts.onToggleWar, title: t('war.open') },
+          t('top.ownWill', { w: pct(ownStatus.willingness), threshold: ownStatus.threshold }),
+          ' · ', h('strong', {}, tn('top.ownMargin', Math.max(0, Math.floor(ownStatus.margin))))) : null)),
     h('div', { class: 'tb-turn' }, h('span', { class: 'muted small' }, opts.mapName), h('strong', {}, t('top.round', { round: v.round })),
       h('span', { class: 'muted small' }, t('top.turnOf', { turn: v.turn }))),
-    h('div', { class: 'tb-nations' }, v.nations.map((n) => {
-      const w = Math.round(willingness(v, n.id));
-      return h('div', {
+    h('button', { class: `tb-nations ${opts.warOpen ? 'open' : ''}`, onclick: opts.onToggleWar, title: t('war.open'), 'aria-expanded': String(opts.warOpen) }, v.nations.map((n) => {
+      const w = warStatus(v, n.id);
+      const level = n.knockedOut ? 'ko' : collapseLevel(w);
+      return h('span', {
         class: `will ${n.knockedOut ? 'ko' : ''} ${n.id === v.current ? 'current' : ''}`,
-        title: t('top.willTitle', { name: nationName(v, n.id), side: t(`role.${n.side}`), w, threshold: n.threshold, exhaustion: n.warExhaustion }),
+        title: t('top.willTitle', {
+          name: nationName(v, n.id), side: t(`role.${n.side}`), w: pct(w.willingness), threshold: n.threshold,
+          held: w.vpHeld, owned: w.vpOwned, exhaustion: n.warExhaustion,
+        }),
       },
       emblemEl(emblems.get(n.id), 24),
       h('span', { class: 'will-name' }, nationName(v, n.id)),
-      h('span', { class: 'bar' }, h('span', { class: 'fill', style: `width:${w}%;background:${n.color}` }), h('span', { class: 'mark', style: `left:${n.threshold}%` })),
-      h('span', { class: 'muted small' }, `${w}%`));
+      willBar(w, n.color),
+      h('span', { class: `margin-chip ${level}` }, n.knockedOut ? t('war.out') : `${pct(w.willingness)}%`));
     })),
     h('div', { class: 'tb-right' },
       h('span', { class: 'muted deck-counts', title: t('top.decksTitle') },
@@ -46,6 +74,37 @@ export function topBar(opts: {
       }, langs.map((l) => h('option', { value: l.code, selected: l.code === language() }, l.name))) : null,
       opts.onSave ? h('button', { onclick: opts.onSave }, t('top.save')) : null,
       h('button', { onclick: opts.onLeave }, t('top.leave'))));
+}
+
+// ---- war status -----------------------------------------------------------------
+
+/** Every nation's standing: victory points held, war exhaustion, willingness and how far from collapse. */
+export function warPanel(v: GameView, me: string | null, emblems: Map<string, Emblem>, onClose: () => void): HTMLElement {
+  const mySide = me ? sideOf(v, me) : null;
+  const rows = v.nations.map((n) => {
+    const w = warStatus(v, n.id);
+    const level = n.knockedOut ? 'ko' : collapseLevel(w);
+    const lostVp = w.vpOwned - w.vpHeld;
+    return h('tr', { class: `${n.id === me ? 'mine' : ''} ${n.knockedOut ? 'ko' : ''}` },
+      h('th', { scope: 'row' }, h('span', { class: 'war-nation' }, emblemEl(emblems.get(n.id), 22), nationName(v, n.id),
+        n.id === me ? h('span', { class: 'you-tag' }, t('war.you')) : mySide && sideOf(v, n.id) === mySide ? h('span', { class: 'muted small' }, ` ${t('war.ally')}`) : null)),
+      h('td', { 'data-label': t('war.vpHeld') }, h('span', {}, h('strong', {}, `${w.vpHeld}`), h('span', { class: 'muted' }, ` / ${w.vpOwned}`),
+        lostVp ? h('div', { class: 'small warn' }, t('war.occupied', { vp: lostVp })) : null)),
+      h('td', { class: 'num', 'data-label': t('war.exhaustion') }, n.warExhaustion ? h('span', { class: 'warn' }, `−${n.warExhaustion}`) : h('span', { class: 'muted' }, '0')),
+      h('td', { 'data-label': t('war.willingness') }, h('div', { class: 'war-will' }, willBar(w, n.color, true), h('strong', {}, `${pct(w.willingness)}%`))),
+      h('td', { class: 'num', 'data-label': t('war.collapse') }, `${n.threshold}%`),
+      h('td', { 'data-label': t('war.distance') }, h('span', { class: `margin-chip ${level}` },
+        n.knockedOut ? t('war.knockedOut') : tn('war.margin', Math.max(0, Math.floor(w.margin))))));
+  });
+  return h('div', { class: 'war-panel', role: 'dialog', 'aria-label': t('war.title') },
+    h('div', { class: 'war-head' }, h('strong', {}, t('war.title')),
+      h('button', { class: 'icon-btn', title: t('common.close'), 'aria-label': t('common.close'), onclick: onClose }, '×')),
+    h('div', { class: 'war-scroll' }, h('table', { class: 'war-table' },
+      h('thead', {}, h('tr', {},
+        h('th', {}, t('war.nation')), h('th', {}, t('war.vpHeld')), h('th', {}, t('war.exhaustion')),
+        h('th', {}, t('war.willingness')), h('th', {}, t('war.collapse')), h('th', {}, t('war.distance')))),
+      h('tbody', {}, rows))),
+    h('p', { class: 'muted small war-help' }, t('war.help')));
 }
 
 // ---- hand ------------------------------------------------------------------------
@@ -62,7 +121,7 @@ export function handPanel(opts: {
   return h('section', { class: 'hand', 'aria-label': t('hand.aria') },
     h('div', { class: 'hand-cards', style: `--n:${hand.length}` }, hand.map((c, index) => {
       const moves = c.type === 'moves+1';
-      const playable = moves ? opts.planning || opts.retreating : inBattle && v.pending.some((p) => p.nation === me && p.kind === 'battlePlan');
+      const playable = moves ? opts.planning || opts.retreating : inBattle && v.pending.some((p) => p.nation === me && (p.kind === 'battleCards' || p.kind === 'battleChoice'));
       return cardEl(c, {
         color,
         playable,

@@ -1,7 +1,7 @@
-import { isProtected, neighbors, sideOf, suppliedNodes, type GameView } from '@krieg/engine';
+import { isProtected, MUSTER_MIN_VP, musterBlocked, musterNodes, neighbors, sideOf, suppliedNodes, unitCount, UNIT_TYPES, type GameView, type Intent, type UnitType } from '@krieg/engine';
 import { add, h } from './dom';
 import { emblemEl, type Emblem } from './emblem';
-import { nationColor, nationName, nodeName, unitSummary } from './labels';
+import { nationColor, nationName, nodeName, unitIcon, unitName, unitSummary } from './labels';
 import { currentTheme } from '../theme/theme';
 import { iconEl } from './icons';
 import { t } from '../i18n/i18n';
@@ -17,6 +17,9 @@ export function nodeCard(opts: {
   onSelectArmy(id: string): void;
   onSelectNode(id: string): void;
   onClose(): void;
+  /** It is the player's movement phase: offer the turn's muster in this town. */
+  canAct?: boolean;
+  send?(intent: Intent): void;
 }): HTMLElement | null {
   const { view: v, emblems } = opts;
   const n = v.nodes[opts.node];
@@ -57,6 +60,27 @@ export function nodeCard(opts: {
     }, h('span', { class: 'road-line' }), nodeName(v, r.node)))));
 
   if (opts.fogged) add(card, h('div', { class: 'fog-note' }, t('node.fogged')));
+  // Muster: once per turn, below the unit cap, in an own town worth more than 5 VP.
+  const me = opts.me;
+  if (me && n.owner === me && (n.vp > MUSTER_MIN_VP || musterNodes(v, me).includes(n.id))) {
+    const cap = v.nations.find((x) => x.id === me)?.unitCap ?? 0;
+    const count = unitCount(v, me);
+    const blocked = opts.canAct ? musterBlocked(v, me) : 'turn';
+    const here = musterNodes(v, me).includes(n.id);
+    const box = h('div', { class: 'muster' },
+      h('div', { class: 'side-label' }, t('muster.title')),
+      h('div', { class: 'muted small' }, t('muster.cap', { count, cap })));
+    if (!blocked && here) {
+      add(box, h('div', { class: 'row' }, (UNIT_TYPES as UnitType[]).map((ty) => h('button', {
+        title: t('muster.raise', { unit: unitName(ty) }),
+        onclick: () => opts.send?.({ type: 'muster', node: n.id, unit: ty }),
+      }, unitIcon(ty, 16), ` ${unitName(ty)}`))));
+    } else {
+      const why = blocked === 'used' ? 'muster.used' : blocked === 'cap' ? 'muster.atCap' : blocked === 'turn' ? 'muster.notNow' : 'muster.townBlocked';
+      add(box, h('div', { class: 'muted small' }, t(why)));
+    }
+    add(card, box);
+  }
   add(card, h('div', { class: 'side-label' }, armies.length ? t('node.armiesHere', { count: armies.length }) : t('node.noArmies')),
     armies.length ? h('div', { class: 'choice-list' }, armies.map((a) => h('button', { class: 'choice', onclick: () => opts.onSelectArmy(a.id) },
       emblemEl(emblems.get(a.nation), 20), t('node.armyOption', { nation: a.nation, army: a.id }), h('span', { class: 'muted small' }, ' · ', unitSummary(a.units))))) : null);

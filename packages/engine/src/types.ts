@@ -1,6 +1,6 @@
 export type UnitType = 'cavalry' | 'infantry' | 'artillery' | 'supply';
 export const UNIT_TYPES: UnitType[] = ['cavalry', 'infantry', 'artillery', 'supply'];
-export const UNIT_SPEED: Record<UnitType, number> = { cavalry: 4, infantry: 3, artillery: 2, supply: 1 };
+export const UNIT_SPEED: Record<UnitType, number> = { cavalry: 4, infantry: 3, artillery: 2, supply: 2 };
 /** Generals are non-combat units that ride with their army; alone they move like cavalry. */
 export const GENERAL_SPEED = 4;
 
@@ -24,6 +24,8 @@ export interface Nation {
   threshold: number;
   warExhaustion: number;
   knockedOut: boolean;
+  /** Soft cap on the nation's units: half the victory points it started with. Musters stop there; events may go past it. */
+  unitCap: number;
 }
 
 export interface MapNode {
@@ -101,62 +103,117 @@ export type BattleRole = 'attacker' | 'defender';
 
 export interface CardPlacement {
   cardId: string;
-  /** Whose die a roll card is placed on (Retreat and Block Retreat need no die). */
-  role?: BattleRole;
-  die?: number;
-}
-
-/** A side's secret plan for a round, made after seeing its own roll. */
-export interface BattlePlan {
-  /** The committed unit fighting with each die (`units[i]` goes with die i). */
-  units: string[];
-  cards: CardPlacement[];
-}
-
-export interface DieResult {
-  /** Index of the attacker die (a "comparison"). */
+  /** Whose die a roll card is placed on. */
+  role: BattleRole;
+  /** Index of the die (the unit it was rolled for) on that side. */
   die: number;
+}
+
+/** A roll card on a die, with its type. */
+export interface PlacedCard extends CardPlacement {
+  type: GeneralCardType;
+}
+
+/**
+ * What a side does before the dice are rolled: fight on, play Retreat or Block Retreat, or flee
+ * in panic. 'hidden' only appears in views, for an enemy choice that is not revealed yet.
+ */
+export type BattleChoice = 'fight' | 'block' | 'retreat' | 'panic';
+
+/** One attacking unit against the defending unit it faces. */
+export interface Duel {
+  /** Index of the attacking unit in `units.attacker` (and of its die). */
+  attacker: number;
+  /** Index of the defending unit in `units.defender` (and of its die). */
+  defender: number;
   attackerPoints: number;
   defenderPoints: number;
   /** Unit-type bonuses included in the points above. */
   attackerBonus: number;
   defenderBonus: number;
   winner: BattleRole;
-  /** Units destroyed in this comparison: the losing side's units on it. */
-  destroyed: string[];
+  /** The losing unit, destroyed. */
+  destroyed: string;
+}
+
+/** A finished round, kept for the battle popup. */
+export interface BattleRound {
+  round: number;
+  units: Record<BattleRole, string[]>;
+  types: Record<BattleRole, UnitType[]>;
+  targets: number[];
+  choices: Record<BattleRole, BattleChoice>;
+  /** Null when the battle ended before the roll (a retreat or panic went through). */
+  dice: Record<BattleRole, number[]> | null;
+  cards: Record<BattleRole, PlacedCard[]>;
+  duels: Duel[];
 }
 
 /**
- * A battle round: 'units' (both commit units, face down) → 'roll' → 'plan' (each sees only its own
- * roll, puts a unit on each die and commits cards) → 'defenderAssign' (dice and units are shown; the
- * defender opposes attacker dice) → reveal and resolve → 'panic' / 'retreat' when an army flees.
+ * A battle round: 'select' (the host picks the fighting units and who faces whom at random) →
+ * 'choose' (each side secretly decides to fight, retreat, block or panic) → 'roll' → 'cards'
+ * (both see every die and may put roll cards on them) → resolve → next round. 'retreat' while an
+ * army falls back.
  */
-export type BattleStep = 'units' | 'roll' | 'plan' | 'defenderAssign' | 'panic' | 'retreat';
+export type BattleStep = 'select' | 'choose' | 'roll' | 'cards' | 'retreat';
+
+/** One side of a battle report. */
+export interface BattleSideReport {
+  nation: NationId;
+  army: string;
+  /** Every unit the army had when the battle began. */
+  units: UnitType[];
+  generals: number;
+  /** Units destroyed in the battle (all of them when the army was destroyed). */
+  lost: UnitType[];
+  /** How the side left the battle. */
+  fate: 'held' | 'retreated' | 'destroyed';
+}
+
+/** The outcome of a finished battle, for the Battle over popup. */
+export interface BattleReport {
+  id: string;
+  node: NodeId;
+  rounds: number;
+  attacker: BattleSideReport;
+  defender: BattleSideReport;
+  /** Null when neither side kept the field (both retreated or both were destroyed). */
+  winner: BattleRole | null;
+  /** The last round fought, for the players who fought it (left out of everyone else's view). */
+  finalRound?: BattleRound | null;
+}
 
 export interface Battle {
+  /** Unique within the game: turn and armies. */
+  id: string;
+  /** Where the defender stood when the battle began. */
+  node: NodeId;
   attackerArmy: string;
   defenderArmy: string;
+  /** Each side as it entered the battle. */
+  start: Record<BattleRole, { nation: NationId; units: UnitType[]; generals: number }>;
+  /** Teams fighting in the battle. */
+  involved: Team[];
+  /** Teams that could see the battle's nodes when it began (the fighting teams included). Everyone else never learns of it. */
+  witnesses: Team[];
+  /** Sides that got away. */
+  retreated: BattleRole[];
   step: BattleStep;
   round: number;
-  /** Combat units each side sends into this round (one per die). */
-  units: Record<BattleRole, string[] | null>;
+  /** The combat units fighting this round, picked at random. */
+  units: Record<BattleRole, string[]>;
+  /** For each attacking unit, the index in `units.defender` of the unit it faces. */
+  targets: number[];
+  choice: Record<BattleRole, BattleChoice | 'hidden' | null>;
+  /** One die per fighting unit, in the order of `units`. */
   dice: Record<BattleRole, number[]> | null;
-  plan: Record<BattleRole, BattlePlan | null>;
-  /** Cards each side committed this round (from its plan). */
-  committed: Record<BattleRole, Card<GeneralCardType>[] | null>;
-  /** Per defender die: which attacker die it opposes. */
-  defenderAssign: number[] | null;
-  lastRound: {
-    results: DieResult[];
-    dice: Record<BattleRole, number[]>;
-    plans: Record<BattleRole, BattlePlan>;
-    defenderAssign: number[];
-    placements: Record<BattleRole, (CardPlacement & { type: GeneralCardType })[]>;
-  } | null;
-  /** Remaining retreat work, processed front to back. A panicking army first loses units the enemy picks. */
-  retreats: { role: BattleRole; panic: boolean }[];
-  /** A side that panicked instead of fighting. */
-  panic?: BattleRole | null;
+  /** Roll cards each side put on dice this round; null until it has decided (and, for the enemy, until the reveal). */
+  cards: Record<BattleRole, PlacedCard[] | null>;
+  lastRound: BattleRound | null;
+  /** Sides still to fall back, processed front to back. */
+  retreats: BattleRole[];
+  /** Units each side has lost in this battle. */
+  lost: Record<BattleRole, UnitType[]>;
 }
 
 export interface Reveal {
@@ -171,14 +228,11 @@ export interface Reveal {
 export type Prompt =
   | { nation: NationId; kind: 'movement' }
   | { nation: NationId; kind: 'chooseBattle'; options: string[] }
-  /** Commit combat units to the round (or panic). */
-  | { nation: NationId; kind: 'battleUnits'; count: number }
-  /** After seeing its own roll: a unit on each die, and any cards. */
-  | { nation: NationId; kind: 'battlePlan' }
-  | { nation: NationId; kind: 'defenderAssign' }
+  /** Before the roll: fight on, play Retreat or Block Retreat, or flee in panic. */
+  | { nation: NationId; kind: 'battleChoice' }
+  /** After the roll: put roll cards on dice (or none). */
+  | { nation: NationId; kind: 'battleCards' }
   | { nation: NationId; kind: 'retreat'; army: string }
-  /** The enemy panicked (or its retreat was blocked): pick `count` of its combat units to destroy. */
-  | { nation: NationId; kind: 'panicTargets'; army: string; count: number }
   | { nation: NationId; kind: 'attrition'; army: string }
   | { nation: NationId; kind: 'sabotage'; options: string[] }
   /** Recruit event: place `remaining` new units (or one general) on one of `options` (own nodes). */
@@ -186,7 +240,9 @@ export type Prompt =
 
 export type OracleRequest =
   | { kind: 'shuffle'; deck: 'general' | 'event'; n: number }
-  | { kind: 'roll'; attacker: number; defender: number };
+  | { kind: 'roll'; attacker: number; defender: number }
+  /** Pick `attackerPick` of the attacker's `attacker` combat units, `defenderPick` of the defender's, and a target for each attacking unit. */
+  | { kind: 'select'; attacker: number; attackerPick: number; defender: number; defenderPick: number };
 
 export type Phase = 'turnStart' | 'movement' | 'battle' | 'turnEnd' | 'gameOver';
 export type TurnStartStep = 'general' | 'event' | 'eventResolve';
@@ -218,6 +274,8 @@ export interface GameState {
   pending: Prompt[];
   oracle: OracleRequest | null;
   reveals: Reveal[];
+  /** The current nation has used its muster this turn (one unit in a town worth more than 5 VP). */
+  mustered: boolean;
   /** Winning team: a side, or a nation id in a free-for-all game. */
   winner: Team | null;
   nextId: number;
@@ -248,4 +306,10 @@ export interface HistoryEntry {
   nation?: NationId;
   /** Node the entry concerns (click-to-locate). */
   node?: NodeId;
+  /** Only these teams may see the entry (battles are hidden from those who could not see them). */
+  teams?: Team[];
+  /** Only these nations may see the entry (how a battle is fought is for the two sides fighting it). */
+  nations?: NationId[];
+  /** A finished battle's outcome. */
+  report?: BattleReport;
 }
