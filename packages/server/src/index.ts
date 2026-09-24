@@ -24,6 +24,7 @@ const TYPES: Record<string, string> = {
   '.svg': 'image/svg+xml',
   '.krieg': 'application/zip',
   '.woff2': 'font/woff2',
+  '.glb': 'model/gltf-binary',
   '.woff': 'font/woff',
   '.ttf': 'font/ttf',
 };

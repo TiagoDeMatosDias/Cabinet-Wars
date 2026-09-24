@@ -7,6 +7,7 @@ import { applyTheme, CANONICAL_ID, listThemes, playerOverride, resolveTheme } fr
 import { t } from './i18n/i18n';
 import type { Session } from './net/session';
 import { editorScreen } from './editor/editor';
+import { galleryScreen } from './ui/gallery';
 import { gameScreen } from './ui/game';
 import { lobbyScreen, menuScreen, startGame, type MenuActions } from './ui/menu';
 
@@ -34,6 +35,10 @@ const actions: MenuActions = {
       back: () => menu(),
       play: (m) => void startGame(m, false, actions),
     }).then((c) => { cleanup = c; });
+  },
+  gallery() {
+    reset();
+    void galleryScreen(root, () => menu()).then((c) => { cleanup = c; });
   },
 };
 

@@ -578,7 +578,16 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       visible: handoff ? undefined : visible,
       ghosts: handoff ? [] : ghosts,
       arrows: handoff ? [] : arrows,
+      fighting: fighting(v),
     });
+  }
+
+  /** The two armies of the current battle, each facing the other's node. */
+  function fighting(v: GameView): Map<string, string> {
+    const out = new Map<string, string>();
+    const [att, def] = v.battle ? [v.armies[v.battle.attackerArmy], v.armies[v.battle.defenderArmy]] : [];
+    if (att && def) { out.set(att.id, def.node); out.set(def.id, att.node); }
+    return out;
   }
 
   async function saveGame(host: HostSession) {

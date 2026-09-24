@@ -5,7 +5,7 @@
 **As built:**
 - The default themes are `imperial-china` and `prussian-baroque`. Like every theme they are folders in `themes/` (`themes/<id>/theme.json`), which the server lists at `/api/themes`.
 - Extra themes can be shared from the server's `themes/` folder.
-- A map can name a theme id in `config.json`, or embed a partial theme object there. A theme folder *inside* a map or `.krieg` bundle is not supported yet, and the texture and ornament images (and `army.model` sprites) aren't shipped.
+- A map can name a theme id in `config.json`, or embed a partial theme object there. A theme folder *inside* a map or `.krieg` bundle is not supported yet, and the texture and ornament images aren't shipped.
 - The editor has a theme picker with live preview and shows contrast and highlight-vs-nation warnings. The main menu has the player's own theme setting.
 
 See the [README](../Readme.md) for the game rules, map format and how to run the game.
@@ -306,7 +306,7 @@ Tokens for the components described in the [game screen specification](game-scre
 | `cards.width` / `cards.height` / `cards.radius` / `cards.frameWidth` | Card size and shape. The frame is always filled with the owning nation's color; the face uses `color.card.face`, `color.card.faceDisabled` (cards not playable now) and `color.card.ink` from 4.1 |
 | `cards.lift` / `cards.fan` | How far a hovered card rises (px) and the hand's fan angle (degrees) |
 | `tooltip.surface` / `tooltip.text` / `tooltip.delay` | Tooltip colors (an inverse surface) and hover delay (ms) |
-| `army.model` | Sprite sheet asset with the miniature parts (plinth block, banner, crate, finial) and their tint masks |
+| `army.model` | 3D miniatures: `units` (a glTF file per `infantry`, `cavalry`, `artillery`, `supply`, `general`, relative to the theme folder), `tint` (the material recolored with the nation color), `unitsPerFigure` / `maxFigures` / `maxWagons` / `maxGenerals` (how many figures an army shows), `figureHeight` (map pixels of a 1.8 m figure), `scale` (per kind), `view` (`pitch`, `turn` in degrees) and `fps`. `false` keeps the procedural blocks. Models need `Idle`, `Walk` and `Combat` animations ([models README](../themes/imperial-china/models/README.md)) |
 | `army.blockPerUnits` / `army.maxBlocks` | Plinth height: one block per this many combat units, capped |
 | `army.shadow` | Ground shadow color and blur |
 | `army.ghostAlpha` | Opacity of planned-position ghost miniatures |

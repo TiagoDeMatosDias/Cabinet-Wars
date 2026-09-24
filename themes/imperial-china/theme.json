@@ -289,7 +289,30 @@
     "delay": 300
   },
   "army": {
-    "model": null,
+    "model": {
+      "units": {
+        "infantry": "models/infantry.glb",
+        "cavalry": "models/cavalry.glb",
+        "artillery": "models/artillery.glb",
+        "supply": "models/supply.glb",
+        "general": "models/general.glb"
+      },
+      "tint": "Nation",
+      "unitsPerFigure": 2,
+      "maxFigures": 5,
+      "maxWagons": 2,
+      "maxGenerals": 2,
+      "figureHeight": 36,
+      "scale": {
+        "artillery": 0.85,
+        "supply": 0.7
+      },
+      "view": {
+        "pitch": 30,
+        "turn": 60
+      },
+      "fps": 12
+    },
     "blockPerUnits": 2,
     "maxBlocks": 5,
     "shadow": {

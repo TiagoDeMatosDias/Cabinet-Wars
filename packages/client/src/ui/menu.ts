@@ -19,6 +19,7 @@ export interface MenuActions {
   play(session: Session): void;
   lobby(session: Session): void;
   edit(map: MapBundle | null): void;
+  gallery(): void;
 }
 
 const NAME_KEY = 'krieg:name';
@@ -127,7 +128,8 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions) {
     h('section', {},
       h('h2', {}, t('menu.appearance')),
       h('label', { class: 'row' }, `${t('menu.theme')} `, themeSelect),
-      h('label', { class: 'row' }, `${t('menu.language')} `, langSelect)),
+      h('label', { class: 'row' }, `${t('menu.language')} `, langSelect),
+      h('div', { class: 'row' }, h('button', { title: t('menu.galleryTitle'), onclick: () => actions.gallery() }, t('menu.gallery')))),
   ));
 
   async function importFile() {

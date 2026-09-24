@@ -37,6 +37,21 @@ export async function listThemes(): Promise<ThemeInfo[]> {
 
 const fetched = new Map<string, PartialTheme>();
 
+/**
+ * Makes the army model paths of a theme absolute (/api/themes/<id>/…), so a theme that inherits
+ * them through `extends` still loads them from the folder that declared them.
+ */
+function withModelUrls<T extends PartialTheme>(theme: T, id: string): T {
+  const model = (theme.army as { model?: unknown } | undefined)?.model;
+  if (!isObject(model) || !isObject(model.units)) return theme;
+  const units: Record<string, string> = {};
+  for (const [k, v] of Object.entries(model.units)) {
+    if (typeof v !== 'string') continue;
+    units[k] = /^(\/|[a-z]+:)/i.test(v) ? v : `/api/themes/${encodeURIComponent(id)}/${v}`;
+  }
+  return { ...theme, army: { ...theme.army, model: { ...model, units } } } as T;
+}
+
 const OVERRIDE_KEY = 'krieg:theme';
 
 export function playerOverride(): string | null {
@@ -61,12 +76,12 @@ function merge(base: unknown, over: unknown): unknown {
 async function fetchTheme(id: string): Promise<PartialTheme | null> {
   const cached = fetched.get(id);
   if (cached) return cached;
-  const fallback = id === CANONICAL_ID ? (imperialChina as PartialTheme) : null;
+  const fallback = id === CANONICAL_ID ? withModelUrls(imperialChina as PartialTheme, CANONICAL_ID) : null;
   try {
     const base = `/api/themes/${encodeURIComponent(id)}/`;
     const res = await fetch(`${base}theme.json`);
     if (!res.ok) return fallback;
-    const theme = (await res.json()) as PartialTheme;
+    const theme = withModelUrls((await res.json()) as PartialTheme, id);
     // Register the theme's bundled fonts, served from its folder.
     const assets = (theme.assets ?? {}) as Record<string, string>;
     const fonts = (theme.fonts ?? {}) as Record<string, { asset: string; weight?: number; style?: string }[]>;
@@ -88,7 +103,7 @@ async function fetchTheme(id: string): Promise<PartialTheme | null> {
 
 /** Resolves a theme reference (id or inline object) into a complete theme, following `extends`. */
 export async function resolveTheme(ref: unknown, depth = 0): Promise<Theme> {
-  const canonical = imperialChina as Theme;
+  const canonical = withModelUrls(imperialChina as PartialTheme, CANONICAL_ID) as Theme;
   let partial: PartialTheme | null = null;
   if (typeof ref === 'string') partial = await fetchTheme(ref);
   else if (isObject(ref)) partial = ref as PartialTheme;
@@ -105,7 +120,7 @@ export function themeForMap(config: Record<string, unknown> | null): Promise<The
 
 // ---- applying -------------------------------------------------------------
 
-let current: Theme = imperialChina as Theme;
+let current: Theme = withModelUrls(imperialChina as PartialTheme, CANONICAL_ID) as Theme;
 const listeners = new Set<(t: Theme) => void>();
 
 export function currentTheme(): Theme {

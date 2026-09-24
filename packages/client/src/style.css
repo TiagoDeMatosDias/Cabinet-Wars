@@ -455,3 +455,20 @@ table.grid td, table.grid th { padding: 3px 4px; text-align: left; font-size: 13
 .popup-pill.your-move { animation: pill-pulse 1.6s ease-in-out infinite; }
 @keyframes pill-pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--danger) 35%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .popup-pill.your-move { animation: none; } }
+
+/* ---- theme gallery ---- */
+.gallery { max-width: 1180px; }
+.gallery-head { gap: 16px; }
+.gallery-controls { gap: 18px; margin-top: 12px; position: sticky; top: 0; z-index: 2; background: var(--app, var(--k-color-surface-app)); padding: 8px 0; }
+.swatch { width: 26px; height: 26px; padding: 0; border-radius: var(--r-chip); border: 2px solid var(--border); }
+.swatch.active { outline: 3px solid var(--focus); outline-offset: 1px; }
+.gallery-units { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.gallery-unit { margin: 0; background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-card); padding: 8px; box-shadow: var(--shadow); text-align: center; }
+.gallery-viewer { width: 100%; aspect-ratio: 1; display: block; cursor: grab; touch-action: none; }
+.gallery-viewer:active { cursor: grabbing; }
+.gallery-icon { display: flex; align-items: center; justify-content: center; cursor: default; color: var(--text); }
+.gallery-map { position: relative; height: 420px; border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.gallery-chip { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-chip); padding: 6px 8px; min-width: 0; overflow-wrap: anywhere; }
+.gallery-swatch { width: 22px; height: 22px; flex: none; border-radius: var(--r-chip); border: 1px solid var(--control); }
+.gallery-display { font-family: var(--font-display); font-size: var(--k-type-size-display, 36px); letter-spacing: var(--k-type-tracking-display, 0.08em); margin: 8px 0; }
