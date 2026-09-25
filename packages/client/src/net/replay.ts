@@ -103,4 +103,9 @@ export class ReplaySession implements Session {
   claim() { /* nothing to claim in a replay */ }
   release() { /* nothing to release in a replay */ }
   status() { return t('replay.status'); }
+  players() { return []; }
+  chat() { return []; }
+  deadlines() { return {}; }
+  sendChat() { /* no one to talk to in a replay */ }
+  leave() { /* nothing to leave */ }
 }

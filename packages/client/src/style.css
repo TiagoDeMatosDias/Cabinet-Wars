@@ -102,6 +102,60 @@ input[type='color'] { padding: 0; width: 2.2em; height: 1.8em; }
 .item .emblem { margin-right: 8px; }
 .room { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-card); padding: 12px; margin-top: 16px; }
 .room .code { font-family: var(--font-display); font-size: var(--k-type-size-display, 36px); letter-spacing: 0.2em; font-weight: 700; color: var(--seal); }
+.room .row { align-items: baseline; }
+.invite-links { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.invite-link .row { flex-wrap: nowrap; }
+.invite-link input { flex: 1; min-width: 0; font-family: var(--font-num); font-size: 13px; }
+.invite-link.primary input { font-size: 15px; border-color: var(--seal); }
+
+/* Online lobby: nations beside the players and chat. */
+.menu-page.lobby-online { max-width: 1040px; }
+.lobby-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr); gap: 16px; align-items: start; }
+.lobby-side { display: flex; flex-direction: column; }
+.lobby-side .chat { height: 320px; }
+.item.seat.mine { border-color: var(--seal); border-left: 4px solid var(--seal); }
+.players { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.players li { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.players li.offline { color: var(--muted); }
+.presence { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--control); margin-right: 4px; }
+.presence.on { background: var(--success); border-color: var(--success); }
+.player-nations { display: inline-flex; gap: 3px; margin-left: auto; }
+@media (max-width: 800px) { .lobby-grid { grid-template-columns: 1fr; } }
+
+/* ---- chat ---- */
+.chat { display: flex; flex-direction: column; min-height: 0; background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-card); }
+.chat-lines { flex: 1; min-height: 0; overflow-y: auto; list-style: none; margin: 0; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
+.chat-line { font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.chat-line.notice { color: var(--muted); font-style: italic; }
+.chat-emblems { display: inline-flex; gap: 2px; vertical-align: -3px; margin-right: 4px; }
+.chat-from { font-weight: 700; }
+.chat-form { display: flex; gap: 6px; padding: 6px; border-top: 1px solid var(--border); }
+.chat-input { flex: 1; min-width: 0; }
+
+.slot-chat { left: 16px; top: 12px; }
+.chat-dock { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.chat-toggle { display: inline-flex; gap: 6px; align-items: center; font-weight: 700; box-shadow: var(--shadow-overlay); background: var(--panel); }
+.chat-unread:not(:empty) { min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--seal); color: var(--on-seal); font-size: 11px; line-height: 18px; text-align: center; }
+.chat-peek { display: none; max-width: 300px; padding: 6px 10px; background: var(--panel); border: 1px solid var(--control); border-radius: var(--r-card); box-shadow: var(--shadow-overlay); font-size: 13px; cursor: pointer; overflow-wrap: anywhere; }
+.chat-peek.show { display: block; }
+.chat-panel { display: none; width: 340px; max-width: calc(100vw - 32px); height: 360px; max-height: calc(100vh - 160px); flex-direction: column; background: var(--panel); border: 1px solid var(--control); border-radius: var(--r-card); box-shadow: var(--shadow-overlay); }
+.chat-panel > header { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; font-family: var(--font-display); font-size: 17px; }
+.chat-panel > header .link { font-size: 20px; text-decoration: none; color: var(--muted); }
+.chat-panel .chat { flex: 1; border: 0; border-top: 1px solid var(--border); border-radius: 0 0 var(--r-card) var(--r-card); }
+.chat-dock.open .chat-panel { display: flex; }
+.chat-dock.open .chat-peek { display: none; }
+
+/* Idle clock: above the turn controls. */
+.slot-clock { right: 16px; bottom: 104px; }
+.turn-clock { display: none; align-items: center; gap: 8px; padding: 5px 12px; background: var(--panel); border: 1px solid var(--control); border-left: 5px solid var(--info); border-radius: var(--r-card); box-shadow: var(--shadow-overlay); font-family: var(--font-num); font-size: 13px; }
+.turn-clock.show { display: flex; }
+.turn-clock.warning { border-left-color: var(--danger); color: var(--danger); font-weight: 700; }
+.players .small-button { padding: 1px 8px; font-size: 12px; }
+
+/* A joined game that lost its host. */
+.net-banner { display: none; position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 50; align-items: center; gap: 12px; padding: 8px 16px; background: var(--panel); border: 1px solid var(--control); border-top: 0; border-left: 6px solid var(--warning); border-radius: 0 0 var(--r-card) var(--r-card); box-shadow: var(--shadow-overlay); }
+.net-banner.show { display: flex; }
+.net-banner.final { border-left-color: var(--danger); }
 
 /* The menu screens sit on the theme's paper, ruled like a campaign map (graticule, vignette and a
    compass rose in the ink colour), so they take on each theme's look. */

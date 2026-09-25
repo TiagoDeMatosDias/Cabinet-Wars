@@ -1,13 +1,13 @@
-/** Minimal IndexedDB wrapper with two stores: user maps and saved games. */
+/** Minimal IndexedDB wrapper: user maps, saved games, and online games hosted here (to resume them). */
 const DB_NAME = 'krieg';
-const STORES = ['maps', 'saves'] as const;
+const STORES = ['maps', 'saves', 'hosted'] as const;
 type Store = (typeof STORES)[number];
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 function db(): Promise<IDBDatabase> {
   dbPromise ??= new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = indexedDB.open(DB_NAME, 2);
     req.onupgradeneeded = () => { for (const s of STORES) if (!req.result.objectStoreNames.contains(s)) req.result.createObjectStore(s, { keyPath: 'id' }); };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);

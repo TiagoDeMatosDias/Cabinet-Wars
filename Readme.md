@@ -15,6 +15,7 @@ It is a multiplayer strategy game in which players control nations and their arm
 - [Raising units](#raising-units)
 - [Card decks](#card-decks)
 - [Maps and custom content](#maps-and-custom-content)
+- [Playing online](#playing-online)
 - [Computer players](#computer-players)
 - [Saves and replays](#saves-and-replays)
 - [Running the game](#running-the-game)
@@ -89,6 +90,8 @@ An army is within reach of supply if it is:
 - on a friendly node (a node owned by the army's nation or an ally), or
 - within 2 nodes of a friendly node, or
 - within 4 nodes of a supply unit that is itself supplied.
+
+Supply doesn't pass through enemy armies. A node holding an enemy army is not a source of supply, even if the army's side controls it, and the 2 or 4 nodes are counted only along roads free of enemy armies. For example, if friendly land at A supplies a supply unit at C through A → B → C, an enemy army on A or B cuts that supply unit off, together with the armies it supplies. Since you only see the enemy armies your fog of war shows you, a hidden enemy army can cut your supply by surprise.
 
 This forces armies advancing into enemy territory to leave supply units behind, or suffer attrition. It also allows "chains" of supply units that provide a path to an army.
 
@@ -237,6 +240,31 @@ All text in the game is English by default. A map can add any number of language
 - Players choose their language under **Settings** on the main menu or in the game's top bar, from the languages the map offers.
 - Icons contain no text, so they look the same in every language.
 
+## Playing online
+
+One player hosts the game in their browser; the others join it from theirs, on the same computer, the same network, or anywhere on the internet.
+
+- **Host.** Under **Multiplayer**, choose **Host online** next to a map or a saved game. The lobby shows the room code and invitation links:
+  - **for anyone, on any network**: a public `https://….trycloudflare.com` address the server opens for the game (see below);
+  - **for your local network**: this computer's address on the network;
+  - **on this computer**: for another tab or browser here.
+- **Join.** Open an invitation link: with a name set (under **Settings**, or asked for on the spot), it joins straight away. Or enter the room code under **Multiplayer**.
+- **Lobby.** Each player takes the nations they want to play (**Take this nation**) and can release them again. The host can play nations themselves, hand them to the computer, free the seat of a player who went offline, or **Kick** a player: their nations open up and they can't rejoin. The host starts the game; open seats are then played by the host.
+- **Idle players.** In an online game, a player who takes no action for 5 minutes when it is up to them is moved on: their turn ends, or for any other decision (a battle, a retreat, a recruit…) the default choice is made for them. Every action restarts the clock. A clock above the turn controls shows the time left, and warns in the last minute. This also keeps a game going when a player's connection is gone.
+- **Chat.** The lobby and the game have a chat for everyone in the room. It notes who joins, leaves, and takes which nation. In the game, the **Chat** button at the top left of the map opens it (or press Enter); new messages show beside it while it is closed.
+- **Reconnecting.** A player whose connection drops, or who reloads the page, rejoins by themselves with their nations. If the host reloads, the game carries on from where it was, and everyone reconnects; the room waits 3 minutes for its host. Leaving (the **Leave** button) as host ends the game for everyone.
+- Players who join without a nation watch the game, seeing only what every player knows.
+
+### Connections and HTTPS
+
+The server answers on one port (8787 by default) with both HTTPS and HTTP. Browsers require HTTPS for the game's cryptography and clipboard, so:
+
+- `http://localhost:8787` serves this computer directly;
+- other computers are sent to `https://<this computer's address>:8787`. Its certificate is made by the server itself (kept in `.krieg/tls`), so each browser asks once to trust it. To use a real certificate, set `KRIEG_TLS_CERT` and `KRIEG_TLS_KEY` to its PEM files;
+- the public link is a [Cloudflare quick tunnel](https://try.cloudflare.com): free, no account, with a valid certificate, and no router set-up. The server opens it when someone first hosts an online game, downloading the `cloudflared` program into `.krieg/bin` the first time if it is not installed. The address changes each time the server starts. Set `KRIEG_TUNNEL=off` to never open one.
+
+Players' browsers connect to the host directly (WebRTC) when their networks allow it, and through the server otherwise. They keep the maps they downloaded, so joining again is quick even when the host's upload is slow.
+
 ## Computer players
 
 Before a game starts, the lobby lists every nation of the map. The host can choose **Computer plays** for any nation that is played here or still open. In a hotseat game, any nation not played by the computer is played on this device. How the computer plays depends on the nation's role:
@@ -269,13 +297,14 @@ Requires Node 22.
     npm test            # engine rules tests (vitest)
     npm run build       # build the browser client
     npm run server      # http://localhost:8787 — serves the client, Map/*, saves/*, and WebRTC signaling
+                        # (also HTTPS on the same port, and a public link when hosting: see Playing online)
 
 During development, run `npm run server` and `npm run dev` (Vite, proxies /api and /ws to the server) together.
 
 ### Code layout
 
 - `packages/engine`: pure rules engine, shared by everything.
-- `packages/server`: static files, map/save listings, signaling.
+- `packages/server`: static files, map/save listings, signaling, HTTPS certificate and public tunnel.
 - `packages/client`: PixiJS map, game UI, map editor, P2P host/peer sessions.
 
 ## Documentation

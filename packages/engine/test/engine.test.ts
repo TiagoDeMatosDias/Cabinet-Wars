@@ -645,7 +645,8 @@ describe('supply', () => {
     expect(red.has('d2')).toBe(false);
     g.state.armies.S = { id: 'S', nation: 'red', node: 'd3', generals: [], units: [{ id: 's', type: 'supply' }], moved: g.state.armies.R.moved };
     const chained = suppliedNodes(g.state, 'attacker');
-    expect(chained.has('d1')).toBe(true);
+    expect(chained.has('d2')).toBe(true);
+    expect(chained.has('d1')).toBe(false); // blue's army stands there
   });
 
   it('tells whether a move would leave an army out of supply', () => {
@@ -663,6 +664,27 @@ describe('supply', () => {
     expect(suppliedAt(g.state, ['R', 'S'], 'd1')).toBe(false);
     g.state.armies.S.node = 'd3';
     expect(suppliedAt(g.state, ['R'], 'd1')).toBe(true);
+  });
+
+  it('does not pass through enemy armies', () => {
+    // A → B → C → D → E is a3 → n1 → d3 → d2 → d1: red land (a3) supplies the wagon on d3, which
+    // supplies the army on d1, unless an enemy army stands on the way.
+    const withBlue = (node: string) => new TestGame(testConfig({
+      armies: [
+        { id: 'R', nation: 'red', node: 'd1', generals: ['gr'], units: { cavalry: 1, infantry: 0, artillery: 0, supply: 0 } },
+        { id: 'S', nation: 'red', node: 'd3', generals: [], units: { cavalry: 0, infantry: 0, artillery: 0, supply: 1 } },
+        { id: 'B', nation: 'blue', node, generals: ['gb'], units: { cavalry: 0, infantry: 1, artillery: 0, supply: 0 } },
+      ],
+    }));
+    expect(suppliedNodes(withBlue('x3').state, 'attacker').has('d1')).toBe(true);
+    for (const node of ['a3', 'n1', 'd2']) {
+      const supplied = suppliedNodes(withBlue(node).state, 'attacker');
+      expect(supplied.has('d1'), `blue on ${node}`).toBe(false);
+      expect(supplied.has(node), `blue on ${node}`).toBe(false);
+    }
+    // Blocked at n1, the wagon itself is cut off; blocked at d2, only what lies beyond it.
+    expect(suppliedNodes(withBlue('n1').state, 'attacker').has('d3')).toBe(false);
+    expect(suppliedNodes(withBlue('d2').state, 'attacker').has('d3')).toBe(true);
   });
 
   it('attrition removes a unit at the end of the turn', () => {
@@ -689,9 +711,11 @@ describe('supply wagons', () => {
       ],
     }));
     const supplied = suppliedNodes(g.state, 'attacker');
-    // From the wagon on a3: n1, d3, d2 and d1 (4 nodes); red land alone reaches d3.
+    // From the wagon on a3: n1, d3, d2 and d1 (4 nodes); red land alone reaches d3. x3 holds a
+    // blue army, so the supply stops at x2.
     expect(supplied.has('d1')).toBe(true);
-    expect(supplied.has('x3')).toBe(true);
+    expect(supplied.has('x2')).toBe(true);
+    expect(supplied.has('x3')).toBe(false);
   });
 
   it('move as fast as artillery', () => {

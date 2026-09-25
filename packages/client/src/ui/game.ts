@@ -15,6 +15,8 @@ import { errorText, logText, mapNameText, nodeText, onLanguageChange, t, tn, use
 import { armyCard, reorganizeEditor, splitEditor } from './army';
 import { nodeCard } from './node';
 import { battleKey, battleOverPanel, battlePopup, battleRecap, freshBattleUi } from './battle';
+import { chatDock } from './chat';
+import { turnClock } from './turnClock';
 import { clear, download, h, toast } from './dom';
 import { buildEmblems } from './emblem';
 import { nationColor, nationName } from './labels';
@@ -67,12 +69,20 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     modal: h('div', { class: 'slot-modal' }),
     editor: h('div', { class: 'slot-editor' }),
     handoff: h('div', { class: 'slot-handoff' }),
+    chat: h('div', { class: 'slot-chat' }),
+    clock: h('div', { class: 'slot-clock' }),
   };
   const mapEl = h('div', { class: 'map' });
   clear(root, h('div', { class: 'game' }, slots.top,
     h('div', { class: `stage ${session instanceof ReplaySession ? 'replaying' : ''}` },
-      mapEl, slots.army, slots.hand, slots.controls, slots.orders, slots.log, slots.banner, slots.war, slots.replay, slots.modal, slots.editor),
+      mapEl, slots.army, slots.hand, slots.controls, slots.orders, slots.log, slots.banner, slots.war, slots.replay, slots.chat, slots.clock, slots.modal, slots.editor),
     slots.handoff));
+
+  // Online games have a chat; it lives outside render(), so a message being typed survives updates.
+  const chat = session.room ? chatDock(session, () => emblems) : null;
+  if (chat) slots.chat.append(chat.el);
+  const clock = session.room ? turnClock(session, () => emblems) : null;
+  if (clock) slots.clock.append(clock.el);
 
   const map = await MapView.create(mapEl, session.map.files[backgroundName(session.map)] ?? null);
   const unsubTheme = onThemeChange((t) => { emblems = buildEmblems(nations(), session.map, t); map.setTheme(t); render(); });
@@ -722,5 +732,5 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   render();
   // Test hook: ?debug exposes the map and session to automated browser tests.
   if (new URLSearchParams(location.search).has('debug')) (window as unknown as Record<string, unknown>).__krieg = { map, session, plan: () => plan };
-  return () => { stopPlaying(); unsub(); unsubTheme(); unsubLang(); window.removeEventListener('keydown', onKey); map.destroy(); };
+  return () => { stopPlaying(); unsub(); unsubTheme(); unsubLang(); chat?.destroy(); clock?.destroy(); window.removeEventListener('keydown', onKey); map.destroy(); };
 }

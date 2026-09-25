@@ -6,12 +6,17 @@ export const SUPPLY_RANGE = 2;
 /** How far a supplied supply wagon carries supply. */
 export const WAGON_SUPPLY_RANGE = 4;
 
-/** Nodes in supply for a side: within 2 of a friendly-controlled node, or within 4 of a supplied supply unit. */
+/**
+ * Nodes in supply for a side: within 2 of a friendly-controlled node, or within 4 of a supplied
+ * supply unit. Supply doesn't pass through enemy armies: a node holding one is neither a source
+ * nor a step on the way.
+ */
 export function suppliedNodes(state: GameState, side: Team): Set<NodeId> {
+  const blocked = new Set(Object.values(state.armies).filter((a) => sideOf(state, a.nation) !== side).map((a) => a.node));
   const sources = Object.values(state.nodes)
     .filter((n) => sideOf(state, n.controller) === side)
     .map((n) => n.id);
-  let supplied = new Set(distances(state, sources, SUPPLY_RANGE).keys());
+  const supplied = new Set(distances(state, sources, SUPPLY_RANGE, blocked).keys());
   const supplyArmies = Object.values(state.armies).filter(
     (a) => sideOf(state, a.nation) === side && a.units.some((u) => u.type === 'supply'),
   );
@@ -21,7 +26,7 @@ export function suppliedNodes(state: GameState, side: Team): Set<NodeId> {
     for (const a of supplyArmies) {
       if (used.has(a.id) || !supplied.has(a.node)) continue;
       used.add(a.id);
-      for (const n of distances(state, [a.node], WAGON_SUPPLY_RANGE).keys()) supplied.add(n);
+      for (const n of distances(state, [a.node], WAGON_SUPPLY_RANGE, blocked).keys()) supplied.add(n);
       changed = true;
     }
   }

@@ -5,11 +5,12 @@ import {
 import { HostSession } from '../net/host';
 import { ReplaySession } from '../net/replay';
 import { PeerSession } from '../net/peer';
+import { hostOnline } from '../net/hosting';
 import type { MapRef, SeatInfo } from '../net/protocol';
-import { hostRoom } from '../net/rtc';
 import type { Session } from '../net/session';
 import { unpackBundle } from '../storage/bundle';
 import { idb } from '../storage/idb';
+import { chatBox } from './chat';
 import { clear, download, h, pickFiles, toast } from './dom';
 import { buildEmblems, emblemEl, emblemSvg } from './emblem';
 import { iconEl } from './icons';
@@ -27,8 +28,13 @@ export interface MenuActions {
 }
 
 const NAME_KEY = 'krieg:name';
-function playerName(): string {
+export function playerName(): string {
   try { return localStorage.getItem(NAME_KEY) ?? ''; } catch { return ''; }
+}
+
+/** The room this page joined, kept in the address so a reload rejoins it. */
+export function setInviteHash(room: string | null) {
+  history.replaceState(null, '', room ? `${location.pathname}${location.search}#join=${room}` : `${location.pathname}${location.search}`);
 }
 
 async function mapRef(map: MapBundle): Promise<MapRef> {
@@ -52,11 +58,11 @@ export async function startGame(map: MapBundle, online: boolean, actions: MenuAc
     const mode = log.length ? null : chosenMode();
     if (mode) map = { ...map, config: { ...map.config, rules: { ...(map.config.rules as object ?? {}), mode } } };
     const config = parseConfig(map.config);
-    const session = new HostSession(map, config, await mapRef(map), log, aiSeats);
+    const session = new HostSession(map, config, await mapRef(map), log, aiSeats, playerName().trim() || t('lobby.host'));
     if (online) {
-      const room = await hostRoom((ch) => session.addChannel(ch));
-      session.room = room.room;
+      // Seats start open, for the players who join to pick.
       for (const s of session.seats()) if (s.holder !== 'ai') session.release(s.nation);
+      await hostOnline(session);
     }
     // The lobby is where the host picks which nations the computer plays.
     actions.lobby(session);
@@ -161,6 +167,10 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions, start:
   clear(root, screen);
 
   let maps: MapEntry[] = [];
+  /** A join is under way; the invitation was acted on. */
+  let joining = false;
+  let autoJoined = false;
+  const joinStatus = h('span', { class: 'muted' });
   let saves: SaveEntry[] = [];
   let languages = new Map<string, string>([['en', languageName('en', {})]]);
 
@@ -309,21 +319,35 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions, start:
   function multiplayer() {
     const nameInput = h('input', { placeholder: t('menu.yourName'), value: playerName(), 'aria-label': t('menu.yourName') });
     const roomInput = h('input', { placeholder: t('menu.roomCode'), maxlength: 6, style: 'text-transform:uppercase', value: invite ?? '', 'aria-label': t('menu.roomCode') });
-    const joinStatus = h('span', { class: 'muted' });
     const join = async () => {
-      savePlayerName(nameInput.value);
+      if (joining) return;
+      if (!nameInput.value.trim()) { nameInput.focus(); toast(t('menu.nameNeeded'), 'error'); return; }
+      if (!roomInput.value.trim()) { roomInput.focus(); return; }
+      savePlayerName(nameInput.value.trim());
+      joining = true;
       try {
-        const s = await PeerSession.join(roomInput.value, nameInput.value, (m) => { joinStatus.textContent = m; });
+        const s = await PeerSession.join(roomInput.value, nameInput.value.trim(), (m) => { joinStatus.textContent = m; });
+        setInviteHash(s.room);
         actions.lobby(s);
       } catch (e) {
         joinStatus.textContent = '';
-        toast(errorText(e), 'error');
+        const code = (e as { code?: string }).code;
+        toast(code === 'no-room' ? t('menu.noRoom', { room: roomInput.value.trim().toUpperCase() }) : code === 'away' ? t('menu.hostAway') : errorText(e), 'error');
+        if (code === 'no-room') setInviteHash(null);
+      } finally {
+        joining = false;
       }
     };
+    // An invitation joins straight away once the player has a name (once: the menu renders again).
+    if (invite && !autoJoined) {
+      autoJoined = true;
+      if (playerName().trim()) queueMicrotask(() => void join()); else queueMicrotask(() => nameInput.focus());
+    }
     return [
       panel(t('menu.join'),
         invite ? h('p', { class: 'muted small' }, t('menu.inviteReady')) : null,
-        h('div', { class: 'row' }, nameInput, roomInput, h('button', { class: 'primary', onclick: join }, t('menu.joinButton')), joinStatus)),
+        h('form', { class: 'row', onsubmit: (e: Event) => { e.preventDefault(); void join(); } },
+          nameInput, roomInput, h('button', { class: 'primary', type: 'submit' }, t('menu.joinButton')), joinStatus)),
       panel(t('menu.hostNew'),
         h('div', { class: 'row' }, modeSelect()),
         mapList((m) => [h('button', { class: 'primary', onclick: () => void playMap(m, true) }, t('menu.hostOnline'))])),
@@ -463,51 +487,145 @@ function savedAiSeats(seats: Record<string, string> | undefined): string[] {
 function holderText(session: Session, s: SeatInfo): string {
   switch (s.holder) {
     case 'you': return session.isHost ? t('lobby.playedHere') : t('lobby.you');
-    case 'host': return t('lobby.host');
-    case 'other': return s.label ?? t('lobby.anotherPlayer');
+    case 'host': return session.players().find((p) => p.host)?.name ?? t('lobby.host');
+    case 'other': return `${s.label ?? t('lobby.anotherPlayer')}${s.offline ? ` (${t('lobby.offline')})` : ''}`;
     case 'ai': return t(s.aiRole === 'defensive' ? 'lobby.aiDefensive' : 'lobby.aiOffensive');
     default: return t('lobby.open');
   }
 }
 
-/** Seat selection before a game starts: who plays each nation, here, remotely or by computer. */
+interface NetworkInfo {
+  public: { state: 'off' | 'starting' | 'ready' | 'failed'; url?: string; error?: string };
+  lan: string[];
+}
+
+/** Where others can reach this server; waits for the public link to open. */
+async function networkInfo(): Promise<NetworkInfo | null> {
+  try {
+    const res = await fetch('/api/network?wait=1');
+    return res.ok ? await res.json() : null;
+  } catch { return null; }
+}
+
+/** Invitation links for the room: over the internet, on the local network, and on this computer. */
+function invitePanel(room: string) {
+  const links = h('div', { class: 'invite-links' });
+  const link = (label: string, base: string, primary = false) => {
+    const url = `${base.replace(/\/$/, '')}/#join=${room}`;
+    const input = h('input', { value: url, readonly: true, onfocus: (e: Event) => (e.target as HTMLInputElement).select() });
+    return h('div', { class: `invite-link ${primary ? 'primary' : ''}` },
+      h('div', { class: 'small muted' }, label),
+      h('div', { class: 'row' }, input,
+        h('button', {
+          class: primary ? 'primary' : '',
+          onclick: () => {
+            input.select();
+            void (navigator.clipboard?.writeText(url) ?? Promise.reject()).then(() => toast(t('lobby.copied')), () => document.execCommand('copy'));
+          },
+        }, t('lobby.copy'))));
+  };
+  const here = location.origin;
+  const onPublic = /trycloudflare\.com$/.test(location.hostname);
+  const paint = (net: NetworkInfo | null) => {
+    const pub = net?.public;
+    const rows: (HTMLElement | null)[] = [];
+    if (onPublic) rows.push(link(t('lobby.inviteInternet'), here, true));
+    else if (pub?.state === 'ready' && pub.url) rows.push(link(t('lobby.inviteInternet'), pub.url, true));
+    else if (!net || pub?.state === 'starting') rows.push(h('p', { class: 'waiting small' }, t('lobby.publicStarting')));
+    else if (pub?.state === 'failed') rows.push(h('p', { class: 'warn small' }, t('lobby.publicFailed', { error: pub.error ?? '' })));
+    for (const lan of net?.lan ?? []) if (!here.startsWith(lan)) rows.push(link(t('lobby.inviteLan'), lan));
+    rows.push(link(t('lobby.inviteHere'), here));
+    links.replaceChildren(...rows.filter((r): r is HTMLElement => r !== null));
+  };
+  paint(null);
+  // The public link takes a few seconds to open; keep asking while it does.
+  const poll = async () => {
+    const net = await networkInfo();
+    if (!links.isConnected && net) return;
+    paint(net);
+    if (!net || net.public.state === 'starting') setTimeout(() => void poll(), 3000);
+  };
+  void poll();
+  return h('section', { class: 'room menu-panel' },
+    h('h2', {}, t('lobby.invite')),
+    h('div', { class: 'row' }, h('span', {}, t('lobby.roomCode')), h('span', { class: 'code' }, room)),
+    links);
+}
+
+/**
+ * Before a game starts: who plays each nation (here, remotely or by computer), who is in the
+ * room, and the room's chat. Players pick their own nations; the host starts the game.
+ */
 export function lobbyScreen(root: HTMLElement, session: Session, onStart: () => void, onExit: () => void) {
   void useThemeForMap(session.map.config);
   useMapText(session.map.config);
   setDefaultNames(session.map.config);
-  const emblems = buildEmblems(session.config.nations, session.map);
+  let emblems = buildEmblems(session.config.nations, session.map);
   const host = session instanceof HostSession ? session : null;
+  const online = Boolean(session.room);
+
+  const head = h('div');
+  const invite = host && session.room ? invitePanel(session.room) : null;
+  const nations = h('section', { class: 'menu-panel' });
+  const players = h('div');
+  const chat = online ? chatBox(session, () => emblems) : null;
+  const foot = h('div');
+  const page = h('div', { class: `menu-page ${online ? 'lobby-online' : ''}` },
+    head, invite,
+    online
+      ? h('div', { class: 'lobby-grid' }, nations,
+        h('section', { class: 'menu-panel lobby-side' }, players, h('h2', {}, t('chat.title')), chat!.el))
+      : nations,
+    foot);
+  clear(root, h('div', { class: 'menu-screen' }, compassRose(), page));
+
+  const aiTitle = (s: SeatInfo) => t(s.aiRole === 'defensive' ? 'lobby.aiDefensiveTitle' : 'lobby.aiOffensiveTitle');
+  const seatButtons = (s: SeatInfo) => [
+    s.holder === null || (host && s.holder === 'ai') ? h('button', { class: s.holder === null && !host ? 'primary' : '', onclick: () => session.claim(s.nation) }, session.isHost ? t('lobby.playHere') : t('lobby.take')) : null,
+    s.holder === 'you' && (!host || session.room) ? h('button', { onclick: () => session.release(s.nation) }, session.isHost ? t('lobby.openRemote') : t('lobby.release')) : null,
+    host && (s.holder === 'you' || s.holder === null) ? h('button', { title: aiTitle(s), onclick: () => host.setAi(s.nation) }, t('lobby.playAi')) : null,
+    host && s.holder === 'other' && s.offline ? h('button', { title: t('lobby.freeSeatTitle'), onclick: () => host.release(s.nation) }, t('lobby.freeSeat')) : null,
+  ];
+
   const render = () => {
     if (session.started()) { stop(); onStart(); return; }
-    const link = `${location.origin}${location.pathname}#join=${session.room}`;
-    clear(root, h('div', { class: 'menu-screen' }, compassRose(), h('div', { class: 'menu-page' },
-      h('header', { class: 'page-head' },
-        h('h1', {}, mapNameText(session.map.name)),
-        divider(),
-        h('p', { class: 'tagline' }, t('lobby.tagline'))),
-      session.room ? h('div', { class: 'room menu-panel' },
-        h('div', {}, t('lobby.roomCode')),
-        h('div', { class: 'code' }, session.room),
-        h('div', { class: 'row' }, h('input', { value: link, readonly: true, style: 'width:28em' }),
-          h('button', { onclick: () => void navigator.clipboard?.writeText(link).then(() => toast(t('lobby.copied'))) }, t('lobby.copyInvite')))) : null,
-      h('section', { class: 'menu-panel' },
-        h('h2', {}, t('lobby.nations')),
-        session.seats().map((s) => h('div', { class: 'item' },
-          h('div', { class: 'row' }, emblemEl(emblems.get(s.nation), 30), h('strong', {}, nationText(s.nation)), h('span', { class: 'muted' }, ` · ${t(`role.${s.side}`)}`)),
-          h('div', { class: 'row' },
-            h('span', { title: s.holder === 'ai' ? t(s.aiRole === 'defensive' ? 'lobby.aiDefensiveTitle' : 'lobby.aiOffensiveTitle') : undefined }, holderText(session, s)),
-            s.holder === null || (host && s.holder === 'ai') ? h('button', { onclick: () => session.claim(s.nation) }, session.isHost ? t('lobby.playHere') : t('lobby.take')) : null,
-            s.holder === 'you' && (!host || session.room) ? h('button', { onclick: () => session.release(s.nation) }, session.isHost ? t('lobby.openRemote') : t('lobby.release')) : null,
-            host && (s.holder === 'you' || s.holder === null) ? h('button', { title: t(s.aiRole === 'defensive' ? 'lobby.aiDefensiveTitle' : 'lobby.aiOffensiveTitle'), onclick: () => host.setAi(s.nation) }, t('lobby.playAi')) : null)))),
+    clear(head, h('header', { class: 'page-head' },
+      h('h1', {}, mapNameText(session.map.name)),
+      divider(),
+      h('p', { class: 'tagline' }, t('lobby.tagline'))));
+    clear(nations,
+      h('h2', {}, t('lobby.nations')),
+      session.seats().map((s) => h('div', { class: `item seat ${s.holder === 'you' ? 'mine' : ''}` },
+        h('div', { class: 'row' }, emblemEl(emblems.get(s.nation), 30), h('strong', {}, nationText(s.nation)), h('span', { class: 'muted' }, ` · ${t(`role.${s.side}`)}`)),
+        h('div', { class: 'row' },
+          h('span', { title: s.holder === 'ai' ? aiTitle(s) : undefined }, holderText(session, s)),
+          seatButtons(s)))));
+    if (online) {
+      clear(players,
+        h('h2', {}, t('lobby.players')),
+        h('ul', { class: 'players' }, session.players().map((p) => h('li', { class: p.online ? '' : 'offline' },
+          h('span', { class: `presence ${p.online ? 'on' : ''}`, 'aria-hidden': 'true' }),
+          h('strong', {}, p.name),
+          p.host ? h('span', { class: 'muted small' }, ` · ${t('lobby.hostTag')}`) : null,
+          p.you ? h('span', { class: 'muted small' }, ` · ${t('lobby.youTag')}`) : null,
+          p.online ? null : h('span', { class: 'muted small' }, ` · ${t('lobby.offline')}`),
+          host && !p.host ? h('button', {
+            class: 'danger small-button', title: t('lobby.kickTitle'),
+            onclick: () => { if (confirm(t('lobby.kickConfirm', { name: p.name }))) host.kick(p.id); },
+          }, t('lobby.kick')) : null,
+          h('span', { class: 'player-nations' }, p.nations.length
+            ? p.nations.map((n) => emblemEl(emblems.get(n), 18, nationText(n)))
+            : h('span', { class: 'muted small' }, t('lobby.noNation')))))));
+    }
+    clear(foot,
       h('p', { class: 'muted' }, session.status()),
       h('div', { class: 'row' },
         host ? h('button', { class: 'primary', onclick: () => host.start() }, t(session.room ? 'lobby.start' : 'lobby.startLocal')) : h('span', { class: 'waiting' }, t('lobby.waitingHost')),
-        h('button', { onclick: () => { stop(); onExit(); } }, t('lobby.leave'))),
-    )));
+        h('button', { onclick: () => { stop(); onExit(); } }, t('lobby.leave'))));
   };
   const unsub = session.subscribe(render);
   // The map's theme arrives after the first render; its ornament and colors follow.
-  const unsubTheme = onThemeChange(render);
-  const stop = () => { unsub(); unsubTheme(); };
+  const unsubTheme = onThemeChange(() => { emblems = buildEmblems(session.config.nations, session.map); render(); });
+  const stop = () => { unsub(); unsubTheme(); chat?.destroy(); };
   render();
 }

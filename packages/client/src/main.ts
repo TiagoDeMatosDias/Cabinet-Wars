@@ -9,25 +9,44 @@ import type { Session } from './net/session';
 import { editorScreen } from './editor/editor';
 import { galleryScreen } from './ui/gallery';
 import { gameScreen } from './ui/game';
-import { lobbyScreen, menuScreen, startGame, type MenuActions } from './ui/menu';
+import { lobbyScreen, menuScreen, setInviteHash, startGame, type MenuActions } from './ui/menu';
+import { connectionBanner } from './ui/chat';
+import { resumeHosting } from './net/hosting';
 
 const root = document.getElementById('app')!;
 let cleanup: (() => void) | null = null;
+/** The connection banner of the online game being shown. */
+let banner: { session: Session; remove: () => void } | null = null;
 
 function reset() {
   cleanup?.();
   cleanup = null;
 }
 
+/** Leaves an online game (a host ends its room) and starts over at the menu. */
+function leave(session: Session) {
+  session.leave();
+  setInviteHash(null);
+  location.reload();
+}
+
+function showBanner(session: Session) {
+  if (banner?.session === session) return;
+  banner?.remove();
+  banner = session.room ? { session, remove: connectionBanner(session, () => leave(session)) } : null;
+}
+
 const actions: MenuActions = {
   play(session: Session) {
     reset();
-    void gameScreen(root, session, () => { if (confirm(t('game.leaveConfirm'))) location.reload(); }, (replay) => actions.play(replay))
+    showBanner(session);
+    void gameScreen(root, session, () => { if (confirm(t('game.leaveConfirm'))) leave(session); }, (replay) => actions.play(replay))
       .then((c) => { cleanup = c; });
   },
   lobby(session: Session) {
     reset();
-    lobbyScreen(root, session, () => actions.play(session), () => location.reload());
+    showBanner(session);
+    lobbyScreen(root, session, () => actions.play(session), () => leave(session));
   },
   edit(map: MapBundle | null) {
     reset();
@@ -50,4 +69,9 @@ function menu(view?: Parameters<typeof menuScreen>[2]) {
   void menuScreen(root, actions, view);
 }
 
-menu();
+// A tab that hosted an online game takes it back after a reload.
+void resumeHosting().then((session) => {
+  if (!session) menu();
+  else if (session.started()) actions.play(session);
+  else actions.lobby(session);
+});

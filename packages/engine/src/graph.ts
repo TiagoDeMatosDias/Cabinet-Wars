@@ -28,14 +28,15 @@ export function edgeType(state: GameState, a: NodeId, b: NodeId): RoadType | nul
 }
 
 /** Multi-source BFS: distance (in edges) from any source node, up to maxDist. */
-export function distances(state: GameState, sources: Iterable<NodeId>, maxDist = Infinity): Map<NodeId, number> {
+/** Road distances from the sources, up to maxDist. Blocked nodes are never entered, nor used as sources. */
+export function distances(state: GameState, sources: Iterable<NodeId>, maxDist = Infinity, blocked?: ReadonlySet<NodeId>): Map<NodeId, number> {
   const dist = new Map<NodeId, number>();
   let frontier: NodeId[] = [];
-  for (const s of sources) if (!dist.has(s)) { dist.set(s, 0); frontier.push(s); }
+  for (const s of sources) if (!dist.has(s) && !blocked?.has(s)) { dist.set(s, 0); frontier.push(s); }
   for (let d = 1; d <= maxDist && frontier.length; d++) {
     const next: NodeId[] = [];
     for (const n of frontier) for (const nb of neighbors(state, n)) {
-      if (!dist.has(nb.node)) { dist.set(nb.node, d); next.push(nb.node); }
+      if (!dist.has(nb.node) && !blocked?.has(nb.node)) { dist.set(nb.node, d); next.push(nb.node); }
     }
     frontier = next;
   }

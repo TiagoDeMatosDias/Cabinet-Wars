@@ -1,6 +1,6 @@
 import type { GameView, Intent, MapConfig, NationId } from '@krieg/engine';
 import type { MapBundle } from '../maps';
-import type { SeatInfo } from './protocol';
+import type { ChatMsg, PlayerInfo, SeatInfo } from './protocol';
 
 /** What the game screen needs, whether this browser hosts the game or joined it. */
 export interface Session {
@@ -21,6 +21,14 @@ export interface Session {
   claim(nation: NationId): void;
   release(nation: NationId): void;
   status(): string;
+  /** Everyone in an online room (empty offline). */
+  players(): PlayerInfo[];
+  chat(): ChatMsg[];
+  /** When each nation's time to act runs out (this browser's clock); only in online games. */
+  deadlines(): Record<NationId, number>;
+  sendChat(text: string): void;
+  /** Leaves the game: a host ends its room for everyone. */
+  leave(): void;
 }
 
 export class Emitter {

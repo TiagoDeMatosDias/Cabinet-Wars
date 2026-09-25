@@ -32,7 +32,27 @@ export async function listServerMaps(): Promise<ServerMapInfo[]> {
   }
 }
 
-export async function loadServerMap(id: string): Promise<MapBundle> {
+/** Downloads a file, reporting the bytes received so far and the total (0 when unknown). */
+async function fetchBlob(url: string, onBytes?: (got: number, total: number) => void): Promise<Blob | null> {
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const total = Number(res.headers.get('content-length') ?? 0);
+  if (!onBytes || !res.body) return res.blob();
+  const chunks: Uint8Array<ArrayBuffer>[] = [];
+  let got = 0;
+  const reader = res.body.getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    got += value.length;
+    onBytes(got, total);
+  }
+  return new Blob(chunks, { type: res.headers.get('content-type') ?? '' });
+}
+
+/** Loads a map the server provides. `onProgress` gets the share downloaded so far, 0 to 1. */
+export async function loadServerMap(id: string, onProgress?: (share: number) => void): Promise<MapBundle> {
   const base = `/api/maps/${encodeURIComponent(id)}/`;
   const text = await fetch(base + 'config.json').then((r) => (r.ok ? r.text() : ''));
   let config: Record<string, unknown> = {};
@@ -42,8 +62,10 @@ export async function loadServerMap(id: string): Promise<MapBundle> {
     ? (config.nations as { emblem?: { image?: string } }[]).map((n) => n.emblem?.image).filter((x): x is string => !!x)
     : [];
   for (const name of new Set([backgroundName(map), nodesImageName(map), ...emblemImages])) {
-    const res = await fetch(base + encodeURIComponent(name));
-    if (res.ok) map.files[name] = await res.blob();
+    // The background image is nearly all of it.
+    const onBytes = name === backgroundName(map) && onProgress ? (got: number, total: number) => { if (total) onProgress(got / total); } : undefined;
+    const blob = await fetchBlob(base + encodeURIComponent(name), onBytes);
+    if (blob) map.files[name] = blob;
   }
   return map;
 }

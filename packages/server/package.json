@@ -8,6 +8,7 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "selfsigned": "^5.5.0",
     "ws": "^8.21.3"
   },
   "devDependencies": {

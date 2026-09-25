@@ -50,6 +50,7 @@ fi
 
 URL="http://localhost:$PORT"
 echo "==> Starting Krieg on $URL (close this window or press Ctrl+C to stop)"
+echo "    Host an online game from Multiplayer: the lobby shows links others can join from anywhere."
 # Open the browser once the server answers.
 (
   for _ in $(seq 1 50); do
