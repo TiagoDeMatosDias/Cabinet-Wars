@@ -2,6 +2,8 @@
 
 Cabinet Wars is a browser strategy game of maneuver, supply and battle. Players control nations and their armies, and must either capture or defend specific locations in order to win. Play on one computer (hotseat, or against the computer) or online with friends.
 
+**Quick start:** from a release package, unpack it and double-click **`start.bat`** (Windows), **`start.command`** (macOS) or **`start.sh`** (Linux) — nothing to install, no internet needed. From the source code: install [Node.js](https://nodejs.org) 22 or newer, then double-click **`start.bat`** (Windows) or **`start.sh`** (Linux, macOS), or run `npm start`. The game opens in your browser; new players can start with **How to play** on the main menu. See [Running the game](#running-the-game) for details, and [Playing online](#playing-online) to play with friends.
+
 ## Contents
 
 - [The map](#the-map)
@@ -324,17 +326,104 @@ The game is transactional: every move by every player, every dice roll, and ever
 
 ## Running the game
 
-Requires Node 22.
+The game runs in the browser; a small server on one computer serves it and hosts the online games. Everyone else only needs a browser.
 
-    npm install
+There are two ways to run the server: a **release package**, which has everything in it (for any computer, even one without internet access), or the **source code**, which needs Node.js and, the first time, internet access to download its dependencies.
+
+### Release packages (no installation, works offline)
+
+A release package is a folder (shipped as a `.zip` for Windows, `.tar.gz` otherwise) with the built game, the server bundled into a single file, the maps and themes, and pinned copies of **Node.js** and **cloudflared** for one system. It needs nothing installed and no internet access: copy it to the computer, unpack it, and start it.
+
+| System | Start it with |
+|---|---|
+| Windows | `start.bat` (double-click) |
+| macOS | `start.command` (double-click; the first time, if macOS refuses it, right-click it → **Open** → **Open**) |
+| Linux | `start.sh` (double-click, or `./start.sh`) |
+
+The package's `README.txt` explains the rest. It keeps its online games, certificate and uploaded maps in its own `data/` folder. Without internet access, players join with the **local network** link (or on the same computer); the public link needs internet.
+
+**Making packages** (from the source code, on any system):
+
+    npm run package                 # for this computer's system
+    npm run package -- win-x64      # for other systems: win-x64, linux-x64, linux-arm64, darwin-x64, darwin-arm64
+    npm run package -- all          # for all of them
+
+They are written to `release/` (about 110 MB each, archived). Making packages needs internet access once, to download Node.js (checked against its official checksums) and cloudflared; these are kept in `release/.cache`, so later packages are made offline.
+
+**What is pinned.** Every npm dependency is at an exact version (`package.json` and `package-lock.json`; `.npmrc` keeps new ones exact), and installs use `npm ci`, which installs exactly the lockfile. The packages use Node.js 22.23.1 and cloudflared 2026.9.3 (`NODE_VERSION` in `scripts/package.mjs`, `CLOUDFLARED_VERSION` in `packages/server/src/tunnel.ts`); a server run from the source code downloads that same cloudflared version when it first needs it. Each package lists its versions in `VERSIONS.txt`, and the licenses of everything it includes in `THIRD_PARTY_LICENSES.txt`, `runtime/LICENSE` (Node.js) and `data/bin/LICENSE-cloudflared.txt`.
+
+### Running from the source code
+
+#### What you need
+
+- **Node.js 22 or newer** on the computer that runs the server. Get it from [nodejs.org](https://nodejs.org):
+  - **Windows:** the "LTS" Windows installer (`.msi`). Keep its default options.
+  - **macOS:** the installer from nodejs.org, or `brew install node`.
+  - **Linux:** your distribution's package (if it is version 22 or newer), or [nvm](https://github.com/nvm-sh/nvm).
+- A current browser: Chrome, Edge, Firefox or Safari. The game is made for computers, not phones.
+- An internet connection the first time, to download the dependencies (and, when an online game is first hosted, the `cloudflared` program for the public link).
+
+#### Starting the server
+
+| System | How |
+|---|---|
+| **Windows** | Double-click **`start.bat`** in the game's folder. Or, in Command Prompt or PowerShell in that folder: `.\start.bat` |
+| **Linux, macOS** | Double-click **`start.sh`** (if your file manager runs scripts), or in a terminal: `./start.sh` |
+| **Any system** | In a terminal in the game's folder: `npm start` |
+
+The first start installs the dependencies (a few minutes, with internet access); every start builds the game, starts the server on **http://localhost:8787** and opens it in your browser. A window shows the server's messages: **keep it open while you play**, and close it (or press **Ctrl+C** in it) to stop the server. Online games are kept, and carry on when the server is started again.
+
+`start.bat`, `start.sh` and `npm start` all run `scripts/start.mjs`, which takes two options: `--no-build` (start with the last build, faster) and `--no-open` (don't open the browser). For example `npm start -- --no-build`.
+
+When the server starts, its window lists the addresses others can use on your network. Opening the game on this computer is always `http://localhost:8787`.
+
+### Playing online with friends
+
+1. Start the server on one computer (above). That computer must stay on, with the server running, for the game.
+2. In the game, open **Multiplayer**, and choose **Host online** next to a map (or a saved game).
+3. Share a link from the lobby's **Invite players** panel:
+   - **Link for anyone, on any network:** works from anywhere, with no router set-up. It takes a few seconds to appear, and changes each time the server starts. Players who were in a game come back to it from **Multiplayer → Your games**.
+   - **Link for your local network:** for players on the same Wi-Fi or network. Their browser warns once about the certificate (made by the server itself): choose to continue.
+   - **Link on this computer:** for another browser tab or window here — handy to try things out alone.
+4. Everyone picks their nations; the host starts the game.
+
+**Firewalls.** The first time the server starts, **Windows** asks whether Node.js may communicate on networks: allow it on **private networks** so players on your local network can connect. macOS may ask the same. The link for anyone doesn't need this: it works through an outgoing connection.
+
+### Settings
+
+The server reads these environment variables:
+
+| Variable | Default | What it does |
+|---|---|---|
+| `PORT` | `8787` | The port the server answers on (HTTP and HTTPS both) |
+| `CABINET_WARS_TUNNEL` | on | `off` never opens the public link |
+| `CABINET_WARS_TLS_CERT`, `CABINET_WARS_TLS_KEY` | self-signed | PEM files of a real HTTPS certificate |
+| `CABINET_WARS_MAPS` | `Map/` | Folder of the maps the server offers |
+| `CABINET_WARS_SAVES` | `saves/` | Folder of the saved games the server offers |
+| `CABINET_WARS_THEMES` | `themes/` | Folder of the interface themes |
+| `CABINET_WARS_DATA` | `.cabinet-wars/` | Where the server keeps its certificate, the `cloudflared` program, online games and uploaded maps |
+
+To set one for a start:
+- **Windows, Command Prompt:** `set PORT=8788`, then `start.bat`
+- **Windows, PowerShell:** `$env:PORT=8788; .\start.bat`
+- **Linux, macOS:** `PORT=8788 ./start.sh`
+
+### Where things are kept
+
+- **On the server's computer**, in `.cabinet-wars/` in the game's folder: `tls/` (the HTTPS certificate), `bin/` (`cloudflared`), `games/` (online games; removed after 30 days without play) and `uploads/` (maps hosts sent from their browsers). Deleting it is safe when no game is running; the server makes what it needs again.
+- **In each player's browser:** their name and settings, the maps they made or imported, their saves and autosaves, the maps of online games they joined, and the list of their online games.
+
+### Building and testing by hand
+
+    npm install         # dependencies
     npm test            # rules and table tests (vitest)
-    npm run build       # build the browser client
-    npm run server      # http://localhost:8787 — serves the client, Map/*, saves/*, and hosts online games
-                        # (also HTTPS on the same port, and a public link when hosting: see Playing online)
+    npm run typecheck   # TypeScript checks
+    npm run build       # build the browser client into packages/client/dist
+    npm run server      # start the server only (it serves the last build)
+
+These work the same on Windows (Command Prompt or PowerShell), macOS and Linux. During development, run `npm run server` and `npm run dev` (Vite, with live reload; it forwards /api and /ws to the server) together, and open the address Vite prints.
 
 The game was called Krieg while it was being made. Files and settings from then still work: `.krieg` map and save files open like `.cabinetwars` ones, `KRIEG_*` environment variables are read when the `CABINET_WARS_*` ones aren't set, and a `.krieg` data folder is moved to `.cabinet-wars` when the server first starts.
-
-During development, run `npm run server` and `npm run dev` (Vite, proxies /api and /ws to the server) together.
 
 ### Code layout
 
@@ -342,6 +431,8 @@ During development, run `npm run server` and `npm run dev` (Vite, proxies /api a
 - `packages/table`: a game and the people at it — randomness, computer players, seats, colors, chat, the idle clock — and the protocol between browsers and the server. The server runs one per online game; the browser runs one for games on this computer.
 - `packages/server`: static files, map/save listings, online games (`/ws`), map uploads, HTTPS certificate and public tunnel.
 - `packages/client`: PixiJS map, game UI, map editor, tutorial, sounds, and the local and online sessions.
+- `scripts/start.mjs`: the launcher behind `start.bat`, `start.sh` and `npm start`.
+- `scripts/package.mjs`: makes the release packages; `scripts/release/` holds what goes into them besides the build (launchers, `README.txt`).
 
 ## Documentation
 

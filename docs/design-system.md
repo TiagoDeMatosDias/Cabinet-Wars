@@ -26,7 +26,7 @@ This document describes how Cabinet Wars's look can change with the map being pl
 ## 1. Goals
 
 - **Change the look without changing code.** A theme is a data file (JSON plus optional fonts and images). Loading a different file restyles the menu, lobby, game screen, battle dialog, map overlays and editor.
-- **Themes travel with maps.** A map says which theme it uses. When a map is shared as a `.cabinetwars` bundle, or sent from host to peer in an online game, its theme goes with it, so every player sees the same design.
+- **Themes travel with maps.** A map says which theme it uses. When a map is shared as a `.cabinetwars` bundle, or downloaded by the players of an online game, its theme goes with it, so every player sees the same design.
 - **Partial themes are fine.** Any token a theme leaves out falls back to the canonical theme. A theme can be as small as five colors and a font.
 - **Rules stay readable.** Themes change style, never game information. Nation colors, fog of war, highlight meaning and card effects look different but mean the same thing in every theme.
 - **Themes are safe to share.** A theme contains only validated values (colors, lengths, font names, files inside its own bundle). It cannot inject CSS, scripts or remote URLs.
@@ -91,7 +91,7 @@ Switching theme at runtime (for example in the editor preview) repeats steps 3â€
 |---|---|
 | Server `Map/<Name>/` | Theme folder inside the map folder, or a named theme from the server's `themes/` |
 | `.cabinetwars` bundle | `theme/` folder inside the zip, added by the editor on Download |
-| Online game (peer) | Inside the map bundle the host sends; the theme content is part of the map hash, so a peer never uses a different theme than the host |
+| Online game | Inside the map the players download (from the server's `Map/` folder, or the bundle the host uploaded); the theme content is part of the map hash, so every player uses the host's theme |
 | Save game | Same as `.cabinetwars`, since saves bundle their map |
 
 ---

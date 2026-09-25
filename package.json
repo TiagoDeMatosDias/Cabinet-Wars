@@ -6,14 +6,17 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "node scripts/start.mjs",
     "dev": "npm run dev -w @cabinet-wars/client",
     "build": "npm run build -w @cabinet-wars/client",
     "server": "npm run start -w @cabinet-wars/server",
     "test": "vitest run",
-    "typecheck": "tsc -p packages/engine && tsc -p packages/table && tsc -p packages/server && tsc -p packages/client"
+    "typecheck": "tsc -p packages/engine && tsc -p packages/table && tsc -p packages/server && tsc -p packages/client",
+    "package": "node scripts/package.mjs"
   },
   "devDependencies": {
-    "typescript": "^5.9.0",
-    "vitest": "^5.0.1"
+    "typescript": "5.9.3",
+    "vitest": "5.0.1",
+    "esbuild": "0.28.2"
   }
 }

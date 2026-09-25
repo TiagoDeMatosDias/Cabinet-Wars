@@ -3,3 +3,4 @@ dist/
 *.png~
 .krieg/
 .cabinet-wars/
+release/

@@ -1,6 +1,6 @@
 # Cabinet Wars Game Screen: Layout and Interaction
 
-**Status:** implemented in `packages/client` (see [section 10](#11-engine-and-code-changes) for where each part lives and how the build differs from this proposal).
+**Status:** implemented in `packages/client` (see [section 12](#12-engine-and-code-changes) for where each part lives and how the build differs from this proposal).
 
 This document specifies the in-game screen:
 - where everything sits on screen
@@ -29,8 +29,9 @@ It complements the [design system](design-system.md), which defines colors, font
 8. [The battle panel](#8-the-battle-panel)
 9. [Fog of war](#9-fog-of-war)
 10. [The log](#10-the-log)
-11. [Engine and code changes](#11-engine-and-code-changes)
-12. [Open questions](#12-open-questions)
+11. [Online play, help and sound](#11-online-play-help-and-sound)
+12. [Engine and code changes](#12-engine-and-code-changes)
+13. [Open questions](#13-open-questions)
 
 ---
 
@@ -49,12 +50,17 @@ The map fills the whole window below the top bar. Every other element floats ove
 | Log | Right edge, as a vertical tab | Full history ([section 10](#10-the-log)) | Collapsed by default; expands over the orders panel |
 | Battle panel | Docked at the bottom centre | The current battle ([section 8](#8-the-battle-panel)) | While a battle is running |
 | Handoff screen | Full screen | "Pass the device to …" (hotseat only) | When the acting player changes in hotseat |
+| Chat | Top left: a **Chat** button, opening a panel ([section 11](#11-online-play-help-and-sound)) | Messages, table notices, People list with Mute | Online games |
+| Idle clock | Bottom right, above the turn controls | Time left for whoever the game waits for | Online games with a time to act |
+| Since your last turn | Centred popup | What the player's side saw happen since their previous turn | At the start of the player's turn, when something happened |
+| Connection banner | Top centre, over everything | "Connection lost — reconnecting…", or why the game ended | Online games, while not connected |
+| Tutorial notes | Beside what they point at | The guided first game's notes | In the tutorial |
 
 **How close each nation is to collapse.** Every nation's willingness bar shades the part below its threshold (the collapse zone) and ticks the threshold. Its chip shows the willingness percentage, coloured by how close the nation is to collapse: green with 25 or more points to spare, amber within 25 points, filled red within 10 points or once knocked out. The tooltip gives the numbers behind it (victory points held and owned, war exhaustion, threshold). Under the acting player's name, a pill of the same colour says it plainly: "Willingness 88% (collapse below 50%) · 38 points to spare". It pulses when the nation is within 10 points.
 
 Clicking the nations, or that pill, opens the **War status** panel. It has one row per nation: victory points held out of owned (with how many are occupied), war exhaustion, the willingness bar, the collapse threshold and the distance to collapse. The player's own row is tinted and allies are marked. A line explains how willingness works. On phones each nation becomes a small card of labelled lines.
 
-**Phone width (≤ 720 px).** The top bar shrinks to the emblem, turn and a willingness summary. The army card and hand become a bottom sheet with two tabs ("Army" / "Hand"). The orders panel and the log become drawers opened from buttons in the top bar. End Turn and Next Step stay pinned bottom-right above the sheet.
+**Narrow windows (≤ 720 px).** The game is made for computers; phones are not a target. In narrow windows the top bar shrinks to the emblem, turn and a willingness summary. The army card and hand become a bottom sheet with two tabs ("Army" / "Hand"). The orders panel and the log become drawers opened from buttons in the top bar. End Turn and Next Step stay pinned bottom-right above the sheet.
 
 ---
 
@@ -252,7 +258,7 @@ A small dialog above the card with two columns, **Stays** and **Leaves**:
 
 ### 5.4 Reorganize editor
 
-This is for redistributing units between armies on the same node in one step. It shows one column per army on the node, plus a "new army" column. Units and generals can be dragged between any columns, with the same checks as Split. Confirming adds a single **Reorganize** order; the engine executes it as one transfer ([section 10](#11-engine-and-code-changes)).
+This is for redistributing units between armies on the same node in one step. It shows one column per army on the node, plus a "new army" column. Units and generals can be dragged between any columns, with the same checks as Split. Confirming adds a single **Reorganize** order; the engine executes it as one transfer ([section 12](#12-engine-and-code-changes)).
 
 ### 5.5 The node card
 
@@ -289,7 +295,7 @@ During their turn a player doesn't act immediately: they **plan orders**, which 
 | Move | Clicking a highlighted node with an army selected | `move` (one or more steps along a path) |
 | Split | Split editor | `split` |
 | Merge | Merge button | `merge` (one per extra army) |
-| Reorganize | Reorganize editor | `transfer` (new engine intent, see [section 10](#11-engine-and-code-changes)) |
+| Reorganize | Reorganize editor | `transfer` (new engine intent, see [section 12](#12-engine-and-code-changes)) |
 | Play +1 Moves | Dragging the card onto an army | `playMoves` |
 
 ### 6.2 Planning
@@ -339,7 +345,7 @@ When no planned orders remain, **Next Step is disabled**. The player can still a
 
 ### 6.5 Privacy, online play and saves
 
-- Planned orders are **private and local** to the player's browser. Opponents and the host only ever see executed intents, so the fog of war is unchanged.
+- Planned orders are **private and local** to the player's browser. Opponents and the server only ever see executed intents, so the fog of war is unchanged.
 - Only executed intents go into the game's transaction log and save files, exactly as today.
 - The current plan is kept in browser storage, so a reload or reconnect during a turn restores it.
 
@@ -432,7 +438,27 @@ The log is its own **drawer on the right edge**:
 
 ---
 
-## 11. Engine and code changes
+## 11. Online play, help and sound
+
+**Chat** (online games). The **Chat** button at the top left opens a panel of the table's messages, with a line to write in (Enter opens it, Escape closes it). Table notices (joined, left, took a nation, the game began, a nation was moved on for idling) are in italics. While the panel is closed, new messages show beside the button for a few seconds, with an unread count. **People** lists who is at the table, each with **Mute**: muting hides that player's messages in this browser only. The panel is not part of the screen's redraws, so a half-written message survives game updates.
+
+**Idle clock** (online games). When the host set a time to act, a clock above the turn controls shows how long the player the game waits for has left: "Act within 4:32, or your turn ends" for the player's own nations, "Wei has 3:10 to act" for others. In the last minute it turns red, and the player gets one warning.
+
+**Connection banner** (online games). If the connection to the server drops, a banner says so while the game reconnects by itself. If the game can't go on (the host ended it, the player was kicked, or opened the game in another tab), it says why, with a way back to the menu.
+
+**Since your last turn.** At the start of the player's turn, after any battle recap, a popup lists what their side saw happen since their previous turn, grouped by nation turn: events, moves, battles (who fought, who won, losses — not each round's dice), control changes. Clicking a line closes it and shows that town. It can be turned off under Settings.
+
+**Tooltips.** Resting the pointer on an element with an explanation shows it in a styled tooltip after a moment (at once on keyboard focus), kept inside the window. Every button's own description (`title`) shows the same way. Towns' owner, control, victory points, protection and supply, the army card's units, moves and supply, and the willingness pill have explanations of the rules behind them.
+
+**Tutorial.** **How to play → Start the tutorial** starts a game on the smallest map, the player against the computer, with notes: each points at a part of the screen with a pulsing outline, and says what it is. Some wait for the player to do what they describe (answer the turn's first prompts or battle, select an army, plan a move, end the turn); the others have **Next**. **Leave the tutorial** ends the notes; the game goes on.
+
+**Sound.** Short sounds, made in the browser: a tap when selecting an army, a tick for a town, a quill for a planned order, marching feet, drums and a horn when a battle begins, dice, paper for cards, a drum roll for recruits, a soft pop for chat, bells for the player's turn, a fanfare or a lament at the end. The volume is under Settings.
+
+**Your turn.** When the game starts waiting for one of the player's nations, a bell rings; if the tab is in the background, its title blinks and (if allowed) a browser notification appears.
+
+---
+
+## 12. Engine and code changes
 
 The rules engine barely changes; most of this is client work.
 
@@ -440,6 +466,7 @@ The rules engine barely changes; most of this is client work.
 - Army miniatures are drawn procedurally rather than from sprite sheets (`army.model` is reserved for that).
 - Order planning lives in `packages/engine/src/orders.ts`: `projectOrders`, `orderToIntents`, and dependency helpers. The client's list and runner are in `packages/client/src/orders/plan.ts` and `ui/game.ts`.
 - In the battle panel, roll cards are placed by selecting a card and then clicking a die. Drag-and-drop is used for playing +1 Moves onto armies.
+- The parts of section 11 are in `packages/client/src/ui/`: `chat.ts` (chat, mute, connection banner), `turnClock.ts`, `summary.ts`, `tooltip.ts`, `tutorial.ts`, `alerts.ts` and `gameSounds.ts`, with the sounds in `audio/sound.ts`. Online games run on the server through `packages/table`, which the browser also uses for games on one computer (`net/local.ts`); `net/online.ts` is the browser's side of an online game.
 
 **Engine (`packages/engine`)**
 - `config.ts`: optional `emblem` on nations (`{ glyph?, shape?, image? }`). The engine ignores it but keeps it.
@@ -460,7 +487,7 @@ The rules engine barely changes; most of this is client work.
 
 ---
 
-## 12. Open questions
+## 13. Open questions
 
 - **Planning while waiting.** Should a player be able to plan orders during the opponent's turn, to be ready when theirs starts? That's easy with the projection, but it may reveal stale information.
 - **Group moves.** Should moving several selected armies be one order or one per army? This document proposes one per army, grouped visually, so they can still be reordered individually.

@@ -14,11 +14,12 @@ import { env } from './env';
 /** Map and save bundles (zip files); saves from the game's working name end in .krieg. */
 const BUNDLE_EXT = '.cabinetwars';
 
-const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
+/** The game's folder: the repository, or a release package (whose launcher sets CABINET_WARS_ROOT). */
+const ROOT = env('ROOT') ?? resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const MAPS_DIR = env('MAPS') ?? join(ROOT, 'Map');
 const SAVES_DIR = env('SAVES') ?? join(ROOT, 'saves');
 const THEMES_DIR = env('THEMES') ?? join(ROOT, 'themes');
-const CLIENT_DIR = join(ROOT, 'packages/client/dist');
+const CLIENT_DIR = env('CLIENT') ?? join(ROOT, 'packages/client/dist');
 const DATA_DIR = env('DATA') ?? join(ROOT, '.cabinet-wars');
 // The data folder of the game's working name ("Krieg") is moved over once.
 if (!env('DATA') && !existsSync(DATA_DIR) && existsSync(join(ROOT, '.krieg'))) renameSync(join(ROOT, '.krieg'), DATA_DIR);

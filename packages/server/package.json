@@ -8,14 +8,14 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
-    "selfsigned": "^5.5.0",
-    "ws": "^8.21.3",
+    "selfsigned": "5.5.0",
+    "ws": "8.21.3",
     "@cabinet-wars/engine": "*",
     "@cabinet-wars/table": "*"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/ws": "^8.18.1",
-    "tsx": "^4.23.15"
+    "@types/node": "22.20.4",
+    "@types/ws": "8.18.1",
+    "tsx": "4.23.15"
   }
 }

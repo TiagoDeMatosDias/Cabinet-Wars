@@ -7,7 +7,8 @@ import { env } from './env';
 /**
  * A public HTTPS address for this server, so players on other networks can join: a Cloudflare
  * quick tunnel (https://<random>.trycloudflare.com, no account needed). The `cloudflared` program
- * is used from the PATH, or downloaded once into `binDir`. Set CABINET_WARS_TUNNEL=off to never open one.
+ * (version CLOUDFLARED_VERSION) is used from `binDir`, where it is downloaded once (release
+ * packages include it), or else from the PATH. Set CABINET_WARS_TUNNEL=off to never open one.
  */
 export interface TunnelStatus {
   state: 'off' | 'starting' | 'ready' | 'failed';
@@ -15,29 +16,35 @@ export interface TunnelStatus {
   error?: string;
 }
 
-const RELEASES = 'https://github.com/cloudflare/cloudflared/releases/latest/download/';
+/** The cloudflared version used, so every install runs the same one (release packages include it). */
+export const CLOUDFLARED_VERSION = '2026.9.3';
+const RELEASES = `https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/`;
 const RESTART_MS = 5000;
 
-function asset(): string | null {
-  const arch = ({ x64: 'amd64', arm64: 'arm64', arm: 'arm', ia32: '386' } as Record<string, string>)[process.arch];
+/** The cloudflared download for a system (Node's names for platform and architecture). */
+export function cloudflaredAsset(platform: string = process.platform, cpu: string = process.arch): string | null {
+  const arch = ({ x64: 'amd64', arm64: 'arm64', arm: 'arm', ia32: '386' } as Record<string, string>)[cpu];
   if (!arch) return null;
-  if (process.platform === 'linux') return `cloudflared-linux-${arch}`;
-  if (process.platform === 'darwin') return `cloudflared-darwin-${arch}.tgz`;
-  if (process.platform === 'win32') return `cloudflared-windows-${arch}.exe`;
+  if (platform === 'linux') return `cloudflared-linux-${arch}`;
+  if (platform === 'darwin') return `cloudflared-darwin-${arch}.tgz`;
+  if (platform === 'win32') return `cloudflared-windows-${arch}.exe`;
   return null;
 }
+
+export const CLOUDFLARED_RELEASES = RELEASES;
 
 async function exists(path: string) {
   return (await stat(path).catch(() => null))?.isFile() ?? false;
 }
 
 async function findCloudflared(binDir: string): Promise<string> {
-  const onPath = spawnSync('cloudflared', ['--version'], { stdio: 'ignore' });
-  if (onPath.status === 0) return 'cloudflared';
+  // The pinned copy (downloaded before, or shipped in a release package) first, then one installed.
   const exe = join(binDir, process.platform === 'win32' ? 'cloudflared.exe' : 'cloudflared');
   if (await exists(exe)) return exe;
+  const onPath = spawnSync('cloudflared', ['--version'], { stdio: 'ignore' });
+  if (onPath.status === 0) return 'cloudflared';
 
-  const name = asset();
+  const name = cloudflaredAsset();
   if (!name) throw new Error(`no cloudflared download for ${process.platform}/${process.arch}`);
   console.log(`Downloading cloudflared (${name}) for the public game link…`);
   const res = await fetch(RELEASES + name);
