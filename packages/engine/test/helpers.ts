@@ -69,6 +69,9 @@ export class TestGame {
           targets: [...Array(o.attackerPick).keys()].map((i) => i % o.defenderPick),
         };
         this.push({ seq, by: 'host', intent: { type: 'select', ...pick } });
+      } else if (o.kind === 'engage') {
+        // The first army of the pair attacks.
+        this.push({ seq, by: 'host', intent: { type: 'engage', attacker: 0 } });
       } else {
         const take = (n: number) => { const d = this.dice.splice(0, n); while (d.length < n) d.push(3); return d; };
         this.push({ seq, by: 'host', intent: { type: 'roll', attacker: take(o.attacker), defender: take(o.defender) } });

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { hostname, networkInterfaces } from 'node:os';
 import { join } from 'node:path';
 import { generate } from 'selfsigned';
+import { env } from './env';
 
 export interface TlsFiles {
   key: string;
@@ -18,12 +19,12 @@ export function lanAddresses(): string[] {
 }
 
 /**
- * The certificate for HTTPS: KRIEG_TLS_CERT/KRIEG_TLS_KEY when given, otherwise a self-signed one
- * kept in `dir`, made again whenever this machine's names or addresses change.
+ * The certificate for HTTPS: CABINET_WARS_TLS_CERT/CABINET_WARS_TLS_KEY when given, otherwise a
+ * self-signed one kept in `dir`, made again whenever this machine's names or addresses change.
  */
 export async function loadTls(dir: string): Promise<TlsFiles> {
-  const certFile = process.env.KRIEG_TLS_CERT;
-  const keyFile = process.env.KRIEG_TLS_KEY;
+  const certFile = env('TLS_CERT');
+  const keyFile = env('TLS_KEY');
   if (certFile && keyFile) return { cert: await readFile(certFile, 'utf8'), key: await readFile(keyFile, 'utf8'), selfSigned: false };
 
   const names = ['localhost', hostname(), `${hostname()}.local`];
@@ -35,7 +36,7 @@ export async function loadTls(dir: string): Promise<TlsFiles> {
   } catch { /* none yet */ }
 
   const now = new Date();
-  const pems = await generate([{ name: 'commonName', value: 'Krieg' }], {
+  const pems = await generate([{ name: 'commonName', value: 'Cabinet Wars' }], {
     keyType: 'ec',
     curve: 'P-256',
     notBeforeDate: new Date(now.getTime() - 86_400_000),

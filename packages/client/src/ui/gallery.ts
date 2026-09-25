@@ -1,4 +1,4 @@
-import { GENERAL_SPEED, UNIT_SPEED, type Army, type GeneralCardType, type MapNode, type Nation, type UnitType } from '@krieg/engine';
+import { GENERAL_SPEED, UNIT_SPEED, type Army, type GeneralCardType, type MapNode, type Nation, type UnitType } from '@cabinet-wars/engine';
 import { MapView } from '../render/MapView';
 import type { FigureKind } from '../render/formation';
 import { ANIMS, armyModel, FIGURE_KINDS, instance, loadModel, studio, type AnimName, type ArmyModel } from '../render/miniatures';

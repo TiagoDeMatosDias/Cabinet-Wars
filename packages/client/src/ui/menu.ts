@@ -1,16 +1,18 @@
-import { parseConfig, type GameMode, type LogEntry } from '@krieg/engine';
+import { parseConfig, RULES_VERSION, type GameMode, type LogEntry } from '@cabinet-wars/engine';
+import { AFK_CHOICES, COLOR_CHOICES, type GameListing, type SeatInfo } from '@cabinet-wars/table';
 import {
-  listBrowserMaps, listServerMaps, loadServerMap, mapHash, saveBrowserMap, type MapBundle,
+  listBrowserMaps, listServerMaps, loadServerMap, saveBrowserMap, type MapBundle,
 } from '../maps';
-import { HostSession } from '../net/host';
+import { LocalSession } from '../net/local';
+import { forgetGame, gameInfo, JoinError, listGames, myGames, OnlineSession } from '../net/online';
 import { ReplaySession } from '../net/replay';
-import { PeerSession } from '../net/peer';
-import { hostOnline } from '../net/hosting';
-import type { MapRef, SeatInfo } from '../net/protocol';
 import type { Session } from '../net/session';
-import { unpackBundle } from '../storage/bundle';
+import { sound } from '../audio/sound';
+import { alertsWanted, setAlertsWanted } from './alerts';
+import { setWantsSummary, wantsSummary } from './summary';
+import { BUNDLE_ACCEPT, BUNDLE_EXT, unpackBundle } from '../storage/bundle';
 import { idb } from '../storage/idb';
-import { chatBox } from './chat';
+import { chatBox, muteButton, onMuteChange } from './chat';
 import { clear, download, h, pickFiles, toast } from './dom';
 import { buildEmblems, emblemEl, emblemSvg } from './emblem';
 import { iconEl } from './icons';
@@ -25,6 +27,8 @@ export interface MenuActions {
   lobby(session: Session): void;
   edit(map: MapBundle | null): void;
   gallery(): void;
+  /** Starts the guided first game. */
+  tutorial(): void;
 }
 
 const NAME_KEY = 'krieg:name';
@@ -37,11 +41,6 @@ export function setInviteHash(room: string | null) {
   history.replaceState(null, '', room ? `${location.pathname}${location.search}#join=${room}` : `${location.pathname}${location.search}`);
 }
 
-async function mapRef(map: MapBundle): Promise<MapRef> {
-  const hash = await mapHash(map);
-  return map.source === 'server' ? { kind: 'server', id: map.id.replace(/^server:/, ''), hash } : { kind: 'bundle', hash, name: map.name };
-}
-
 const MODE_KEY = 'krieg:mode';
 
 /** The game mode chosen for new games: null keeps the map's own rule. */
@@ -50,24 +49,26 @@ function chosenMode(): GameMode | null {
 }
 
 /**
- * Starts a game. A new game (no log) takes the mode chosen in the menu; it is written into the
- * map's rules, so saves and online players get the same rules.
+ * Starts a game. A new game (no log) takes the mode chosen in the menu and the current rules
+ * version; they are written into the map's rules, so saves and online players get the same rules.
+ * A saved game keeps the rules it was started with.
  */
 export async function startGame(map: MapBundle, online: boolean, actions: MenuActions, log: LogEntry[] = [], aiSeats: string[] = []) {
   try {
-    const mode = log.length ? null : chosenMode();
-    if (mode) map = { ...map, config: { ...map.config, rules: { ...(map.config.rules as object ?? {}), mode } } };
-    const config = parseConfig(map.config);
-    const session = new HostSession(map, config, await mapRef(map), log, aiSeats, playerName().trim() || t('lobby.host'));
-    if (online) {
-      // Seats start open, for the players who join to pick.
-      for (const s of session.seats()) if (s.holder !== 'ai') session.release(s.nation);
-      await hostOnline(session);
+    if (!log.length) {
+      const mode = chosenMode();
+      const rules = { ...(map.config.rules as object ?? {}), version: RULES_VERSION, ...(mode ? { mode } : {}) };
+      map = { ...map, config: { ...map.config, rules } };
     }
+    const name = playerName().trim() || t('lobby.host');
+    const session: Session = online
+      ? await OnlineSession.create({ map, log, aiSeats, name, onProgress: (m) => toast(m) })
+      : new LocalSession(map, parseConfig(map.config), log, aiSeats, name);
+    if (session.room) setInviteHash(session.room);
     // The lobby is where the host picks which nations the computer plays.
     actions.lobby(session);
   } catch (e) {
-    toast((e as Error).message, 'error');
+    toast(errorText(e), 'error');
   }
 }
 
@@ -80,7 +81,7 @@ export function watchReplay(map: MapBundle, log: LogEntry[], actions: MenuAction
   }
 }
 
-type MenuView = 'title' | 'newGame' | 'loadGame' | 'replays' | 'multiplayer' | 'editor' | 'settings';
+type MenuView = 'title' | 'newGame' | 'howToPlay' | 'loadGame' | 'replays' | 'multiplayer' | 'editor' | 'settings' | 'credits';
 
 /** A map as listed in the menu, with the nations of its config for the emblem strip. */
 interface MapEntry {
@@ -103,8 +104,9 @@ interface SaveEntry {
   remove?: () => Promise<void>;
 }
 
-const ENTRIES: { view: Exclude<MenuView, 'title'>; icon: string }[] = [
+const ENTRIES: { view: Exclude<MenuView, 'title' | 'credits'>; icon: string }[] = [
   { view: 'newGame', icon: 'icon:battle' },
+  { view: 'howToPlay', icon: 'icon:book' },
   { view: 'loadGame', icon: 'icon:ledger' },
   { view: 'replays', icon: 'icon:replay' },
   { view: 'multiplayer', icon: 'icon:network' },
@@ -121,14 +123,14 @@ function divider(): HTMLElement {
   return h('div', { class: 'ornament', 'aria-hidden': 'true' }, ornament());
 }
 
-/** The game's seal: a "K" in the theme's first emblem shape, in its seal colors. */
+/** The game's seal: "CW" in the theme's first emblem shape, in its seal colors. */
 function titleSeal(): HTMLElement {
   const theme = currentTheme();
   const { fill, text } = theme.color.seal;
   // The emblem's ink is the theme's paper; on the seal it is the seal's own text color instead.
   const sealTheme = { ...theme, color: { ...theme.color, surface: { ...theme.color.surface, raised: text } } };
   const el = h('span', { class: 'emblem', style: 'width:76px;height:76px', 'aria-hidden': 'true' });
-  el.innerHTML = emblemSvg({ nation: 'krieg', glyph: 'K', shape: theme.emblem.shapes[0], style: 'field', color: fill }, sealTheme);
+  el.innerHTML = emblemSvg({ nation: 'cabinet-wars', glyph: 'CW', shape: theme.emblem.shapes[0], style: 'field', color: fill }, sealTheme);
   return el;
 }
 
@@ -156,6 +158,44 @@ function compassRose(): SVGSVGElement {
     + `<text x="100" y="9" text-anchor="middle" font-size="12" fill="currentColor">N</text>`;
   return svg;
 }
+
+/** Chapters of How to play (text keys howto.<id>.title / .body). */
+const HOWTO_CHAPTERS = [
+  'goal', 'turn', 'map', 'armies', 'movement', 'supply', 'battles', 'cards', 'events', 'raising', 'fog', 'control', 'online', 'controls',
+] as const;
+
+/** Paragraphs separated by blank lines; lines starting with "- " make a list. */
+function richText(text: string) {
+  return text.split(/\n\n+/).map((para) => {
+    const lines = para.split('\n');
+    if (lines.every((l) => l.startsWith('- '))) return h('ul', {}, lines.map((l) => h('li', {}, l.slice(2))));
+    return h('p', {}, para);
+  });
+}
+
+/** Credits: [name, what it is, license]. */
+const CREDITS: { id: string; items: [string, string, string][] }[] = [
+  { id: 'art', items: [
+    ['Maps, emblems and unit miniatures', 'made for this game with the help of AI image and model generation', ''],
+    ['Sounds', 'synthesized in the browser as the game plays', ''],
+  ] },
+  { id: 'fonts', items: [
+    ['LXGW WenKai', 'by LXGW, via lxgw-wenkai-webfont', 'SIL Open Font License 1.1'],
+    ['Noto Serif SC', 'by Google and Adobe, via Fontsource', 'SIL Open Font License 1.1'],
+  ] },
+  { id: 'software', items: [
+    ['PixiJS', 'the map', 'MIT'],
+    ['pixi-viewport', 'panning and zooming', 'MIT'],
+    ['three.js', 'the 3D army miniatures', 'MIT'],
+    ['d3-delaunay', 'fog of war areas', 'ISC'],
+    ['fflate', 'save files', 'MIT'],
+    ['Zod', 'map validation', 'MIT'],
+    ['ws', 'the game server connections', 'MIT'],
+    ['selfsigned', 'the HTTPS certificate of the server', 'MIT'],
+    ['cloudflared', 'public links from Cloudflare for online games (downloaded when first needed)', 'Apache 2.0'],
+    ['Vite, TypeScript, tsx, Vitest', 'building and testing', 'MIT / Apache 2.0'],
+  ] },
+];
 
 export async function menuScreen(root: HTMLElement, actions: MenuActions, start: MenuView = 'title') {
   // Outside a map, only the built-in English and the player's own choice apply.
@@ -200,7 +240,7 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions, start:
     return [
       h('header', { class: 'title-block' },
         titleSeal(),
-        h('h1', {}, 'Krieg'),
+        h('h1', {}, 'Cabinet Wars'),
         divider(),
         h('p', { class: 'tagline' }, t('menu.tagline'))),
       h('nav', { class: 'menu-entries', 'aria-label': t('menu.mainMenu') },
@@ -225,7 +265,7 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions, start:
         h('h1', {}, t(`menu.${v}`)),
         divider(),
         h('p', { class: 'tagline' }, t(`menu.${v}Desc`))),
-      ...{ newGame, loadGame, replays, multiplayer, editor, settings }[v](),
+      ...{ newGame, howToPlay, loadGame, replays, multiplayer, editor, settings, credits }[v](),
     ];
   }
 
@@ -316,44 +356,110 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions, start:
     ];
   }
 
+  /** Joins a game (by code, from the list, or back into one of this browser's games). */
+  async function joinGame(room: string, name: string, token?: string) {
+    if (joining) return;
+    if (!name.trim()) { toast(t('menu.nameNeeded'), 'error'); return; }
+    savePlayerName(name.trim());
+    joining = true;
+    try {
+      const s = await OnlineSession.join(room, name.trim(), (m) => { joinStatus.textContent = m; }, token);
+      setInviteHash(s.room);
+      actions.lobby(s);
+    } catch (e) {
+      joinStatus.textContent = '';
+      const reason = (e as JoinError).reason;
+      toast(reason === 'noRoom' ? t('menu.noRoom', { room: room.trim().toUpperCase() }) : errorText(e), 'error');
+      if (reason === 'noRoom' || reason === 'kicked') { setInviteHash(null); forgetGame(room.trim().toUpperCase()); }
+    } finally {
+      joining = false;
+    }
+  }
+
+  /** The games on this server, and this browser's own games, refreshed while the page shows them. */
+  const openGames = h('div', { class: 'list' });
+  const ownGames = h('div', { class: 'list' });
+  let listTimer = 0;
+  async function refreshGames(nameInput: () => string) {
+    clearTimeout(listTimer);
+    if (!screen.isConnected || view !== 'multiplayer') return;
+    const [open, mine] = await Promise.all([listGames(), Promise.all(myGames().map(async (g) => ({ g, info: await gameInfo(g.room) })))]);
+    const status = (l: GameListing) => [
+      l.mapName,
+      t('menu.gameHost', { name: l.host }),
+      t('menu.gamePlayers', { online: l.online, players: l.players }),
+      l.started ? t('menu.gameRound', { round: l.round }) : t('menu.gameOpenSeats', { n: l.openSeats }),
+    ].join(' · ');
+    const mineRooms = new Set(mine.map((x) => x.g.room));
+    clear(openGames, open.filter((l) => !mineRooms.has(l.room)).length
+      ? open.filter((l) => !mineRooms.has(l.room)).map((l) => h('div', { class: 'item' },
+        h('div', {}, h('strong', {}, `${l.room}`), h('div', { class: 'muted small' }, status(l))),
+        h('div', { class: 'row' }, h('button', {
+          class: 'primary',
+          disabled: l.started && !l.spectators,
+          title: l.started && !l.spectators ? t('menu.noSpectatorsTitle') : undefined,
+          onclick: () => void joinGame(l.room, nameInput()),
+        }, l.started ? t('menu.watchGame') : t('menu.joinButton')))))
+      : h('p', { class: 'muted' }, t('menu.noOpenGames')));
+    // Games gone from the server are forgotten.
+    for (const { g, info } of mine) if (!info) forgetGame(g.room);
+    const alive = mine.filter((x) => x.info);
+    clear(ownGames, alive.length
+      ? alive.map(({ g, info }) => h('div', { class: 'item' },
+        h('div', {}, h('strong', {}, `${g.room}${g.host ? ` · ${t('lobby.hostTag')}` : ''}`), h('div', { class: 'muted small' }, status(info!))),
+        h('div', { class: 'row' },
+          h('button', { class: 'primary', onclick: () => void joinGame(g.room, nameInput(), g.token) }, t('menu.returnToGame')),
+          h('button', { class: 'danger', title: t('menu.forgetGameTitle'), onclick: () => { forgetGame(g.room); void refreshGames(nameInput); } }, t('menu.forgetGame')))))
+      : h('p', { class: 'muted' }, t('menu.noOwnGames')));
+    listTimer = window.setTimeout(() => void refreshGames(nameInput), 8000);
+  }
+
   function multiplayer() {
-    const nameInput = h('input', { placeholder: t('menu.yourName'), value: playerName(), 'aria-label': t('menu.yourName') });
+    const nameInput = h('input', { placeholder: t('menu.yourName'), value: playerName(), 'aria-label': t('menu.yourName'), onchange: () => savePlayerName(nameInput.value.trim()) });
     const roomInput = h('input', { placeholder: t('menu.roomCode'), maxlength: 6, style: 'text-transform:uppercase', value: invite ?? '', 'aria-label': t('menu.roomCode') });
-    const join = async () => {
-      if (joining) return;
+    const join = () => {
       if (!nameInput.value.trim()) { nameInput.focus(); toast(t('menu.nameNeeded'), 'error'); return; }
       if (!roomInput.value.trim()) { roomInput.focus(); return; }
-      savePlayerName(nameInput.value.trim());
-      joining = true;
-      try {
-        const s = await PeerSession.join(roomInput.value, nameInput.value.trim(), (m) => { joinStatus.textContent = m; });
-        setInviteHash(s.room);
-        actions.lobby(s);
-      } catch (e) {
-        joinStatus.textContent = '';
-        const code = (e as { code?: string }).code;
-        toast(code === 'no-room' ? t('menu.noRoom', { room: roomInput.value.trim().toUpperCase() }) : code === 'away' ? t('menu.hostAway') : errorText(e), 'error');
-        if (code === 'no-room') setInviteHash(null);
-      } finally {
-        joining = false;
-      }
+      void joinGame(roomInput.value, nameInput.value);
     };
     // An invitation joins straight away once the player has a name (once: the menu renders again).
     if (invite && !autoJoined) {
       autoJoined = true;
-      if (playerName().trim()) queueMicrotask(() => void join()); else queueMicrotask(() => nameInput.focus());
+      if (playerName().trim()) queueMicrotask(join); else queueMicrotask(() => nameInput.focus());
     }
+    void refreshGames(() => nameInput.value);
     return [
       panel(t('menu.join'),
         invite ? h('p', { class: 'muted small' }, t('menu.inviteReady')) : null,
-        h('form', { class: 'row', onsubmit: (e: Event) => { e.preventDefault(); void join(); } },
+        h('form', { class: 'row', onsubmit: (e: Event) => { e.preventDefault(); join(); } },
           nameInput, roomInput, h('button', { class: 'primary', type: 'submit' }, t('menu.joinButton')), joinStatus)),
+      panel(t('menu.ownGames'), ownGames),
+      panel(t('menu.openGames'), h('p', { class: 'muted small' }, t('menu.openGamesHint')), openGames),
       panel(t('menu.hostNew'),
         h('div', { class: 'row' }, modeSelect()),
         mapList((m) => [h('button', { class: 'primary', onclick: () => void playMap(m, true) }, t('menu.hostOnline'))])),
       panel(t('menu.hostSaved'), saveList((s) => [
         h('button', { onclick: () => void openSave(s, true) }, t('menu.hostOnline'))], t('menu.noSaves'))),
     ];
+  }
+
+  /** The rules in short, chapter by chapter, and the way into the tutorial. */
+  function howToPlay() {
+    return [
+      panel(t('howto.learn'),
+        h('p', {}, t('howto.learnText')),
+        h('div', { class: 'row' }, h('button', { class: 'primary', onclick: () => actions.tutorial() }, t('howto.startTutorial')))),
+      panel(t('howto.rules'), h('div', { class: 'rules' }, HOWTO_CHAPTERS.map((c, i) => h('details', { open: i === 0 },
+        h('summary', {}, t(`howto.${c}.title` as Parameters<typeof t>[0])),
+        richText(t(`howto.${c}.body` as Parameters<typeof t>[0])))))),
+    ];
+  }
+
+  /** Who and what made the game. */
+  function credits() {
+    return CREDITS.map((section) => panel(t(`credits.${section.id}` as Parameters<typeof t>[0]),
+      h('ul', { class: 'credits' }, section.items.map(([name, what, license]) => h('li', {},
+        h('strong', {}, name), what ? ` — ${what}` : null, license ? h('span', { class: 'muted small' }, ` · ${license}`) : null)))));
   }
 
   function editor() {
@@ -391,13 +497,28 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions, start:
       panel(t('menu.player'),
         h('label', { class: 'row' }, `${t('menu.yourName')} `, nameInput),
         h('p', { class: 'muted small' }, t('menu.playerNameHint'))),
+      panel(t('menu.soundAndAlerts'),
+        h('label', { class: 'row' }, `${t('menu.volume')} `, h('input', {
+          type: 'range', min: 0, max: 100, step: 5, value: Math.round(sound.volume() * 100), 'aria-label': t('menu.volume'),
+          oninput: (e: Event) => sound.setVolume(Number((e.target as HTMLInputElement).value) / 100),
+          onchange: () => sound.play('yourTurn'),
+        })),
+        h('label', { class: 'row' }, h('input', {
+          type: 'checkbox', checked: alertsWanted(),
+          onchange: (e: Event) => void setAlertsWanted((e.target as HTMLInputElement).checked).then(() => render()),
+        }), t('menu.turnAlerts')),
+        h('p', { class: 'muted small' }, t('menu.turnAlertsHint')),
+        h('label', { class: 'row' }, h('input', {
+          type: 'checkbox', checked: wantsSummary(), onchange: (e: Event) => setWantsSummary((e.target as HTMLInputElement).checked),
+        }), t('menu.turnSummary'))),
+      panel(t('menu.about'), h('div', { class: 'row' }, h('button', { onclick: () => show('credits') }, t('menu.credits')))),
     ];
   }
 
   // ---- data ---------------------------------------------------------------------------
 
   async function importFile() {
-    const [file] = await pickFiles('.krieg,.zip');
+    const [file] = await pickFiles(BUNDLE_ACCEPT);
     if (!file) return;
     try {
       const bundle = await unpackBundle(file);
@@ -459,7 +580,7 @@ export async function menuScreen(root: HTMLElement, actions: MenuActions, start:
         detail: [s.title.includes(s.mapName) ? '' : s.mapName, s.turn ? t('menu.turnN', { n: s.turn }) : '', new Date(s.date).toLocaleString()]
           .filter(Boolean).join(' · '),
         open: () => unpack(s.blob, `save:${s.id}`),
-        download: () => download(s.blob, `${s.title.replace(/\W+/g, '_')}.krieg`),
+        download: () => download(s.blob, `${s.title.replace(/\W+/g, '_')}${BUNDLE_EXT}`),
         remove: () => idb.delete('saves', s.id),
       })),
       ...serverSaves.map((s): SaveEntry => ({
@@ -486,7 +607,7 @@ function savedAiSeats(seats: Record<string, string> | undefined): string[] {
 
 function holderText(session: Session, s: SeatInfo): string {
   switch (s.holder) {
-    case 'you': return session.isHost ? t('lobby.playedHere') : t('lobby.you');
+    case 'you': return session.online ? t('lobby.you') : t('lobby.playedHere');
     case 'host': return session.players().find((p) => p.host)?.name ?? t('lobby.host');
     case 'other': return `${s.label ?? t('lobby.anotherPlayer')}${s.offline ? ` (${t('lobby.offline')})` : ''}`;
     case 'ai': return t(s.aiRole === 'defensive' ? 'lobby.aiDefensive' : 'lobby.aiOffensive');
@@ -552,28 +673,66 @@ function invitePanel(room: string) {
     links);
 }
 
+/** Color swatches for a nation: the palette, with the colors other nations use marked as taken. */
+function colorPicker(session: Session, s: SeatInfo) {
+  const taken = new Set(session.seats().filter((x) => x.nation !== s.nation).map((x) => x.color.toLowerCase()));
+  const original = (session.map.config.nations as { id: string; color: string }[] | undefined)?.find((n) => n.id === s.nation)?.color;
+  return h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': t('lobby.colorFor', { nation: s.nation }) },
+    original ? h('button', {
+      class: `swatch map ${s.color.toLowerCase() === original.toLowerCase() ? 'current' : ''}`, style: `--swatch:${original}`,
+      title: t('lobby.colorMap'), 'aria-label': t('lobby.colorMap'), disabled: taken.has(original.toLowerCase()),
+      onclick: () => session.setColor(s.nation, null),
+    }) : null,
+    COLOR_CHOICES.map((c) => h('button', {
+      class: `swatch ${s.color.toLowerCase() === c ? 'current' : ''}`, style: `--swatch:${c}`, role: 'radio',
+      'aria-checked': String(s.color.toLowerCase() === c), 'aria-label': c, title: taken.has(c) ? t('lobby.colorTaken') : c,
+      disabled: taken.has(c), onclick: () => session.setColor(s.nation, c),
+    })));
+}
+
+/** The host's options for an online game. */
+function settingsPanel(session: Session) {
+  const st = session.settings();
+  const disabled = !session.isHost;
+  return h('section', { class: 'menu-panel' },
+    h('h2', {}, t('lobby.settings')),
+    h('label', { class: 'row', 'data-tip': t('lobby.afkTip') }, `${t('lobby.afk')} `, h('select', {
+      disabled, onchange: (e: Event) => session.setSettings({ afkMinutes: Number((e.target as HTMLSelectElement).value) }),
+    }, AFK_CHOICES.map((m) => h('option', { value: m, selected: st.afkMinutes === m }, m ? t('lobby.afkMinutes', { n: m }) : t('lobby.afkOff'))))),
+    h('label', { class: 'row', 'data-tip': t('lobby.spectatorsTip') }, h('input', {
+      type: 'checkbox', checked: st.allowSpectators, disabled, onchange: (e: Event) => session.setSettings({ allowSpectators: (e.target as HTMLInputElement).checked }),
+    }), t('lobby.spectators')),
+    h('label', { class: 'row', 'data-tip': t('lobby.listedTip') }, h('input', {
+      type: 'checkbox', checked: st.listed, disabled, onchange: (e: Event) => session.setSettings({ listed: (e.target as HTMLInputElement).checked }),
+    }), t('lobby.listed')),
+    disabled ? h('p', { class: 'muted small' }, t('lobby.settingsHostOnly')) : null);
+}
+
 /**
- * Before a game starts: who plays each nation (here, remotely or by computer), who is in the
- * room, and the room's chat. Players pick their own nations; the host starts the game.
+ * Before a game starts: who plays each nation (here, remotely or by computer), their colors, who
+ * is at the table, the host's options and the table's chat. Players pick their own nations; the
+ * host starts the game.
  */
 export function lobbyScreen(root: HTMLElement, session: Session, onStart: () => void, onExit: () => void) {
   void useThemeForMap(session.map.config);
   useMapText(session.map.config);
   setDefaultNames(session.map.config);
-  let emblems = buildEmblems(session.config.nations, session.map);
-  const host = session instanceof HostSession ? session : null;
-  const online = Boolean(session.room);
+  const emblemsNow = () => buildEmblems(session.config.nations, session.map);
+  let emblems = emblemsNow();
+  const host = session.isHost;
+  const online = session.online;
 
   const head = h('div');
   const invite = host && session.room ? invitePanel(session.room) : null;
   const nations = h('section', { class: 'menu-panel' });
   const players = h('div');
+  const settings = h('div');
   const chat = online ? chatBox(session, () => emblems) : null;
   const foot = h('div');
   const page = h('div', { class: `menu-page ${online ? 'lobby-online' : ''}` },
     head, invite,
     online
-      ? h('div', { class: 'lobby-grid' }, nations,
+      ? h('div', { class: 'lobby-grid' }, h('div', {}, nations, settings),
         h('section', { class: 'menu-panel lobby-side' }, players, h('h2', {}, t('chat.title')), chat!.el))
       : nations,
     foot);
@@ -581,26 +740,42 @@ export function lobbyScreen(root: HTMLElement, session: Session, onStart: () => 
 
   const aiTitle = (s: SeatInfo) => t(s.aiRole === 'defensive' ? 'lobby.aiDefensiveTitle' : 'lobby.aiOffensiveTitle');
   const seatButtons = (s: SeatInfo) => [
-    s.holder === null || (host && s.holder === 'ai') ? h('button', { class: s.holder === null && !host ? 'primary' : '', onclick: () => session.claim(s.nation) }, session.isHost ? t('lobby.playHere') : t('lobby.take')) : null,
-    s.holder === 'you' && (!host || session.room) ? h('button', { onclick: () => session.release(s.nation) }, session.isHost ? t('lobby.openRemote') : t('lobby.release')) : null,
-    host && (s.holder === 'you' || s.holder === null) ? h('button', { title: aiTitle(s), onclick: () => host.setAi(s.nation) }, t('lobby.playAi')) : null,
-    host && s.holder === 'other' && s.offline ? h('button', { title: t('lobby.freeSeatTitle'), onclick: () => host.release(s.nation) }, t('lobby.freeSeat')) : null,
+    s.holder === null || (host && s.holder === 'ai')
+      ? h('button', { class: s.holder === null && !host ? 'primary' : '', onclick: () => { sound.play('click'); session.claim(s.nation); } }, online ? t('lobby.take') : t('lobby.playHere'))
+      : null,
+    s.holder === 'you' && online ? h('button', { onclick: () => session.release(s.nation) }, t('lobby.release')) : null,
+    host && (s.holder === 'you' || s.holder === null) ? h('button', { 'data-tip': aiTitle(s), onclick: () => session.setAi(s.nation) }, t('lobby.playAi')) : null,
+    host && s.holder === 'other' && s.offline ? h('button', { 'data-tip': t('lobby.freeSeatTitle'), onclick: () => session.release(s.nation) }, t('lobby.freeSeat')) : null,
   ];
+  /** Seats whose color this player may change. */
+  const canColor = (s: SeatInfo) => host || s.holder === 'you';
+  let colorOpen: string | null = null;
 
   const render = () => {
     if (session.started()) { stop(); onStart(); return; }
+    if (session.link !== 'connected' && session.link !== 'reconnecting') return;
+    emblems = emblemsNow();
     clear(head, h('header', { class: 'page-head' },
       h('h1', {}, mapNameText(session.map.name)),
       divider(),
       h('p', { class: 'tagline' }, t('lobby.tagline'))));
     clear(nations,
       h('h2', {}, t('lobby.nations')),
-      session.seats().map((s) => h('div', { class: `item seat ${s.holder === 'you' ? 'mine' : ''}` },
-        h('div', { class: 'row' }, emblemEl(emblems.get(s.nation), 30), h('strong', {}, nationText(s.nation)), h('span', { class: 'muted' }, ` · ${t(`role.${s.side}`)}`)),
+      session.seats().map((s) => h('div', { class: `item seat ${s.holder === 'you' ? 'mine' : ''}`, style: `--c:${s.color}` },
         h('div', { class: 'row' },
-          h('span', { title: s.holder === 'ai' ? aiTitle(s) : undefined }, holderText(session, s)),
-          seatButtons(s)))));
+          canColor(s)
+            ? h('button', {
+              class: 'seat-emblem', 'data-tip': t('lobby.changeColor'), 'aria-expanded': String(colorOpen === s.nation),
+              onclick: () => { colorOpen = colorOpen === s.nation ? null : s.nation; render(); },
+            }, emblemEl(emblems.get(s.nation), 30))
+            : emblemEl(emblems.get(s.nation), 30),
+          h('strong', {}, nationText(s.nation)), h('span', { class: 'muted' }, ` · ${t(`role.${s.side}`)}`)),
+        h('div', { class: 'row' },
+          h('span', { 'data-tip': s.holder === 'ai' ? aiTitle(s) : undefined }, holderText(session, s)),
+          seatButtons(s)),
+        colorOpen === s.nation && canColor(s) ? colorPicker(session, s) : null)));
     if (online) {
+      clear(settings, settingsPanel(session));
       clear(players,
         h('h2', {}, t('lobby.players')),
         h('ul', { class: 'players' }, session.players().map((p) => h('li', { class: p.online ? '' : 'offline' },
@@ -609,9 +784,10 @@ export function lobbyScreen(root: HTMLElement, session: Session, onStart: () => 
           p.host ? h('span', { class: 'muted small' }, ` · ${t('lobby.hostTag')}`) : null,
           p.you ? h('span', { class: 'muted small' }, ` · ${t('lobby.youTag')}`) : null,
           p.online ? null : h('span', { class: 'muted small' }, ` · ${t('lobby.offline')}`),
+          p.you ? null : muteButton(session, p.id, p.name),
           host && !p.host ? h('button', {
-            class: 'danger small-button', title: t('lobby.kickTitle'),
-            onclick: () => { if (confirm(t('lobby.kickConfirm', { name: p.name }))) host.kick(p.id); },
+            class: 'danger small-button', 'data-tip': t('lobby.kickTitle'),
+            onclick: () => { if (confirm(t('lobby.kickConfirm', { name: p.name }))) session.kick(p.id); },
           }, t('lobby.kick')) : null,
           h('span', { class: 'player-nations' }, p.nations.length
             ? p.nations.map((n) => emblemEl(emblems.get(n), 18, nationText(n)))
@@ -620,12 +796,13 @@ export function lobbyScreen(root: HTMLElement, session: Session, onStart: () => 
     clear(foot,
       h('p', { class: 'muted' }, session.status()),
       h('div', { class: 'row' },
-        host ? h('button', { class: 'primary', onclick: () => host.start() }, t(session.room ? 'lobby.start' : 'lobby.startLocal')) : h('span', { class: 'waiting' }, t('lobby.waitingHost')),
+        host ? h('button', { class: 'primary', onclick: () => session.start() }, t(online ? 'lobby.start' : 'lobby.startLocal')) : h('span', { class: 'waiting' }, t('lobby.waitingHost')),
         h('button', { onclick: () => { stop(); onExit(); } }, t('lobby.leave'))));
   };
   const unsub = session.subscribe(render);
+  const unsubMute = onMuteChange(render);
   // The map's theme arrives after the first render; its ornament and colors follow.
-  const unsubTheme = onThemeChange(() => { emblems = buildEmblems(session.config.nations, session.map); render(); });
-  const stop = () => { unsub(); unsubTheme(); chat?.destroy(); };
+  const unsubTheme = onThemeChange(render);
+  const stop = () => { unsub(); unsubMute(); unsubTheme(); chat?.destroy(); };
   render();
 }

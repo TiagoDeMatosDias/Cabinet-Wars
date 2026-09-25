@@ -1,14 +1,16 @@
 {
-  "name": "krieg",
+  "name": "cabinet-wars",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "npm run dev -w @krieg/client",
-    "build": "npm run build -w @krieg/client",
-    "server": "npm run start -w @krieg/server",
+    "dev": "npm run dev -w @cabinet-wars/client",
+    "build": "npm run build -w @cabinet-wars/client",
+    "server": "npm run start -w @cabinet-wars/server",
     "test": "vitest run",
-    "typecheck": "tsc -p packages/engine && tsc -p packages/server && tsc -p packages/client"
+    "typecheck": "tsc -p packages/engine && tsc -p packages/table && tsc -p packages/server && tsc -p packages/client"
   },
   "devDependencies": {
     "typescript": "^5.9.0",

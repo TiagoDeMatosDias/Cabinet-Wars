@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   advanceCopy, aiIntent, apply, filterForSeats, initialState, newAiMemory, parseConfig, replay,
   type AiMemory, type GameState, type LogEntry,
-} from '@krieg/engine';
+} from '@cabinet-wars/engine';
 import { ReplaySession } from '../src/net/replay';
 import { testConfig } from '../../engine/test/helpers';
 

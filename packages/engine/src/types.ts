@@ -242,7 +242,9 @@ export type OracleRequest =
   | { kind: 'shuffle'; deck: 'general' | 'event'; n: number }
   | { kind: 'roll'; attacker: number; defender: number }
   /** Pick `attackerPick` of the attacker's `attacker` combat units, `defenderPick` of the defender's, and a target for each attacking unit. */
-  | { kind: 'select'; attacker: number; attackerPick: number; defender: number; defenderPick: number };
+  | { kind: 'select'; attacker: number; attackerPick: number; defender: number; defenderPick: number }
+  /** Two enemy armies stand next to each other: pick which one attacks (index into `armies`). */
+  | { kind: 'engage'; armies: [string, string] };
 
 export type Phase = 'turnStart' | 'movement' | 'battle' | 'turnEnd' | 'gameOver';
 export type TurnStartStep = 'general' | 'event' | 'eventResolve';
@@ -286,6 +288,11 @@ export interface GameState {
 export type HistoryKind = 'turn' | 'order' | 'card' | 'battle' | 'event' | 'control' | 'attrition' | 'result';
 
 export interface Rules {
+  /**
+   * Version of the rules the game is played by (see RULES_VERSION). Saves keep the version they
+   * were started with, so they replay the same way after the rules change.
+   */
+  version: number;
   /** Before this round, a drawn End Game card goes to the bottom of the event deck instead. */
   endGameFromRound: number;
   /** 'sides': attackers against defenders. 'freeForAll': every nation is an attacker, at war with all others. */

@@ -1,4 +1,4 @@
-import type { GameView, GeneralCardType, Unit, UnitType } from '@krieg/engine';
+import type { GameView, GeneralCardType, Unit, UnitType } from '@cabinet-wars/engine';
 import { currentTheme } from '../theme/theme';
 import { nationText, nodeText, t } from '../i18n/i18n';
 import { h } from './dom';

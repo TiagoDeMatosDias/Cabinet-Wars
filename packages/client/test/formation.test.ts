@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { UnitType } from '@krieg/engine';
+import type { UnitType } from '@cabinet-wars/engine';
 import { formation } from '../src/render/formation';
 
 const army = (units: Partial<Record<UnitType, number>>, generals = 0) => ({

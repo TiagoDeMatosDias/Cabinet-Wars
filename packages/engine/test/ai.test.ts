@@ -1,25 +1,20 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import {
-  advanceCopy, aiFallback, aiIntent, aiRole, apply, filterForSeats, initialState, newAiMemory, parseConfig,
+  advanceCopy, aiFallback, aiIntent, aiRole, apply, filterForSeats, initialState, newAiMemory, parseConfig, randomOracle,
   type AiMemory, type GameState, type LogEntry, type MapConfig,
 } from '../src';
 import { TestGame, testConfig } from './helpers';
 
 let seed = 1;
 const rnd = (n: number) => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % n; };
-const fy = (n: number) => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 /** Plays a whole game with every nation run by the AI, like the host does. */
 function aiGame(cfg: MapConfig, maxSteps = 20_000) {
   let s: GameState = advanceCopy(initialState(cfg));
   const log: LogEntry[] = [];
   const push = (e: LogEntry) => { s = apply(s, e); log.push(e); };
-  const oracle = () => { while (s.oracle) { const o = s.oracle; push(o.kind === 'shuffle'
-    ? { seq: log.length, by: 'host', intent: { type: 'shuffle', deck: o.deck, order: fy(o.n) } }
-    : o.kind === 'select'
-      ? { seq: log.length, by: 'host', intent: { type: 'select', attacker: fy(o.attacker).slice(0, o.attackerPick), defender: fy(o.defender).slice(0, o.defenderPick), targets: Array.from({ length: o.attackerPick }, () => rnd(o.defenderPick)) } }
-      : { seq: log.length, by: 'host', intent: { type: 'roll', attacker: Array.from({ length: o.attacker }, () => rnd(6) + 1), defender: Array.from({ length: o.defender }, () => rnd(6) + 1) } }); } };
+  const oracle = () => { while (s.oracle) push({ seq: log.length, by: 'host', intent: randomOracle(s.oracle, rnd) }); };
   oracle();
   const memory = new Map<string, AiMemory>();
   const stats = { steps: 0, refused: 0, battles: 0, moves: 0, captures: 0 };

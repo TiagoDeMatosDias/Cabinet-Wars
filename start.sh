@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Installs dependencies, builds the client and starts the Krieg server, then opens the browser.
+# Installs dependencies, builds the client and starts the Cabinet Wars server, then opens the browser.
 # Double-click it in the file manager, or run ./start.sh. Set PORT to use another port.
 
 # When launched by double-click there is no terminal: reopen in one so output and errors stay visible.
-if [ ! -t 1 ] && [ -z "$KRIEG_IN_TERMINAL" ]; then
-  export KRIEG_IN_TERMINAL=1
+if [ ! -t 1 ] && [ -z "$CABINET_WARS_IN_TERMINAL" ]; then
+  export CABINET_WARS_IN_TERMINAL=1
   for term in ptyxis gnome-terminal konsole xfce4-terminal x-terminal-emulator xterm; do
     if command -v "$term" >/dev/null 2>&1; then
       case "$term" in
@@ -45,11 +45,11 @@ echo "==> Building the client…"
 npm run build || fail "The build failed."
 
 if (echo >"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then
-  fail "Port $PORT is already in use (is Krieg already running?). Close it or run: PORT=8788 ./start.sh"
+  fail "Port $PORT is already in use (is Cabinet Wars already running?). Close it or run: PORT=8788 ./start.sh"
 fi
 
 URL="http://localhost:$PORT"
-echo "==> Starting Krieg on $URL (close this window or press Ctrl+C to stop)"
+echo "==> Starting Cabinet Wars on $URL (close this window or press Ctrl+C to stop)"
 echo "    Host an online game from Multiplayer: the lobby shows links others can join from anywhere."
 # Open the browser once the server answers.
 (

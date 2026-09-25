@@ -2,7 +2,7 @@ import {
   ROLL_CARDS, scoreDuels, TYPE_ADVANTAGE, retreatPlan, typeBonus,
   type Army, type Battle, type BattleChoice, type BattleReport, type BattleRole, type BattleRound, type GameView, type HistoryEntry, type Intent,
   type PlacedCard, type UnitType,
-} from '@krieg/engine';
+} from '@cabinet-wars/engine';
 import { add, h } from './dom';
 import { cardEl } from './cards';
 import { emblemEl, type Emblem } from './emblem';

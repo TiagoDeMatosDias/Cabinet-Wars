@@ -19,6 +19,8 @@ export const MESSAGES = {
   'log.winner': 'The {side} win the war',
   'log.winnerNation': '{nation} wins the war',
   'log.landPartitioned': '{nation} takes over {count} town(s) of the defeated {defeatedNation}',
+  'log.standoff': '{nation} army {army} and {defNation} army {defArmy} stand face to face: {nation} attacks',
+  'log.handFull': '{nation} holds {limit} cards and draws none',
   'log.battle': 'Battle at {node}: {nation} ({army}) attacks {defNation} ({defArmy})',
   'log.battleWon': '{nation} wins the battle at {node}',
   'log.battleDrawn': 'The battle at {node} ends with no winner',

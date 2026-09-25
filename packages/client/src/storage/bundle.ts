@@ -1,9 +1,10 @@
 import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
-import type { LogEntry } from '@krieg/engine';
+import type { LogEntry } from '@cabinet-wars/engine';
 import type { MapBundle } from '../maps';
 
 /**
- * A .krieg file is a zip: config.json, the map images, and for saved games log.json + meta.json.
+ * A .cabinetwars file is a zip: config.json, the map images, and for saved games log.json +
+ * meta.json. Files from the game's working name end in .krieg; they are the same.
  * Saves always carry their map so they can be shared on their own.
  */
 export interface SaveMeta {
@@ -22,6 +23,10 @@ export interface Bundle {
   meta?: SaveMeta;
 }
 
+/** File name ending of maps and saves, and what file pickers accept (older files included). */
+export const BUNDLE_EXT = '.cabinetwars';
+export const BUNDLE_ACCEPT = '.cabinetwars,.krieg,.zip';
+
 export async function packBundle({ map, log, meta }: Bundle): Promise<Blob> {
   const files: Zippable = { 'config.json': strToU8(JSON.stringify(map.config, null, 2)) };
   for (const [name, blob] of Object.entries(map.files)) {
@@ -37,7 +42,7 @@ const IMAGE_TYPES: Record<string, string> = { png: 'image/png', webp: 'image/web
 export async function unpackBundle(blob: Blob, id = `browser:${crypto.randomUUID()}`): Promise<Bundle> {
   const entries = unzipSync(new Uint8Array(await blob.arrayBuffer()));
   const cfgBytes = entries['config.json'];
-  if (!cfgBytes) throw new Error('Not a Krieg bundle: config.json is missing');
+  if (!cfgBytes) throw new Error('Not a Cabinet Wars file: config.json is missing');
   const config = JSON.parse(strFromU8(cfgBytes));
   const files: Record<string, Blob> = {};
   for (const [name, bytes] of Object.entries(entries)) {

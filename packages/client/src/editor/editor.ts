@@ -1,9 +1,9 @@
 import {
   checkConfig, configWarnings, DEFAULT_EVENT_DECK, DEFAULT_GENERAL_DECK, DEFAULT_RULES, MapConfigSchema, startingUnitCap, type RoadType, type Side,
-} from '@krieg/engine';
+} from '@cabinet-wars/engine';
 import { MapView } from '../render/MapView';
 import { saveBrowserMap, type MapBundle } from '../maps';
-import { packBundle, unpackBundle } from '../storage/bundle';
+import { BUNDLE_ACCEPT, BUNDLE_EXT, packBundle, unpackBundle } from '../storage/bundle';
 import { clear, download, h, pickFiles, toast } from '../ui/dom';
 import { buildEmblems, emblemEl } from '../ui/emblem';
 import { applyTheme, currentTheme, knownThemes, loadFonts, resolveTheme } from '../theme/theme';
@@ -240,9 +240,9 @@ export async function editorScreen(root: HTMLElement, source: MapBundle | null, 
       : `The node map is ${b.width}×${b.height} but the base map is ${a.width}×${a.height}.`;
   }
 
-  /** Opens a .krieg map/save bundle or a config.json, replacing what is being edited. */
+  /** Opens a map or save file (or a config.json), replacing what is being edited. */
   async function openMap() {
-    const [f] = await pickFiles('.krieg,.zip,.json');
+    const [f] = await pickFiles(`${BUNDLE_ACCEPT},.json`);
     if (!f) return;
     if (cfg.nodes.length && !confirm('Replace the map you are editing?')) return;
     try {
@@ -531,11 +531,11 @@ export async function editorScreen(root: HTMLElement, source: MapBundle | null, 
         h('button', { onclick: () => void uploadBaseMap(), title: 'The background image players see (PNG, WebP or JPEG)' }, 'Base map…'),
         h('button', { onclick: () => void uploadNodeMap(), title: 'Optional: an image with one colored dot per node, the same size as the base map. Nodes are created from the dots.' }, 'Node map…'),
         map.files[cfg.nodesImage] ? h('button', { onclick: () => void runDetection(), title: 'Re-read the dots from the node map' }, 'Detect nodes') : null,
-        h('button', { onclick: () => void openMap(), title: 'Open a .krieg map or a config.json' }, 'Open…'),
+        h('button', { onclick: () => void openMap(), title: 'Open a .cabinetwars map or a config.json' }, 'Open…'),
         h('button', { onclick: async () => { await saveBrowserMap(await bundle()); toast('Saved in this browser'); } }, 'Save'),
         h('button', {
-          title: 'Download the map as a .krieg file (a zip with config.json, the base map and the node map)',
-          onclick: async () => download(await packBundle({ map: await bundle() }), `${cfg.name.replace(/\W+/g, '_')}.krieg`),
+          title: 'Download the map as a .cabinetwars file (a zip with config.json, the base map and the node map)',
+          onclick: async () => download(await packBundle({ map: await bundle() }), `${cfg.name.replace(/\W+/g, '_')}${BUNDLE_EXT}`),
         }, 'Download'),
         h('button', { title: 'Download only config.json', onclick: () => download(new Blob([JSON.stringify(exportConfig(), null, 2)], { type: 'application/json' }), 'config.json') }, 'config.json'),
         h('button', { class: 'primary', onclick: async () => { const { errors } = problems(); if (errors.length) toast(errors[0], 'error'); else actions.play(await bundle()); } }, 'Play')));

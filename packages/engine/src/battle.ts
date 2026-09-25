@@ -1,6 +1,6 @@
 import type {
   Army, Battle, BattleChoice, BattleReport, BattleRole, BattleRound, BattleSideReport, CardPlacement, Duel, GameState, GeneralCardType,
-  NodeId, PlacedCard, UnitType,
+  NodeId, PlacedCard, Team, UnitType,
 } from './types';
 import { GENERAL_SPEED, UNIT_SPEED } from './types';
 import {
@@ -35,7 +35,8 @@ export function roleOf(state: GameState, nationId: string): BattleRole | null {
   return null;
 }
 
-export function startBattle(state: GameState, attackerArmy: string, defenderArmy: string) {
+/** Starts a battle; returns the teams that see it. */
+export function startBattle(state: GameState, attackerArmy: string, defenderArmy: string): Team[] {
   const a = army(state, attackerArmy);
   const d = army(state, defenderArmy);
   const involved = [...new Set([sideOf(state, a.nation), sideOf(state, d.nation)])];
@@ -70,6 +71,7 @@ export function startBattle(state: GameState, attackerArmy: string, defenderArmy
   };
   log(state, 'log.battle', { node: d.node, nation: a.nation, army: a.id, defNation: d.nation, defArmy: d.id }, { kind: 'battle', nation: a.nation, node: d.node });
   beginRound(state);
+  return witnesses;
 }
 
 /** How many units a side fights with each round: set by its number of combat units (README table). */
@@ -465,6 +467,36 @@ export function endBattle(state: GameState) {
   }
   state.battleQueue = null;
   state.phase = 'movement';
+}
+
+/**
+ * Version 2: finds two enemy armies standing next to each other (after a recruit, a retreat, or
+ * from the map's set-up) and asks the host which of them attacks. Returns true if it did.
+ */
+export function standingBattle(state: GameState): boolean {
+  const armies = Object.values(state.armies).sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+  for (const a of armies) {
+    const enemy = enemyArmiesAdjacent(state, a).sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0))[0];
+    if (!enemy) continue;
+    state.oracle = { kind: 'engage', armies: [a.id, enemy.id] };
+    return true;
+  }
+  return false;
+}
+
+/** The host's pick: `attacker` (0 or 1) indexes the two armies of the engage request. */
+export function applyEngage(state: GameState, attacker: number) {
+  const req = state.oracle;
+  if (req?.kind !== 'engage') fail('No engagement expected');
+  if (attacker !== 0 && attacker !== 1) fail('Bad engagement pick');
+  state.oracle = null;
+  const att = army(state, req.armies[attacker]);
+  const def = army(state, req.armies[1 - attacker]);
+  const at = state.history.length;
+  const witnesses = startBattle(state, att.id, def.id);
+  // Logged after the battle has its witnesses (who alone may see it), then put before the battle's entries.
+  log(state, 'log.standoff', { nation: att.nation, army: att.id, defNation: def.nation, defArmy: def.id, node: def.node }, { kind: 'battle', nation: att.nation, node: def.node, teams: witnesses });
+  state.history.splice(at, 0, state.history.pop()!);
 }
 
 export function queueBattles(state: GameState, attacker: string, defenders: string[]) {

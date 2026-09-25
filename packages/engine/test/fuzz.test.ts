@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import {
-  advanceCopy, apply, parseConfig, initialState, reachable, replay, filterForSeats,
-  ROLL_CARDS, type BattleChoice, type GameState, type Intent, type LogEntry,
+  advanceCopy, apply, parseConfig, initialState, randomOracle, reachable, replay, filterForSeats,
+  ROLL_CARDS, RULES_VERSION, type BattleChoice, type GameState, type Intent, type LogEntry,
 } from '../src';
 import { testConfig } from './helpers';
 
@@ -13,7 +13,6 @@ const cfg = parseConfig(testConfig({
 }));
 let seed = 1;
 const rnd = (n: number) => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % n; };
-const fy = (n: number) => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pick = <T,>(xs: T[]) => xs[rnd(xs.length)];
 
 function choose(s: GameState, nation: string): Intent {
@@ -83,15 +82,13 @@ it('random games never crash or stall', () => {
   const stats = { games: 0, steps: 0, battles: 0, winners: {} as Record<string, number>, errors: 0 };
   for (let g = 0; g < 80; g++) {
     seed = g + 1;
-    const init = initialState(g % 2 ? { ...cfg, rules: { ...cfg.rules, mode: 'freeForAll' } } : cfg);
+    // Both modes, under the original rules and the current ones.
+    const rules = { ...cfg.rules, version: g % 4 < 2 ? 1 : RULES_VERSION, mode: g % 2 ? 'freeForAll' as const : cfg.rules.mode };
+    const init = initialState({ ...cfg, rules });
     let s = advanceCopy(init);
     const log: LogEntry[] = [];
     const push = (e: LogEntry) => { s = apply(s, e); log.push(e); };
-    const oracle = () => { while (s.oracle) { const o = s.oracle; push(o.kind === 'shuffle'
-      ? { seq: log.length, by: 'host', intent: { type: 'shuffle', deck: o.deck, order: fy(o.n) } }
-      : o.kind === 'select'
-        ? { seq: log.length, by: 'host', intent: { type: 'select', attacker: fy(o.attacker).slice(0, o.attackerPick), defender: fy(o.defender).slice(0, o.defenderPick), targets: Array.from({ length: o.attackerPick }, () => rnd(o.defenderPick)) } }
-        : { seq: log.length, by: 'host', intent: { type: 'roll', attacker: Array.from({ length: o.attacker }, () => rnd(6) + 1), defender: Array.from({ length: o.defender }, () => rnd(6) + 1) } }); } };
+    const oracle = () => { while (s.oracle) push({ seq: log.length, by: 'host', intent: randomOracle(s.oracle, rnd) }); };
     oracle();
     let steps = 0;
     while (s.phase !== 'gameOver' && steps < 3000) {

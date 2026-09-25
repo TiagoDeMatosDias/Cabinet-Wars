@@ -33,7 +33,21 @@ export const DEFAULT_EVENT_DECK: { card: EventCardType; count: number }[] = [
   { card: 'nothing', count: 20 },
 ];
 
-export const DEFAULT_RULES: Rules = { endGameFromRound: 6, mode: 'sides' };
+/**
+ * The rules version new games are played by. Version 1 is the original rules; version 2 adds
+ * the hand limit, decks that grow with the number of nations, and battles between armies that
+ * stand next to each other.
+ */
+export const RULES_VERSION = 2;
+
+/** Version 2: a nation holding this many General cards draws no more. */
+export const HAND_LIMIT = 10;
+
+/** Version 2: the deck amounts are for this many nations; each nation in the game adds its share. */
+export const DECK_NATIONS = 5;
+
+/** Maps and old saves without a version play by the original rules. */
+export const DEFAULT_RULES: Rules = { version: 1, endGameFromRound: 6, mode: 'sides' };
 
 const unitCounts = z.object({
   cavalry: z.number().int().min(0).default(0),
@@ -83,6 +97,7 @@ export const MapConfigSchema = z.object({
   })).default([]),
   /** Rule options (docs: README "Maps and custom content"). */
   rules: z.object({
+    version: z.number().int().min(1).default(DEFAULT_RULES.version),
     endGameFromRound: z.number().int().min(1).default(DEFAULT_RULES.endGameFromRound),
     mode: z.enum(['sides', 'freeForAll']).default(DEFAULT_RULES.mode),
   }).default(DEFAULT_RULES),
@@ -179,12 +194,25 @@ function buildDeck<T extends string>(prefix: string, spec: { card: T; count: num
   return cards;
 }
 
+/**
+ * Version 2: the deck for `nations` nations. Each nation adds a fifth of the listed amounts
+ * (rounded, but at least one of each card listed); the End Game card stays single. So the decks
+ * last about as many rounds whatever the number of players.
+ */
+export function scaleDeck<T extends string>(spec: { card: T; count: number }[], nations: number): { card: T; count: number }[] {
+  return spec.map(({ card, count }) => ({
+    card,
+    count: card === 'endGame' || count === 0 ? count : Math.max(1, Math.round((count * nations) / DECK_NATIONS)),
+  }));
+}
+
 /** A nation's soft cap on units: half the victory points it owns at the start, rounded down. */
 export function startingUnitCap(nodes: { owner: string; vp: number }[], nationId: string): number {
   return Math.floor(nodes.filter((n) => n.owner === nationId).reduce((sum, n) => sum + n.vp, 0) / 2);
 }
 
 export function initialState(cfg: MapConfig): GameState {
+  const deckFor = <T extends string>(spec: { card: T; count: number }[]) => (cfg.rules.version >= 2 ? scaleDeck(spec, cfg.nations.length) : spec);
   const armies: Record<string, Army> = {};
   for (const a of cfg.armies) {
     const units: Unit[] = [];
@@ -210,8 +238,8 @@ export function initialState(cfg: MapConfig): GameState {
     generals: Object.fromEntries(cfg.generals.map((g) => [g.id, { ...g }])),
     armies,
     // All cards start in the discard pile, so the first draw asks the host for a shuffle.
-    generalDeck: { draw: [], discard: buildDeck('g', cfg.decks?.general ?? DEFAULT_GENERAL_DECK) },
-    eventDeck: { draw: [], discard: buildDeck('e', cfg.decks?.event ?? DEFAULT_EVENT_DECK) },
+    generalDeck: { draw: [], discard: buildDeck('g', deckFor(cfg.decks?.general ?? DEFAULT_GENERAL_DECK)) },
+    eventDeck: { draw: [], discard: buildDeck('e', deckFor(cfg.decks?.event ?? DEFAULT_EVENT_DECK)) },
     hands: Object.fromEntries(cfg.nations.map((n) => [n.id, []])),
     current: cfg.nations[0].id,
     turn: 1,

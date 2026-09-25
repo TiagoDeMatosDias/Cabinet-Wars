@@ -1,23 +1,33 @@
-import { createReadStream } from 'node:fs';
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { createReadStream, createWriteStream, existsSync, renameSync } from 'node:fs';
+import { mkdir, readdir, readFile, rename, rm, stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
 import { createServer as createNetServer, type Socket } from 'node:net';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
-import { attachSignaling } from './signaling';
+import { Games } from './games';
 import { lanAddresses, loadTls } from './tls';
 import { Tunnel } from './tunnel';
+import { env } from './env';
+
+/** Map and save bundles (zip files); saves from the game's working name end in .krieg. */
+const BUNDLE_EXT = '.cabinetwars';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
-const MAPS_DIR = process.env.KRIEG_MAPS ?? join(ROOT, 'Map');
-const SAVES_DIR = process.env.KRIEG_SAVES ?? join(ROOT, 'saves');
-const THEMES_DIR = process.env.KRIEG_THEMES ?? join(ROOT, 'themes');
+const MAPS_DIR = env('MAPS') ?? join(ROOT, 'Map');
+const SAVES_DIR = env('SAVES') ?? join(ROOT, 'saves');
+const THEMES_DIR = env('THEMES') ?? join(ROOT, 'themes');
 const CLIENT_DIR = join(ROOT, 'packages/client/dist');
-const DATA_DIR = process.env.KRIEG_DATA ?? join(ROOT, '.krieg');
+const DATA_DIR = env('DATA') ?? join(ROOT, '.cabinet-wars');
+// The data folder of the game's working name ("Krieg") is moved over once.
+if (!env('DATA') && !existsSync(DATA_DIR) && existsSync(join(ROOT, '.krieg'))) renameSync(join(ROOT, '.krieg'), DATA_DIR);
 const PORT = Number(process.env.PORT ?? 8787);
+const UPLOADS_DIR = join(DATA_DIR, 'uploads');
+/** Largest map bundle a host may upload. */
+const MAX_UPLOAD = 300 * 1024 * 1024;
 const tunnel = new Tunnel(PORT, join(DATA_DIR, 'bin'));
+const games = new Games(join(DATA_DIR, 'games'), () => tunnel.start());
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -28,6 +38,7 @@ const TYPES: Record<string, string> = {
   '.webp': 'image/webp',
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
+  '.cabinetwars': 'application/zip',
   '.krieg': 'application/zip',
   '.woff2': 'font/woff2',
   '.glb': 'model/gltf-binary',
@@ -105,7 +116,7 @@ async function listThemes() {
 
 async function listSaves() {
   try {
-    const files = (await readdir(SAVES_DIR)).filter((f) => f.endsWith('.krieg'));
+    const files = (await readdir(SAVES_DIR)).filter((f) => f.endsWith(BUNDLE_EXT) || f.endsWith('.krieg'));
     return Promise.all(files.map(async (f) => ({ file: f, size: (await stat(join(SAVES_DIR, f))).size })));
   } catch {
     return [];
@@ -125,6 +136,18 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
   try {
     if (parts[0] === 'api') {
       if (parts[1] === 'health') return json(res, 200, { ok: true });
+      if (parts[1] === 'games' && parts.length === 2) return json(res, 200, games.list());
+      if (parts[1] === 'games' && parts.length === 3) {
+        const g = games.get(parts[2]);
+        return g ? json(res, 200, g) : json(res, 404, { error: 'No such game' });
+      }
+      // Maps the host made or loaded in their browser, uploaded for the other players (by content hash).
+      if (parts[1] === 'uploads' && parts.length === 3) {
+        if (!/^[0-9a-f]{8,64}$/.test(parts[2])) return json(res, 400, { error: 'Bad map id' });
+        const path = join(UPLOADS_DIR, `${parts[2]}${BUNDLE_EXT}`);
+        if (req.method === 'PUT') return receiveUpload(req, res, path);
+        return sendFile(req, res, path);
+      }
       if (parts[1] === 'network') return json(res, 200, await network(url.searchParams.has('wait')));
       if (parts[1] === 'maps' && parts.length === 2) return json(res, 200, await listMaps());
       if (parts[1] === 'maps' && parts.length >= 4) return sendFile(req, res, safeJoin(MAPS_DIR, parts.slice(2).join('/')));
@@ -140,6 +163,24 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
   } catch (err) {
     json(res, 500, { error: String(err) });
   }
+}
+
+/** Stores an uploaded map bundle (written aside first, so a broken upload leaves nothing behind). */
+async function receiveUpload(req: IncomingMessage, res: ServerResponse, path: string) {
+  if ((await stat(path).catch(() => null))?.isFile()) { req.resume(); return json(res, 200, { ok: true }); }
+  if (Number(req.headers['content-length'] ?? 0) > MAX_UPLOAD) return json(res, 413, { error: 'Map too large' });
+  await mkdir(UPLOADS_DIR, { recursive: true });
+  const tmp = `${path}.${process.pid}.part`;
+  let size = 0;
+  const out = createWriteStream(tmp);
+  req.on('data', (chunk: Buffer) => { size += chunk.length; if (size > MAX_UPLOAD) req.destroy(); });
+  req.pipe(out);
+  out.on('finish', async () => {
+    if (size > MAX_UPLOAD) { await rm(tmp, { force: true }); return; }
+    await rename(tmp, path);
+    json(res, 200, { ok: true });
+  });
+  req.on('error', () => void rm(tmp, { force: true }));
 }
 
 const isLoopback = (addr = '') => addr === '::1' || addr.startsWith('127.') || addr.startsWith('::ffff:127.');
@@ -166,7 +207,8 @@ for (const server of [http, https]) {
     wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
   });
 }
-attachSignaling(wss, () => tunnel.start());
+await games.load();
+games.attach(wss);
 
 // One port for both: a TLS handshake starts with byte 0x16, anything else is plain HTTP.
 const listener = createNetServer((socket: Socket) => {
@@ -180,7 +222,7 @@ const listener = createNetServer((socket: Socket) => {
 });
 
 listener.listen(PORT, () => {
-  console.log(`Krieg server on http://localhost:${PORT} (maps: ${MAPS_DIR})`);
+  console.log(`Cabinet Wars server on http://localhost:${PORT} (maps: ${MAPS_DIR})`);
   for (const ip of lanAddresses()) console.log(`  on your network: https://${ip}:${PORT}${tls.selfSigned ? ' (self-signed certificate: browsers ask to confirm once)' : ''}`);
-  if (tunnel.enabled) console.log('  a public https link is opened when someone hosts an online game (KRIEG_TUNNEL=off to disable)');
+  if (tunnel.enabled) console.log('  a public https link is opened when someone hosts an online game (CABINET_WARS_TUNNEL=off to disable)');
 });

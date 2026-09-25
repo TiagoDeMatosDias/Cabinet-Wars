@@ -1,16 +1,16 @@
-# Krieg Design System: Themeable UI
+# Cabinet Wars Design System: Themeable UI
 
 **Status:** implemented in `packages/client/src/theme` · **Default theme:** Imperial China (`imperial-china`)
 
 **As built:**
 - The default themes are `imperial-china` and `prussian-baroque`. Like every theme they are folders in `themes/` (`themes/<id>/theme.json`), which the server lists at `/api/themes`.
 - Extra themes can be shared from the server's `themes/` folder.
-- A map can name a theme id in `config.json`, or embed a partial theme object there. A theme folder *inside* a map or `.krieg` bundle is not supported yet, and the texture and ornament images aren't shipped.
+- A map can name a theme id in `config.json`, or embed a partial theme object there. A theme folder *inside* a map or `.cabinetwars` bundle is not supported yet, and the texture and ornament images aren't shipped.
 - The editor has a theme picker with live preview and shows contrast and highlight-vs-nation warnings. The main menu's Settings have the player's own theme setting.
 
 See the [README](../Readme.md) for the game rules, map format and how to run the game.
 
-This document describes how Krieg's look can change with the map being played: a Chinese map gets a Chinese imperial interface, a European map can get a completely different style. It covers:
+This document describes how Cabinet Wars's look can change with the map being played: a Chinese map gets a Chinese imperial interface, a European map can get a completely different style. It covers:
 
 1. [Goals](#1-goals)
 2. [How the system works](#2-how-the-system-works)
@@ -26,7 +26,7 @@ This document describes how Krieg's look can change with the map being played: a
 ## 1. Goals
 
 - **Change the look without changing code.** A theme is a data file (JSON plus optional fonts and images). Loading a different file restyles the menu, lobby, game screen, battle dialog, map overlays and editor.
-- **Themes travel with maps.** A map says which theme it uses. When a map is shared as a `.krieg` bundle, or sent from host to peer in an online game, its theme goes with it, so every player sees the same design.
+- **Themes travel with maps.** A map says which theme it uses. When a map is shared as a `.cabinetwars` bundle, or sent from host to peer in an online game, its theme goes with it, so every player sees the same design.
 - **Partial themes are fine.** Any token a theme leaves out falls back to the canonical theme. A theme can be as small as five colors and a font.
 - **Rules stay readable.** Themes change style, never game information. Nation colors, fog of war, highlight meaning and card effects look different but mean the same thing in every theme.
 - **Themes are safe to share.** A theme contains only validated values (colors, lengths, font names, files inside its own bundle). It cannot inject CSS, scripts or remote URLs.
@@ -62,7 +62,7 @@ themes/
 When a game, lobby or editor session opens a map, the client resolves its theme in this order:
 
 1. **Player override.** A player can force a theme for themselves, for example for accessibility (high contrast). This is stored per browser and never sent to other players.
-2. **Theme inside the map.** A `theme/` folder in the map folder or `.krieg` bundle, if `config.json` points to it.
+2. **Theme inside the map.** A `theme/` folder in the map folder or `.cabinetwars` bundle, if `config.json` points to it.
 3. **Named theme.** A theme id resolved from the browser's installed themes, then from the server's `themes/` folder (`GET /api/themes/<id>/theme.json`).
 4. **Canonical theme.** `imperial-china`.
 
@@ -90,9 +90,9 @@ Switching theme at runtime (for example in the editor preview) repeats steps 3�
 | Where the map comes from | How the theme arrives |
 |---|---|
 | Server `Map/<Name>/` | Theme folder inside the map folder, or a named theme from the server's `themes/` |
-| `.krieg` bundle | `theme/` folder inside the zip, added by the editor on Download |
+| `.cabinetwars` bundle | `theme/` folder inside the zip, added by the editor on Download |
 | Online game (peer) | Inside the map bundle the host sends; the theme content is part of the map hash, so a peer never uses a different theme than the host |
-| Save game | Same as `.krieg`, since saves bundle their map |
+| Save game | Same as `.cabinetwars`, since saves bundle their map |
 
 ---
 
@@ -102,7 +102,7 @@ Switching theme at runtime (for example in the editor preview) repeats steps 3�
 
 ```jsonc
 {
-  "$schema": "https://krieg.local/schemas/theme-1.json",
+  "$schema": "https://cabinet-wars.local/schemas/theme-1.json",
   "id": "imperial-china",
   "name": "Imperial China",
   "version": 1,                 // theme format version
@@ -167,7 +167,7 @@ Every token below is **required in the canonical theme** and **optional in any o
 | `color.surface.scrim` | Hotseat handoff overlay (with alpha) | `rgba(8, 9, 11, 0.94)` |
 | `color.text.primary` | Body text | `--text` |
 | `color.text.muted` | Secondary text, hints, log | `--muted` |
-| `color.text.heading` | Titles such as "Krieg" and section headings | `--accent` on `h1` |
+| `color.text.heading` | Titles such as "Cabinet Wars" and section headings | `--accent` on `h1` |
 | `color.border.subtle` | Decorative dividers and section outlines | `--border` |
 | `color.border.control` | Borders of inputs and buttons (must pass 3:1) | `--border` on inputs |
 | `color.action.primary` | Primary buttons ("End turn", "Commit & roll") | `--accent` |
@@ -1019,7 +1019,7 @@ Before shipping a theme, open a map with it and check:
 3. **Canvas:** `MapView.create()` takes a `Theme`. Replace the hex literals and `NODE_RADIUS` in `render/MapView.ts`, and `HL_MOVE`, `HL_RETREAT`, `HL_TARGET` in `ui/game.ts`, with theme values. Add the highlight casing ring.
 4. **Icons:** make `UNIT_ICON` in `ui/labels.ts`, and the ★ / ⚔ / 🏁 / 🂠 / ⚑ literals in `ui/game.ts`, `ui/battle.ts` and `render/MapView.ts`, read from the theme.
 5. **Map config:** add an optional `theme: string` to `MapConfigSchema` (`packages/engine/src/config.ts`). The engine ignores it but must keep it, since zod strips unknown keys. The map editor's `normalize()` must keep it too.
-6. **Bundles and server:** include `theme/` in `.krieg` files (`storage/bundle.ts`) and in `mapHash()`. Add `GET /api/themes` and `/api/themes/<id>/*` to `packages/server/src/index.ts`, and a `themes/` folder at the repository root.
+6. **Bundles and server:** include `theme/` in `.cabinetwars` files (`storage/bundle.ts`) and in `mapHash()`. Add `GET /api/themes` and `/api/themes/<id>/*` to `packages/server/src/index.ts`, and a `themes/` folder at the repository root.
 7. **Editor:** a theme picker in the toolbar, live preview, contrast warnings in the problems list, and nation color suggestions from `map.nationPalette`.
 8. **Player setting:** a "Theme: map default / high contrast / …" choice on the main menu, stored in `localStorage`.
 

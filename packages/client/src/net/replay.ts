@@ -1,9 +1,9 @@
 import {
   advanceCopy, apply, filterForSeats, initialState, type GameState, type GameView, type LogEntry, type MapConfig, type NationId,
-} from '@krieg/engine';
+} from '@cabinet-wars/engine';
 import type { MapBundle } from '../maps';
-import type { SeatInfo } from './protocol';
-import { Emitter, type Session } from './session';
+import { DEFAULT_SETTINGS, type SeatInfo } from '@cabinet-wars/table';
+import { Emitter, type Link, type Session } from './session';
 import { t } from '../i18n/i18n';
 
 /** A state is kept every this many log entries, so jumping around replays only a few entries. */
@@ -23,7 +23,9 @@ export interface ReplayMark {
  */
 export class ReplaySession implements Session {
   readonly isHost = false;
+  readonly online = false;
   room: string | null = null;
+  link: Link = 'connected';
   private readonly checkpoints = new Map<number, GameState>();
   /** Turn, round and nation to play after each number of applied entries. */
   readonly marks: ReplayMark[] = [];
@@ -93,19 +95,29 @@ export class ReplaySession implements Session {
 
   // ---- Session ------------------------------------------------------------
 
+  you() { return ''; }
   seats(): SeatInfo[] { return []; }
+  players() { return []; }
+  settings() { return DEFAULT_SETTINGS; }
   started() { return true; }
   localSeats(): NationId[] { return []; }
   actingSeat() { return null; }
   view() { return this.cached; }
   subscribe(cb: () => void) { return this.emitter.subscribe(cb); }
   async send(): Promise<void> { throw new Error(t('replay.readOnly')); }
-  claim() { /* nothing to claim in a replay */ }
-  release() { /* nothing to release in a replay */ }
+  // Nothing to change in a replay.
+  claim() {}
+  release() {}
+  setAi() {}
+  kick() {}
+  start() {}
+  setSettings() {}
+  setColor() {}
   status() { return t('replay.status'); }
-  players() { return []; }
   chat() { return []; }
+  sendChat() {}
   deadlines() { return {}; }
-  sendChat() { /* no one to talk to in a replay */ }
-  leave() { /* nothing to leave */ }
+  async entries() { return this.log; }
+  leave() {}
+  end() {}
 }

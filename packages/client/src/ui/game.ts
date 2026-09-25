@@ -1,14 +1,15 @@
 import {
   dependentsOf, orderToIntents, reachable, retreatPlan, sideOf, suppliedAt, unsuppliedArmies, visibleNodes,
   type Army, type BattleReport, type GameState, type GameView, type HistoryEntry, type Intent, type OrderIntent, type UnitType,
-} from '@krieg/engine';
+} from '@cabinet-wars/engine';
 import { MapView, type HighlightKind, type MapScene } from '../render/MapView';
 import { backgroundName } from '../maps';
 import type { Session } from '../net/session';
-import { HostSession } from '../net/host';
+import { LocalSession } from '../net/local';
 import { ReplaySession } from '../net/replay';
 import { replayControls } from './replayControls';
 import { idb } from '../storage/idb';
+import { BUNDLE_EXT } from '../storage/bundle';
 import { describe, Plan, type Projection } from '../orders/plan';
 import { onThemeChange, useThemeForMap } from '../theme/theme';
 import { errorText, logText, mapNameText, nodeText, onLanguageChange, t, tn, useMapText, setDefaultNames } from '../i18n/i18n';
@@ -16,6 +17,10 @@ import { armyCard, reorganizeEditor, splitEditor } from './army';
 import { nodeCard } from './node';
 import { battleKey, battleOverPanel, battlePopup, battleRecap, freshBattleUi } from './battle';
 import { chatDock } from './chat';
+import { sound } from '../audio/sound';
+import { gameSounds } from './gameSounds';
+import { turnAlerts } from './alerts';
+import { summaryEntries, summaryShown, turnSummary, wantsSummary } from './summary';
 import { turnClock } from './turnClock';
 import { clear, download, h, toast } from './dom';
 import { buildEmblems } from './emblem';
@@ -31,6 +36,8 @@ export interface SaveRecord {
   mapName: string;
   turn: number;
   blob: Blob;
+  /** Written by the game itself at every turn (one per game, replaced each time). */
+  auto?: boolean;
 }
 
 /** The in-game screen (docs/game-screen.md). */
@@ -147,7 +154,9 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     if (!v || !plan) return;
     try {
       plan.add(v, v.current, intent);
+      sound.play('order');
     } catch (e) {
+      sound.play('error');
       toast(errorText(e), 'error');
     }
     render();
@@ -307,10 +316,12 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       if (shift) selected = selected.includes(army) ? selected.filter((x) => x !== army) : [...selected, army];
       else selected = [army];
       selectedNode = null;
+      sound.play('selectArmy');
     } else if (node) {
       // Clicking a node shows its details; its armies are listed there.
       selected = [];
       selectedNode = node;
+      sound.play('selectNode');
     } else {
       selected = [];
       selectedNode = null;
@@ -344,14 +355,15 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
 
   map.onBoxSelect = (ids) => {
     selected = ids;
+    if (ids.length) sound.play('selectArmy');
     selectedNode = null;
     render();
   };
 
   // Cards dragged from the hand onto an army on the map.
-  map.canvas.addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('application/x-krieg-card')) e.preventDefault(); });
+  map.canvas.addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('application/x-cabinet-wars-card')) e.preventDefault(); });
   map.canvas.addEventListener('drop', (e) => {
-    const raw = e.dataTransfer?.getData('application/x-krieg-card');
+    const raw = e.dataTransfer?.getData('application/x-cabinet-wars-card');
     if (!raw) return;
     e.preventDefault();
     const { id } = JSON.parse(raw) as { id: string };
@@ -434,7 +446,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
           : t('status.waitingFor', { names: [...new Set(v.pending.map((p) => nationName(v, p.nation)))].join(', ') || nationName(v, v.current) });
     slots.top.replaceChildren(topBar({
       view: v, me: seat, emblems, mapName: mapNameText(session.map.name), status: session.status(), statusLine,
-      onSave: session instanceof HostSession ? () => void saveGame(session) : undefined,
+      onSave: session instanceof LocalSession ? () => void saveGame(session) : undefined,
       onLeave: onExit,
       warOpen,
       onToggleWar: () => { warOpen = !warOpen; render(); },
@@ -519,7 +531,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     // During a battle its cards are played from the battle panel.
     slots.hand.replaceChildren(handoff || v.battle ? '' : handPanel({
       view: handView, me: seat, planning, retreating, selectedCard,
-      onSelect: (id) => { selectedCard = id; if (id) toast(t('game.clickArmyForCard')); render(); },
+      onSelect: (id) => { selectedCard = id; if (id) { sound.play('card'); toast(t('game.clickArmyForCard')); } render(); },
     }) ?? '');
 
     const showOrders = Boolean(plan && proj && myTurn(v));
@@ -591,9 +603,13 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
         onContinue: () => { recaps = recaps.slice(1); render(); },
         onStop: () => { stopRequested = true; recaps = []; render(); },
       }) : null)
+      || (handoff ? null : summaryModal(v, seat))
       || (handoff ? null : promptDialog(v, seat, emblems, (i) => void send(i)))
-      || (replay ? null : gameOverDialog(v, emblems, onExit, session instanceof HostSession && onReplay
-        ? () => onReplay(new ReplaySession(session.map, session.config, [...session.entries()]))
+      || (replay ? null : gameOverDialog(v, emblems, onExit, onReplay
+        ? () => void session.entries().then((log) => {
+          if (log) onReplay(new ReplaySession(session.map, session.config, [...log]));
+          else toast(t('game.replayUnavailable'), 'error');
+        })
         : undefined))
       || null;
     // Any popup can be minimized to a pill, so the player can look around the map first.
@@ -668,12 +684,29 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     return out;
   }
 
-  async function saveGame(host: HostSession) {
+  /** Where summaries remember what they showed: the online game, or this session. */
+  const summaryGame = session.room ?? `local-${crypto.randomUUID()}`;
+
+  /** At the start of the player's turn: what happened since their last one. */
+  function summaryModal(v: GameView, seat: string | null): HTMLElement | null {
+    if (replay || !seat || !wantsSummary() || !myTurn(v) || v.phase !== 'movement' || v.battle) return null;
+    if (!v.pending.some((p) => p.nation === seat && p.kind === 'movement')) return null;
+    if (summaryShown.get(summaryGame, seat) >= v.turn) return null;
+    const entries = summaryEntries(v, seat);
+    if (!entries.length) { summaryShown.set(summaryGame, seat, v.turn); return null; }
+    return turnSummary(v, entries, emblems, {
+      // Showing a town closes the summary.
+      onFocus: (node) => { summaryShown.set(summaryGame, seat, v.turn); showNode(node); },
+      onClose: () => { summaryShown.set(summaryGame, seat, v.turn); render(); },
+    });
+  }
+
+  async function saveGame(host: LocalSession) {
     const title = t('game.saveTitle', { map: mapNameText(session.map.name), round: view()?.round ?? 1 });
     const { blob, meta } = await host.save(title);
     const rec: SaveRecord = { id: crypto.randomUUID(), title, date: meta.date, mapName: meta.mapName, turn: meta.turn, blob };
     await idb.put('saves', rec);
-    download(blob, `${session.map.name.replace(/\W+/g, '_')}_turn${meta.turn}.krieg`);
+    download(blob, `${session.map.name.replace(/\W+/g, '_')}_turn${meta.turn}${BUNDLE_EXT}`);
     toast(t('game.saved'));
   }
 
@@ -713,8 +746,11 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
 
   // Announce events drawn since the last update.
   let seenHistory = view()?.history.length ?? 0;
+  let lastView = view();
   const unsub = session.subscribe(() => {
     const v = view();
+    if (!replay) gameSounds(lastView, v, session.localSeats());
+    lastView = v;
     if (v) {
       if (!replay) for (const e of v.history.slice(seenHistory)) if (e.kind === 'event') toast(logText(e));
       seenHistory = v.history.length;
@@ -731,6 +767,10 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   const unsubLang = onLanguageChange(() => render());
   render();
   // Test hook: ?debug exposes the map and session to automated browser tests.
-  if (new URLSearchParams(location.search).has('debug')) (window as unknown as Record<string, unknown>).__krieg = { map, session, plan: () => plan };
-  return () => { stopPlaying(); unsub(); unsubTheme(); unsubLang(); chat?.destroy(); clock?.destroy(); window.removeEventListener('keydown', onKey); map.destroy(); };
+  if (new URLSearchParams(location.search).has('debug')) (window as unknown as Record<string, unknown>).__cabinetWars = { map, session, plan: () => plan };
+  const stopAlerts = replay ? null : turnAlerts(session);
+  return () => {
+    stopPlaying(); unsub(); unsubTheme(); unsubLang(); chat?.destroy(); clock?.destroy(); stopAlerts?.();
+    window.removeEventListener('keydown', onKey); map.destroy();
+  };
 }

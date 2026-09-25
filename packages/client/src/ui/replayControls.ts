@@ -1,4 +1,4 @@
-import type { GameView } from '@krieg/engine';
+import type { GameView } from '@cabinet-wars/engine';
 import type { ReplaySession } from '../net/replay';
 import { h } from './dom';
 import { emblemEl, type Emblem } from './emblem';

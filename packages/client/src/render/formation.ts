@@ -1,4 +1,4 @@
-import type { Army, UnitType } from '@krieg/engine';
+import type { Army, UnitType } from '@cabinet-wars/engine';
 
 /** What a miniature figure depicts: a unit type or a general. */
 export type FigureKind = UnitType | 'general';

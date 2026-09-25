@@ -1,11 +1,12 @@
-import type { BattleChoice, CardPlacement, GameState, NationId, NodeId, Prompt, UnitType } from './types';
+import type { BattleChoice, CardPlacement, GameState, NationId, NodeId, OracleRequest, Prompt, UnitType } from './types';
 import { fail, log, nation, removeArmy, sideOf } from './graph';
 import { mergeArmies, moveArmy, resetMovement, splitArmy, transferArmies, type TransferGroup } from './movement';
-import { applyRoll, applySelect, chooseBattle, chooseInBattle, queueBattles, retreat, roleOf, submitCards } from './battle';
+import { applyEngage, applyRoll, applySelect, chooseBattle, chooseInBattle, queueBattles, retreat, roleOf, standingBattle, submitCards } from './battle';
 import { unsuppliedArmies } from './supply';
 import { checkVictory, finish, updateControl } from './control';
 import { applyMuster, applyRecruit, applySabotage, applyShuffle, drawCard, resolveEvent } from './decks';
 import { playMovesCard } from './orders';
+import { HAND_LIMIT } from './config';
 
 export type Intent =
   | { type: 'move'; army: string; path: NodeId[] }
@@ -30,7 +31,9 @@ export type Intent =
 export type OracleEntry =
   | { type: 'shuffle'; deck: 'general' | 'event'; order: number[] }
   | { type: 'roll'; attacker: number[]; defender: number[] }
-  | { type: 'select'; attacker: number[]; defender: number[]; targets: number[] };
+  | { type: 'select'; attacker: number[]; defender: number[]; targets: number[] }
+  /** Which of the two armies standing next to each other attacks: 0 or 1. */
+  | { type: 'engage'; attacker: number };
 
 export type LogEntry =
   | { seq: number; by: NationId; intent: Intent }
@@ -52,6 +55,34 @@ const PROMPT_FOR: Record<Intent['type'], Prompt['kind'][]> = {
   recruit: ['recruit'],
   muster: ['movement'],
 };
+
+/**
+ * A host's answer to a random request, drawing numbers from `rnd(n)` (an integer from 0 to n−1):
+ * shuffles, the units drawn for a battle round and whom they face, dice, and who attacks when
+ * two armies stand face to face.
+ */
+export function randomOracle(req: OracleRequest, rnd: (n: number) => number): OracleEntry {
+  const order = (n: number) => {
+    const xs = [...Array(n).keys()];
+    for (let i = n - 1; i > 0; i--) { const j = rnd(i + 1); [xs[i], xs[j]] = [xs[j], xs[i]]; }
+    return xs;
+  };
+  switch (req.kind) {
+    case 'shuffle': return { type: 'shuffle', deck: req.deck, order: order(req.n) };
+    case 'select': return {
+      type: 'select',
+      attacker: order(req.attacker).slice(0, req.attackerPick),
+      defender: order(req.defender).slice(0, req.defenderPick),
+      targets: Array.from({ length: req.attackerPick }, () => rnd(req.defenderPick)),
+    };
+    case 'roll': return {
+      type: 'roll',
+      attacker: Array.from({ length: req.attacker }, () => rnd(6) + 1),
+      defender: Array.from({ length: req.defender }, () => rnd(6) + 1),
+    };
+    case 'engage': return { type: 'engage', attacker: rnd(2) };
+  }
+}
 
 /** Applies one log entry and runs the automatic steps that follow. Pure: returns a new state. */
 export function apply(prev: GameState, entry: LogEntry): GameState {
@@ -82,6 +113,8 @@ function applyOracle(state: GameState, o: OracleEntry) {
     if (req.kind !== 'shuffle' || req.deck !== o.deck) fail('Unexpected shuffle');
     applyShuffle(o.deck === 'general' ? state.generalDeck : state.eventDeck, o.order);
     state.oracle = null;
+  } else if (o.type === 'engage') {
+    applyEngage(state, o.attacker);
   } else if (o.type === 'select') {
     applySelect(state, o.attacker, o.defender, o.targets);
   } else {
@@ -178,7 +211,13 @@ export function advance(state: GameState) {
         if (ts.step === 'general') {
           const card = drawCard(state.generalDeck);
           if (card === 'shuffle') { state.oracle = { kind: 'shuffle', deck: 'general', n: state.generalDeck.discard.length }; return; }
-          if (card) state.hands[state.current].push(card);
+          if (card) {
+            // Version 2: a full hand draws nothing; the card stays on top of the deck.
+            if (state.rules.version >= 2 && state.hands[state.current].length >= HAND_LIMIT) {
+              state.generalDeck.draw.unshift(card);
+              log(state, 'log.handFull', { nation: state.current, limit: HAND_LIMIT }, { kind: 'card', nation: state.current, side: sideOf(state, state.current) });
+            } else state.hands[state.current].push(card);
+          }
           ts.step = 'event';
           continue;
         }
@@ -203,10 +242,11 @@ export function advance(state: GameState) {
         // The event may have knocked out the nation whose turn it is: play passes on.
         if (nation(state, state.current).knockedOut) { passTurn(state); continue; }
         state.phase = 'movement';
-        state.pending = [{ nation: state.current, kind: 'movement' }];
-        return;
+        continue;
       }
       case 'movement':
+        // Version 2: enemy armies next to each other fight, even if neither moved there.
+        if (state.rules.version >= 2 && standingBattle(state)) return;
         state.pending = [{ nation: state.current, kind: 'movement' }];
         return;
       case 'battle':

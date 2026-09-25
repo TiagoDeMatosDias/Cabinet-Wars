@@ -1,4 +1,4 @@
-import { sideOf, UNIT_TYPES, warStatus, type GameView, type WarStatus, type HistoryEntry, type Intent, type UnitType } from '@krieg/engine';
+import { sideOf, UNIT_TYPES, warStatus, type GameView, type WarStatus, type HistoryEntry, type Intent, type UnitType } from '@cabinet-wars/engine';
 import { add, h } from './dom';
 import { cardEl } from './cards';
 import { emblemEl, type Emblem } from './emblem';
@@ -43,7 +43,7 @@ export function topBar(opts: {
       emblemEl(emblems.get(acting), 40, nationName(v, acting)),
       h('div', {}, h('div', { class: 'tb-name' }, nationName(v, acting)), h('div', { class: 'tb-status' }, opts.statusLine),
         // The player's own nation: how far it is from collapse, in plain words.
-        ownStatus ? h('button', { class: `tb-own ${collapseLevel(ownStatus)}`, onclick: opts.onToggleWar, title: t('war.open') },
+        ownStatus ? h('button', { class: `tb-own ${collapseLevel(ownStatus)}`, onclick: opts.onToggleWar, 'data-tip': t('tip.willingness') },
           t('top.ownWill', { w: pct(ownStatus.willingness), threshold: ownStatus.threshold }),
           ' · ', h('strong', {}, tn('top.ownMargin', Math.max(0, Math.floor(ownStatus.margin))))) : null)),
     h('div', { class: 'tb-turn' }, h('span', { class: 'muted small' }, opts.mapName), h('strong', {}, t('top.round', { round: v.round })),

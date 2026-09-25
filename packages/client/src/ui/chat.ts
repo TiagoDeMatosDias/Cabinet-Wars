@@ -1,14 +1,50 @@
-import type { ChatMsg } from '../net/protocol';
-import { CHAT_MAX_LENGTH } from '../net/protocol';
-import { HostSession } from '../net/host';
-import { PeerSession } from '../net/peer';
+import { CHAT_MAX_LENGTH, type ChatMsg } from '@cabinet-wars/table';
 import type { Session } from '../net/session';
+import { sound } from '../audio/sound';
 import { nationText, t } from '../i18n/i18n';
 import { clear, h } from './dom';
 import { emblemEl, type Emblem } from './emblem';
 
 /** How long a new message shows on the closed chat button. */
 const PEEK_MS = 6000;
+
+// ---- muting --------------------------------------------------------------------------------
+
+/**
+ * Muting is this browser's own business: the muted player is not told, and everyone else still
+ * sees their lines. Kept per game, by player id.
+ */
+const muteKey = (room: string) => `krieg:muted:${room}`;
+const muteListeners = new Set<() => void>();
+
+export function mutedIn(room: string | null): Set<string> {
+  if (!room) return new Set();
+  try { return new Set(JSON.parse(localStorage.getItem(muteKey(room)) ?? '[]') as string[]); } catch { return new Set(); }
+}
+
+export function setMuted(room: string | null, player: string, muted: boolean) {
+  if (!room) return;
+  const set = mutedIn(room);
+  if (muted) set.add(player); else set.delete(player);
+  try { localStorage.setItem(muteKey(room), JSON.stringify([...set])); } catch { /* storage unavailable */ }
+  for (const l of muteListeners) l();
+}
+
+export function onMuteChange(cb: () => void) {
+  muteListeners.add(cb);
+  return () => { muteListeners.delete(cb); };
+}
+
+/** A Mute / Unmute button for another player. */
+export function muteButton(session: Session, player: string, name: string) {
+  const muted = mutedIn(session.room).has(player);
+  return h('button', {
+    class: `small-button ${muted ? 'active' : ''}`,
+    title: t(muted ? 'chat.unmuteTitle' : 'chat.muteTitle', { name }),
+    'aria-pressed': String(muted),
+    onclick: () => setMuted(session.room, player, !muted),
+  }, t(muted ? 'chat.unmute' : 'chat.mute'));
+}
 
 function timeText(at: number) {
   return new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -36,8 +72,11 @@ export function chatBox(session: Session, emblems: () => Map<string, Emblem>) {
   // Keys typed in the chat are not game shortcuts.
   input.addEventListener('keydown', (e) => { if (e.key !== 'Escape') e.stopPropagation(); });
 
-  const connected = () => !(session instanceof PeerSession) || session.link === 'connected';
+  const connected = () => session.link === 'connected';
   let shown: ChatMsg[] = [];
+  let muted = mutedIn(session.room);
+  /** The lines to show: everything but what muted players wrote. */
+  const visible = () => session.chat().filter((m) => !m.by || !muted.has(m.by));
 
   const line = (m: ChatMsg) => {
     if (m.key) return h('li', { class: 'chat-line notice', title: timeText(m.at) }, t(m.key as Parameters<typeof t>[0], m.params ?? {}));
@@ -49,7 +88,7 @@ export function chatBox(session: Session, emblems: () => Map<string, Emblem>) {
   };
 
   const update = () => {
-    const msgs = session.chat();
+    const msgs = visible();
     const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 24;
     // Append what is new; rebuild when the history was replaced (after reconnecting).
     const same = shown.length <= msgs.length && shown.every((m, i) => msgs[i]?.id === m.id);
@@ -69,7 +108,12 @@ export function chatBox(session: Session, emblems: () => Map<string, Emblem>) {
   };
 
   const listeners = new Set<(fresh: ChatMsg[]) => void>();
-  const unsub = session.subscribe(() => { const fresh = update(); for (const l of listeners) l(fresh); });
+  const unsub = session.subscribe(() => {
+    const fresh = update();
+    if (fresh.some((m) => m.text !== undefined && m.by !== session.you())) sound.play('chat');
+    for (const l of listeners) l(fresh);
+  });
+  const unsubMute = onMuteChange(() => { muted = mutedIn(session.room); shown = []; update(); });
   update();
   return {
     el,
@@ -77,7 +121,7 @@ export function chatBox(session: Session, emblems: () => Map<string, Emblem>) {
     /** Scrolls to the newest line (after the box becomes visible). */
     reveal() { list.scrollTop = list.scrollHeight; },
     onNew(cb: (fresh: ChatMsg[]) => void) { listeners.add(cb); },
-    destroy: unsub,
+    destroy() { unsub(); unsubMute(); },
   };
 }
 
@@ -91,9 +135,30 @@ export function chatDock(session: Session, emblems: () => Map<string, Emblem>) {
   const peek = h('div', { class: 'chat-peek', onclick: () => setOpen(true) });
   const toggle = h('button', { class: 'chat-toggle', onclick: () => setOpen(!open), 'aria-expanded': 'false' },
     h('span', {}, t('chat.title')), badge);
+  // Who is here, with a Mute button for each (shown on demand, above the lines).
+  let peopleOpen = false;
+  const people = h('ul', { class: 'chat-people' });
+  const paintPeople = () => {
+    people.hidden = !peopleOpen;
+    if (!peopleOpen) return;
+    const others = session.players().filter((p) => !p.you);
+    clear(people, others.length
+      ? others.map((p) => h('li', { class: p.online ? '' : 'offline' },
+        h('span', { class: `presence ${p.online ? 'on' : ''}`, 'aria-hidden': 'true' }), h('span', {}, p.name), muteButton(session, p.id, p.name)))
+      : h('li', { class: 'muted small' }, t('chat.nobodyElse')));
+  };
+  const peopleButton = h('button', { class: 'small-button', 'aria-expanded': 'false', title: t('chat.peopleTitle'), onclick: () => {
+    peopleOpen = !peopleOpen;
+    peopleButton.setAttribute('aria-expanded', String(peopleOpen));
+    paintPeople();
+  } }, t('chat.people'));
+  const unsubPeople = session.subscribe(paintPeople);
+  const unsubMutePeople = onMuteChange(paintPeople);
+  paintPeople();
   const panel = h('div', { class: 'chat-panel' },
-    h('header', {}, h('strong', {}, t('chat.title')), h('button', { class: 'link', onclick: () => setOpen(false), title: t('chat.close') }, '×')),
-    box.el);
+    h('header', {}, h('strong', {}, t('chat.title')),
+      h('span', { class: 'row' }, peopleButton, h('button', { class: 'link', onclick: () => setOpen(false), title: t('chat.close') }, '×'))),
+    people, box.el);
   const el = h('div', { class: 'chat-dock' }, toggle, peek, panel);
 
   const paint = () => {
@@ -131,7 +196,7 @@ export function chatDock(session: Session, emblems: () => Map<string, Emblem>) {
   paint();
   return {
     el,
-    destroy() { box.destroy(); clearTimeout(peekTimer); window.removeEventListener('keydown', onKey, true); },
+    destroy() { box.destroy(); unsubPeople(); unsubMutePeople(); clearTimeout(peekTimer); window.removeEventListener('keydown', onKey, true); },
   };
 }
 
@@ -142,7 +207,7 @@ export function chatDock(session: Session, emblems: () => Map<string, Emblem>) {
 export function connectionBanner(session: Session, onMenu: () => void) {
   const el = h('div', { class: 'net-banner', role: 'status' });
   const paint = () => {
-    const link = session instanceof PeerSession ? session.link : session instanceof HostSession && session.roomClosed ? 'ended' : 'connected';
+    const link = session.link;
     if (link === 'connected' || link === 'left') { el.replaceChildren(); el.classList.remove('show'); return; }
     el.className = `net-banner show ${link === 'reconnecting' ? '' : 'final'}`;
     clear(el, h('span', {}, session.status()), link !== 'reconnecting' && h('button', { onclick: onMenu }, t('menu.back')));

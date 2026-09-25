@@ -2,11 +2,12 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { Resolver } from 'node:dns/promises';
 import { chmod, mkdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { env } from './env';
 
 /**
  * A public HTTPS address for this server, so players on other networks can join: a Cloudflare
  * quick tunnel (https://<random>.trycloudflare.com, no account needed). The `cloudflared` program
- * is used from the PATH, or downloaded once into `binDir`. Set KRIEG_TUNNEL=off to never open one.
+ * is used from the PATH, or downloaded once into `binDir`. Set CABINET_WARS_TUNNEL=off to never open one.
  */
 export interface TunnelStatus {
   state: 'off' | 'starting' | 'ready' | 'failed';
@@ -63,7 +64,7 @@ export class Tunnel {
     process.on('exit', () => this.child?.kill());
   }
 
-  get enabled() { return !/^(0|off|false|no)$/i.test(process.env.KRIEG_TUNNEL ?? ''); }
+  get enabled() { return !/^(0|off|false|no)$/i.test(env('TUNNEL') ?? ''); }
 
   current(): TunnelStatus { return this.status; }
 

@@ -1,7 +1,7 @@
 import {
   dependentsOf, isPlaceholder, orderCreates, orderRefs, projectOrders,
   type ArmyRef, type GameState, type GameView, type Order, type OrderIntent, type OrderProjection,
-} from '@krieg/engine';
+} from '@cabinet-wars/engine';
 import { t, tn } from '../i18n/i18n';
 
 /** An order as the list shows it: planned, executed this turn, or dropped because it became impossible. */

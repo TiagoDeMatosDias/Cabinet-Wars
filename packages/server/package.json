@@ -1,5 +1,5 @@
 {
-  "name": "@krieg/server",
+  "name": "@cabinet-wars/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "selfsigned": "^5.5.0",
-    "ws": "^8.21.3"
+    "ws": "^8.21.3",
+    "@cabinet-wars/engine": "*",
+    "@cabinet-wars/table": "*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

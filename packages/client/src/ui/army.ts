@@ -1,7 +1,7 @@
 import {
   armySpeed, canMoveWithoutGeneral, GENERAL_SPEED, isFriendlyNode, MAJOR_ROAD_MULTIPLIER, isSupplied, UNIT_SPEED, UNIT_TYPES,
   type Army, type GameState, type GameView, type Unit, type UnitType,
-} from '@krieg/engine';
+} from '@cabinet-wars/engine';
 import { add, clear, h } from './dom';
 import { emblemEl, type Emblem } from './emblem';
 import { nationColor, nationName, nodeName, unitIcon, unitName } from './labels';
@@ -54,7 +54,7 @@ export function armyCard(opts: {
         h('div', { class: 'muted' },
           generals.length ? h('span', {}, iconEl(currentTheme().icons.general, 14), ` ${generals.join(', ')}`) : t('army.noGeneral'),
           ` · ${t('army.at', { node: a.node })}`,
-          mine && isSupplied(state, a.id) ? h('span', { class: 'ok' }, ` · ${t('army.inSupply')}`) : null)),
+          mine && isSupplied(state, a.id) ? h('span', { class: 'ok', 'data-tip': t('tip.supply') }, ` · ${t('army.inSupply')}`) : null)),
       h('button', { class: 'icon-btn', title: t('common.close'), 'aria-label': t('common.close'), onclick: actions.close }, '×')));
   if (opts.planned && mine) add(card, h('div', { class: 'planned-note' }, t('army.planned')));
   // Supply, spelled out: the map marks the same with a "!" badge.
@@ -80,7 +80,7 @@ export function armyCard(opts: {
     const left = a.moved.stopped ? 0 : Math.max(0, speed - a.moved.edges);
     add(rows, h('div', { class: 'unit-line' },
       h('span', { class: 'unit-token', style: `--c:${color}` }, unitIcon(type, 18)),
-      h('span', { class: 'unit-name' }, unitName(type)),
+      h('span', { class: 'unit-name', 'data-tip': t(`tip.unit.${type}` as Parameters<typeof t>[0]) }, unitName(type)),
       h('span', { class: 'unit-count' }, `×${units.length}`),
       mine ? h('span', { class: 'pips', title: t('army.pipsTitle', { left, speed }) }, Array.from({ length: speed }, (_, i) => h('span', { class: `pip ${i < left ? 'on' : ''}` }))) : null,
       mine ? h('span', { class: 'muted small' }, t('army.pips', { left, speed })) : null));
@@ -91,7 +91,7 @@ export function armyCard(opts: {
     const left = a.moved.stopped ? 0 : Math.max(0, speed - a.moved.edges);
     add(rows, h('div', { class: 'unit-line' },
       h('span', { class: 'unit-token', style: `--c:${color}` }, iconEl(currentTheme().icons.general, 18)),
-      h('span', { class: 'unit-name' }, t('unit.general')),
+      h('span', { class: 'unit-name', 'data-tip': t('tip.unit.general') }, t('unit.general')),
       h('span', { class: 'unit-count' }, `×${a.generals.length}`),
       mine ? h('span', { class: 'pips', title: t('army.pipsTitle', { left, speed }) }, Array.from({ length: speed }, (_, i) => h('span', { class: `pip ${i < left ? 'on' : ''}` }))) : null,
       mine ? h('span', { class: 'muted small' }, t('army.pips', { left, speed })) : null));
@@ -104,7 +104,7 @@ export function armyCard(opts: {
     const slowest = a.units.length ? a.units.reduce((s, u) => (UNIT_SPEED[u.type] < UNIT_SPEED[s.type] ? u : s), a.units[0]) : null;
     const fasterIfSplit = slowest ? a.units.filter((u) => u.type !== slowest.type) : [];
     const gain = slowest && fasterIfSplit.length ? Math.min(...fasterIfSplit.map((u) => UNIT_SPEED[u.type]), a.generals.length ? GENERAL_SPEED : 99) - UNIT_SPEED[slowest.type] : 0;
-    add(card, h('div', { class: 'move-summary' },
+    add(card, h('div', { class: 'move-summary', 'data-tip': t('tip.moves') },
       h('strong', {}, a.moved.stopped ? t('army.stopped') : t('army.moves', { n: m.any })),
       !a.moved.stopped && m.major !== m.any ? h('span', { class: 'muted' }, ` ${t('army.majorOnly', { n: m.major })}`) : null,
       h('span', { class: 'muted' }, ` · ${t('army.slowest', { unit: slowest ? unitName(slowest.type).toLowerCase() : t('unit.general').toLowerCase() })}`)),

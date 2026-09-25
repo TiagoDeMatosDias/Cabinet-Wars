@@ -1,8 +1,6 @@
-# Krieg
+# Cabinet Wars
 
-Krieg is a small browser game inspired by the board game Friedrich.
-
-It is a multiplayer strategy game in which players control nations and their armies, and must either capture or defend specific locations in order to win.
+Cabinet Wars is a browser strategy game of maneuver, supply and battle. Players control nations and their armies, and must either capture or defend specific locations in order to win. Play on one computer (hotseat, or against the computer) or online with friends.
 
 ## Contents
 
@@ -15,11 +13,15 @@ It is a multiplayer strategy game in which players control nations and their arm
 - [Raising units](#raising-units)
 - [Card decks](#card-decks)
 - [Maps and custom content](#maps-and-custom-content)
+- [Rules versions](#rules-versions)
+- [Learning the game](#learning-the-game)
 - [Playing online](#playing-online)
 - [Computer players](#computer-players)
 - [Saves and replays](#saves-and-replays)
+- [Sound and alerts](#sound-and-alerts)
 - [Running the game](#running-the-game)
 - [Documentation](#documentation)
+- [Credits](#credits)
 
 ## The map
 
@@ -99,6 +101,8 @@ This forces armies advancing into enemy territory to leave supply units behind, 
 
 If an army moves to a node directly connected to a node holding an enemy army, a battle occurs. The army that moved is the **attacker**; the other army is the **defender**.
 
+Enemy armies that stand on neighbouring nodes fight even if neither moved there: after a retreat or a recruit brings them side by side, or when the map places them so at the start. Which of the two attacks is drawn at random. Such a battle happens as soon as the game settles (before the current player's next order), one pair at a time.
+
 A battle is fought in rounds. Supply units and generals never fight; the other units are "combat units". Each round proceeds as follows:
 
 1. **Units are drawn.** Each side fights with a number of its combat units, picked at random. How many depends on the army's total number of combat units:
@@ -165,7 +169,7 @@ A battle is fought in rounds. Supply units and generals never fight; the other u
 There are 2 decks, each with its own cards:
 
 1. **Event deck**: each player draws from it at the beginning of their turn, right after drawing from the General deck. The card is revealed immediately and its event is triggered.
-2. **General deck**: each player draws from it at the beginning of their turn. Players can keep any number of cards in their hand and use them whenever they like.
+2. **General deck**: each player draws from it at the beginning of their turn. Players keep the cards in their hand and use them whenever they like. **Hand limit:** a nation holding 10 cards draws none; the card stays on the deck for the next player.
 
 Both decks are shared between all players:
 
@@ -173,9 +177,11 @@ Both decks are shared between all players:
 - When a deck has no more cards to draw, its discard pile is shuffled and becomes the new deck.
 - If the discard pile is also empty, draws are skipped until there are cards in the deck again.
 
+**Deck size.** Each nation in the game brings its own share of cards: the amounts below are for 5 nations, and a game with *n* nations has *n*/5 of each (rounded, at least one of each card). The End Game card is always single. So the decks last about as many rounds whatever the number of players — about 14 rounds for the Event deck. For example, a 2-nation game has 24 General and 28 Event cards; a 6-nation game has 72 and 83. A map's own decks (see below) are scaled the same way.
+
 ### General deck
 
-| Card          | Amount | Effect                                      |
+| Card          | Amount (5 nations) | Effect                                      |
 |---------------|--------|---------------------------------------------|
 | +1 Roll       | 10     | +1 to roll                                  |
 | +2 Roll       | 10     | +2 to roll                                  |
@@ -186,7 +192,7 @@ Both decks are shared between all players:
 
 ### Event deck
 
-| Card                    | Amount | Effect                                                                                                  |
+| Card                    | Amount (5 nations) | Effect                                                                                                  |
 |-------------------------|--------|---------------------------------------------------------------------------------------------------------|
 | Recruit 1 Unit          | 6      | The player who drew it places a new unit (cavalry, infantry, artillery or supply, their choice) in one of their own towns that they control. It joins their army there, or forms a new army. |
 | Recruit 2 Units         | 3      | As Recruit 1 Unit, twice (the two units may go to different towns). |
@@ -219,8 +225,8 @@ Maps are made in the in-browser map editor (main menu → **Map editor** → "Ne
 
 - **Base map…** uploads the background image.
 - **Node map…** (optional) uploads an image with one colored dot per node on a transparent background, the same size as the base map; nodes are created from the dots. Without one, use **Place node** to click nodes onto the map (Shift+click moves the selected node).
-- **Download** saves the map as a `.krieg` file: a zip with `config.json`, `map.png` and `nodes.png` (generated from the node positions if you placed nodes by hand). Unzip it into `Map/<Name>/` to serve it from the server, or share the file as is.
-- **Open…** loads a `.krieg` file or a `config.json` back into the editor. "Import map…" under **Map editor** on the main menu adds one to the browser's map list.
+- **Download** saves the map as a `.cabinetwars` file: a zip with `config.json`, `map.png` and `nodes.png` (generated from the node positions if you placed nodes by hand). Unzip it into `Map/<Name>/` to serve it from the server, or share the file as is.
+- **Open…** loads a `.cabinetwars` file or a `config.json` back into the editor. "Import map…" under **Map editor** on the main menu adds one to the browser's map list.
 - **Rules & decks** sets the round from which the End Game card can end the war, and how many of each card the Event and General decks contain.
 - **Languages & translations** adds languages to the map and translates its names and any interface text (see [Languages](#languages)).
 
@@ -240,30 +246,50 @@ All text in the game is English by default. A map can add any number of language
 - Players choose their language under **Settings** on the main menu or in the game's top bar, from the languages the map offers.
 - Icons contain no text, so they look the same in every language.
 
+## Rules versions
+
+Every game records the version of the rules it is played by. Saves and replays keep theirs, so they play back exactly as they were played after the rules change.
+
+- **Version 1** (games from before these rules existed): no hand limit, the classic deck amounts whatever the number of nations, and battles only when an army moves next to an enemy.
+- **Version 2** (every new game): the 10-card hand limit, decks that grow with the number of nations, and battles between armies that stand next to each other.
+
+## Learning the game
+
+- **How to play** on the main menu has the rules in short, chapter by chapter, and starts the **tutorial**: a guided game against the computer on the smallest map, with notes pointing at each part of the screen. Some notes wait for the player to do what they describe (select an army, plan a move, end the turn). The tutorial can be left at any time.
+- **Tooltips.** Rest the pointer on almost anything — units, towns' owner and control, victory points, supply, willingness, cards, buttons — for a short explanation.
+- **Since your last turn.** When a player's turn begins, a summary lists what their side saw happen since their previous turn, turn by turn; clicking a line shows it on the map. It can be turned off under **Settings**.
+
 ## Playing online
 
-One player hosts the game in their browser; the others join it from theirs, on the same computer, the same network, or anywhere on the internet.
+Online games are played on the Cabinet Wars server: it keeps the game, rolls the dice, runs the computer players and sends each player only what their nations can see — nobody's browser holds the hidden information, not even the host's. The server is meant to run on one of the players' computers (see [Running the game](#running-the-game)); the others connect to it.
 
-- **Host.** Under **Multiplayer**, choose **Host online** next to a map or a saved game. The lobby shows the room code and invitation links:
+- **Host.** Under **Multiplayer**, choose **Host online** next to a map or a saved game. A map made or imported in the host's browser is sent to the server for the others. The lobby shows the room code and invitation links:
   - **for anyone, on any network**: a public `https://….trycloudflare.com` address the server opens for the game (see below);
   - **for your local network**: this computer's address on the network;
   - **on this computer**: for another tab or browser here.
-- **Join.** Open an invitation link: with a name set (under **Settings**, or asked for on the spot), it joins straight away. Or enter the room code under **Multiplayer**.
-- **Lobby.** Each player takes the nations they want to play (**Take this nation**) and can release them again. The host can play nations themselves, hand them to the computer, free the seat of a player who went offline, or **Kick** a player: their nations open up and they can't rejoin. The host starts the game; open seats are then played by the host.
-- **Idle players.** In an online game, a player who takes no action for 5 minutes when it is up to them is moved on: their turn ends, or for any other decision (a battle, a retreat, a recruit…) the default choice is made for them. Every action restarts the clock. A clock above the turn controls shows the time left, and warns in the last minute. This also keeps a game going when a player's connection is gone.
-- **Chat.** The lobby and the game have a chat for everyone in the room. It notes who joins, leaves, and takes which nation. In the game, the **Chat** button at the top left of the map opens it (or press Enter); new messages show beside it while it is closed.
-- **Reconnecting.** A player whose connection drops, or who reloads the page, rejoins by themselves with their nations. If the host reloads, the game carries on from where it was, and everyone reconnects; the room waits 3 minutes for its host. Leaving (the **Leave** button) as host ends the game for everyone.
-- Players who join without a nation watch the game, seeing only what every player knows.
+- **Join.** Open an invitation link: with a name set (under **Settings**, or asked for on the spot), it joins straight away. Or enter the room code, or pick a game under **Open games**.
+- **Lobby.**
+  - Each player takes the nations they want to play (**Take this nation**) and can release them again.
+  - **Colors:** click a nation's emblem to pick its color from a palette chosen to stay distinct for players with color vision deficiencies. Players color their own nations, the host any; two nations never share a color.
+  - The host can play nations themselves, hand them to the computer, free the seat of a player who went offline, or **Kick** a player: their nations open up and they can't rejoin.
+  - **Game options** (set by the host): the **time to act** (2, 5 or 10 minutes, or no limit), whether others may **watch** once the game has started, and whether the game shows in the list of **open games**.
+  - The host starts the game; open seats are then played by the host.
+- **Idle players.** A player who takes no action for the time to act when the game waits for them is moved on: their turn ends, or for any other decision (a battle, a retreat, a recruit…) the default choice is made for them. Every action restarts the clock. A clock above the turn controls shows the time left, and warns in the last minute. This also keeps a game going when a player's connection is gone.
+- **Chat.** The lobby and the game have a chat for everyone at the table. It notes who joins, leaves, and takes which nation. In the game, the **Chat** button at the top left of the map opens it (or press Enter); new messages show beside it while it is closed. **Mute** (in the lobby's player list, or under **People** in the game's chat) hides a player's messages in your browser only: nobody else is affected, and the muted player isn't told.
+- **Coming and going.** A player whose connection drops, or who reloads the page, rejoins by themselves with their nations. **Leave** takes a player out of the game, which carries on without them; **Multiplayer → Your games** lists the games this browser is in, to return to them. The host can leave the same way, or end the game for everyone. Games survive the server restarting.
+- **Open games.** **Multiplayer → Open games** lists the games on the server that someone is playing and whose host lets them be listed.
+- **Spectators.** Players who join without a nation watch the game, seeing only what every player knows.
+- Each browser tab is its own player, so friends can share a computer (or you can test with two tabs).
 
 ### Connections and HTTPS
 
 The server answers on one port (8787 by default) with both HTTPS and HTTP. Browsers require HTTPS for the game's cryptography and clipboard, so:
 
 - `http://localhost:8787` serves this computer directly;
-- other computers are sent to `https://<this computer's address>:8787`. Its certificate is made by the server itself (kept in `.krieg/tls`), so each browser asks once to trust it. To use a real certificate, set `KRIEG_TLS_CERT` and `KRIEG_TLS_KEY` to its PEM files;
-- the public link is a [Cloudflare quick tunnel](https://try.cloudflare.com): free, no account, with a valid certificate, and no router set-up. The server opens it when someone first hosts an online game, downloading the `cloudflared` program into `.krieg/bin` the first time if it is not installed. The address changes each time the server starts. Set `KRIEG_TUNNEL=off` to never open one.
+- other computers are sent to `https://<this computer's address>:8787`. Its certificate is made by the server itself (kept in `.cabinet-wars/tls`), so each browser asks once to trust it. To use a real certificate, set `CABINET_WARS_TLS_CERT` and `CABINET_WARS_TLS_KEY` to its PEM files;
+- the public link is a [Cloudflare quick tunnel](https://try.cloudflare.com): free, no account, with a valid certificate, and no router set-up. The server opens it when someone first hosts an online game, downloading the `cloudflared` program into `.cabinet-wars/bin` the first time if it is not installed. The address changes each time the server starts. Set `CABINET_WARS_TUNNEL=off` to never open one.
 
-Players' browsers connect to the host directly (WebRTC) when their networks allow it, and through the server otherwise. They keep the maps they downloaded, so joining again is quick even when the host's upload is slow.
+Players keep the maps they downloaded, so joining again is quick even when the server's upload is slow. The server keeps its games in `.cabinet-wars/games` (removed after 30 days without play) and uploaded maps in `.cabinet-wars/uploads`.
 
 ## Computer players
 
@@ -279,35 +305,53 @@ The computer decides only from what its nation can see, fog of war included. It 
 
 The game is transactional: every move by every player, every dice roll, and every card draw and play is recorded in a JSON file.
 
+- **Autosave.** A game played on this computer saves itself at the start of every turn; **Continue** on the main menu picks up the latest. Online games are kept by the server (see [Playing online](#playing-online)).
+
 - This file can be saved and loaded later; the game replays up to that point and carries on from there.
 - Saves are listed in the `saves` folder and come bundled with the map being played, so users can share save files and maps.
 - By default, the server serves the maps available to it, while each user's browser holds the maps they created or loaded, as well as the games they saved.
-- **Replays.** Any saved game can be watched again: open **Replays** on the main menu and choose **Watch replay** next to it, or **Watch replay** when a game ends. A bar along the bottom of the screen controls the replay:
+- **Replays.** Any saved game can be watched again: open **Replays** on the main menu and choose **Watch replay** next to it, or **Watch replay** when a game ends (online games too: once a game is over, its whole log is everyone's). A bar along the bottom of the screen controls the replay:
   - go back or forward one **step** (a player's action, with the dice and cards that follow it) or one **turn**;
   - jump to the start or the end, or drag the slider to any point;
   - **play** it at 2, 1, ½ or ¼ seconds per step.
   - Keyboard: ← → steps, Shift + ← → turns, Space plays or pauses.
   - **View** shows everything, or a single nation's view with its fog of war. A replay can't change the game.
 
+## Sound and alerts
+
+- **Sounds** are made in the browser as the game plays: selecting armies and towns, writing orders, marching, drums and a horn when a battle begins, dice, cards, recruits, the chat, victory and defeat. Set the **volume** (or turn it off) under **Settings**.
+- **Your turn.** A bell rings when the game waits for you. While the game's tab is in the background, its title blinks and — if you allow it under **Settings** — a notification appears.
+
 ## Running the game
 
 Requires Node 22.
 
     npm install
-    npm test            # engine rules tests (vitest)
+    npm test            # rules and table tests (vitest)
     npm run build       # build the browser client
-    npm run server      # http://localhost:8787 — serves the client, Map/*, saves/*, and WebRTC signaling
+    npm run server      # http://localhost:8787 — serves the client, Map/*, saves/*, and hosts online games
                         # (also HTTPS on the same port, and a public link when hosting: see Playing online)
+
+The game was called Krieg while it was being made. Files and settings from then still work: `.krieg` map and save files open like `.cabinetwars` ones, `KRIEG_*` environment variables are read when the `CABINET_WARS_*` ones aren't set, and a `.krieg` data folder is moved to `.cabinet-wars` when the server first starts.
 
 During development, run `npm run server` and `npm run dev` (Vite, proxies /api and /ws to the server) together.
 
 ### Code layout
 
 - `packages/engine`: pure rules engine, shared by everything.
-- `packages/server`: static files, map/save listings, signaling, HTTPS certificate and public tunnel.
-- `packages/client`: PixiJS map, game UI, map editor, P2P host/peer sessions.
+- `packages/table`: a game and the people at it — randomness, computer players, seats, colors, chat, the idle clock — and the protocol between browsers and the server. The server runs one per online game; the browser runs one for games on this computer.
+- `packages/server`: static files, map/save listings, online games (`/ws`), map uploads, HTTPS certificate and public tunnel.
+- `packages/client`: PixiJS map, game UI, map editor, tutorial, sounds, and the local and online sessions.
 
 ## Documentation
 
 - [Design system: themeable UI](docs/design-system.md): how each map can have its own interface style, the design tokens a theme must define, how to write a theme, and the canonical Imperial China theme.
 - [Game screen: layout and interaction](docs/game-screen.md): the in-game layout, nation emblems, cards, 3D armies, the army card, the orders (step) list, turn controls, the battle panel and the log.
+
+## Credits
+
+- **Art and sound.** Maps, emblems and unit miniatures were made for this game with the help of AI image and model generation. Sounds are synthesized in the browser.
+- **Fonts.** [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (via lxgw-wenkai-webfont) and [Noto Serif SC](https://fonts.google.com/noto/specimen/Noto+Serif+SC) (via Fontsource), both under the SIL Open Font License 1.1.
+- **Software.** [PixiJS](https://pixijs.com) and pixi-viewport (the map), [three.js](https://threejs.org) (3D miniatures), d3-delaunay (fog areas), fflate (save files), Zod (map validation), ws (server connections), selfsigned (HTTPS certificate) — MIT or ISC licensed; [cloudflared](https://github.com/cloudflare/cloudflared) (public links, Apache 2.0, downloaded when first needed). Built and tested with Vite, TypeScript, tsx and Vitest.
+
+The same credits are in the game, under **Settings → About → Credits**.

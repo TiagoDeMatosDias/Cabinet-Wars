@@ -1,7 +1,7 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, Texture, type FederatedPointerEvent } from 'pixi.js';
 import { Delaunay } from 'd3-delaunay';
 import { Viewport } from 'pixi-viewport';
-import type { Army, Edge, MapNode, Nation } from '@krieg/engine';
+import type { Army, Edge, MapNode, Nation } from '@cabinet-wars/engine';
 import { alphaOf, currentTheme, hex, type Theme } from '../theme/theme';
 import type { Emblem } from '../ui/emblem';
 import { iconPath } from '../ui/icons';

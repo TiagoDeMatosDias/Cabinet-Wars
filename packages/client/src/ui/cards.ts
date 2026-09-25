@@ -1,4 +1,4 @@
-import type { Card, GeneralCardType } from '@krieg/engine';
+import type { Card, GeneralCardType } from '@cabinet-wars/engine';
 import { h } from './dom';
 import { emblemEl, type Emblem } from './emblem';
 import { iconEl, iconPath } from './icons';
@@ -46,7 +46,7 @@ export function cardEl(card: Card<GeneralCardType>, o: CardOptions): HTMLElement
     h('span', { class: 'tooltip-how' }, o.playable ? cardHow(card.type) : (o.when ?? cardHow(card.type)))));
   if (o.draggable) {
     el.addEventListener('dragstart', (e) => {
-      e.dataTransfer?.setData('application/x-krieg-card', JSON.stringify({ id: card.id, type: card.type }));
+      e.dataTransfer?.setData('application/x-cabinet-wars-card', JSON.stringify({ id: card.id, type: card.type }));
       e.dataTransfer!.effectAllowed = 'move';
       el.classList.add('dragging');
     });

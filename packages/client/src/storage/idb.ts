@@ -1,4 +1,5 @@
 /** Minimal IndexedDB wrapper: user maps, saved games, and online games hosted here (to resume them). */
+// Browser storage keeps the game's working name ("krieg"), so saves and settings carry over.
 const DB_NAME = 'krieg';
 const STORES = ['maps', 'saves', 'hosted'] as const;
 type Store = (typeof STORES)[number];

@@ -1257,8 +1257,9 @@ def preview(name, ao, mesh, frames):
 
 
 PREVIEW_FRAMES = [("Idle", 0.0), ("Walk", 0.25), ("Walk", 0.75), ("Combat", 0.25), ("Combat", 0.34), ("Combat", 0.62)]
-if os.environ.get("KRIEG_FRAMES"):  # e.g. "Combat:0.6,Walk:0.5"
-    PREVIEW_FRAMES = [(a, float(b)) for a, b in (x.split(":") for x in os.environ["KRIEG_FRAMES"].split(","))]
+FRAMES = os.environ.get("CABINET_WARS_FRAMES") or os.environ.get("KRIEG_FRAMES")
+if FRAMES:  # e.g. "Combat:0.6,Walk:0.5"
+    PREVIEW_FRAMES = [(a, float(b)) for a, b in (x.split(":") for x in FRAMES.split(","))]
 
 
 def main():

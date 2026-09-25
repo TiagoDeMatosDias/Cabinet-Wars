@@ -1,5 +1,5 @@
 {
-  "name": "@krieg/client",
+  "name": "@cabinet-wars/client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,13 +10,14 @@
   },
   "dependencies": {
     "@fontsource/noto-serif-sc": "^5.3.0",
-    "@krieg/engine": "*",
+    "@cabinet-wars/engine": "*",
     "d3-delaunay": "^6.0.4",
     "fflate": "^0.8.3",
     "lxgw-wenkai-webfont": "^1.7.0",
     "pixi-viewport": "^6.0.3",
     "pixi.js": "^8.21.0",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "@cabinet-wars/table": "*"
   },
   "devDependencies": {
     "@types/d3-delaunay": "^6.0.4",

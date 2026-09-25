@@ -1,4 +1,4 @@
-import type { Nation } from '@krieg/engine';
+import type { Nation } from '@cabinet-wars/engine';
 import type { MapBundle } from '../maps';
 import { currentTheme, fontStack, type Theme } from '../theme/theme';
 

@@ -1,4 +1,4 @@
-# Krieg Game Screen: Layout and Interaction
+# Cabinet Wars Game Screen: Layout and Interaction
 
 **Status:** implemented in `packages/client` (see [section 10](#11-engine-and-code-changes) for where each part lives and how the build differs from this proposal).
 
@@ -85,7 +85,7 @@ or an image from the map folder:
 "emblem": { "image": "emblems/qin.png" }
 ```
 
-`glyph` is 1–3 characters. `shape` is one of the shapes the current theme offers (see 2.3). `image` must be a square PNG/SVG in the map folder; it's included in `.krieg` bundles.
+`glyph` is 1–3 characters. `shape` is one of the shapes the current theme offers (see 2.3). `image` must be a square PNG/SVG in the map folder; it's included in `.cabinetwars` bundles.
 
 ### 2.2 Auto-generated emblems
 

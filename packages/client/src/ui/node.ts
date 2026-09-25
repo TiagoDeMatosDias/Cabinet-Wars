@@ -1,4 +1,4 @@
-import { isProtected, MUSTER_MIN_VP, musterBlocked, musterNodes, neighbors, sideOf, suppliedNodes, unitCount, UNIT_TYPES, type GameView, type Intent, type UnitType } from '@krieg/engine';
+import { isProtected, MUSTER_MIN_VP, musterBlocked, musterNodes, neighbors, sideOf, suppliedNodes, unitCount, UNIT_TYPES, type GameView, type Intent, type UnitType } from '@cabinet-wars/engine';
 import { add, h } from './dom';
 import { emblemEl, type Emblem } from './emblem';
 import { nationColor, nationName, nodeName, unitIcon, unitName, unitSummary } from './labels';
@@ -40,18 +40,18 @@ export function nodeCard(opts: {
         h('div', { class: 'muted small' }, occupied ? t('node.occupied', { nation: n.owner }) : t('node.held'))),
       h('button', { class: 'icon-btn', title: t('common.close'), 'aria-label': t('common.close'), onclick: opts.onClose }, '×')),
     h('dl', { class: 'node-facts' },
-      h('dt', {}, t('node.owner')), h('dd', {}, nation(n.owner)),
-      h('dt', {}, t('node.control')), h('dd', {}, nation(n.controller), occupied ? h('span', { class: 'warn small' }, ` ${t('node.occupiedTag')}`) : null),
-      h('dt', {}, t('node.vp')),
+      h('dt', { 'data-tip': t('tip.owner') }, t('node.owner')), h('dd', {}, nation(n.owner)),
+      h('dt', { 'data-tip': t('tip.control') }, t('node.control')), h('dd', {}, nation(n.controller), occupied ? h('span', { class: 'warn small' }, ` ${t('node.occupiedTag')}`) : null),
+      h('dt', { 'data-tip': t('tip.vp') }, t('node.vp')),
       h('dd', {}, n.vp
         ? h('span', {}, h('span', { class: 'vp-seal' }, iconEl(currentTheme().icons.vp, 16)), ` ${n.vp}`,
           h('span', { class: 'muted small' }, ` ${occupied ? t('node.vpLost', { nation: n.owner }) : t('node.vpCount', { nation: n.owner })}`))
         : h('span', { class: 'muted' }, t('common.none'))),
-      h('dt', {}, t('node.protected')),
+      h('dt', { 'data-tip': t('tip.protected') }, t('node.protected')),
       h('dd', {}, protectedNow
         ? h('span', {}, t('common.yes'), h('span', { class: 'muted small' }, ` ${t('node.protectedYes', { nation: n.controller })}`))
         : h('span', {}, t('common.no'), h('span', { class: 'muted small' }, ` ${t('node.protectedNo')}`))),
-      inSupply === null ? null : [h('dt', {}, t('node.supply')), h('dd', {}, inSupply ? h('span', { class: 'ok' }, t('node.inReach')) : h('span', { class: 'warn' }, t('node.outOfReach')))]));
+      inSupply === null ? null : [h('dt', { 'data-tip': t('tip.supply') }, t('node.supply')), h('dd', {}, inSupply ? h('span', { class: 'ok' }, t('node.inReach')) : h('span', { class: 'warn' }, t('node.outOfReach')))]));
 
   add(card, h('div', { class: 'side-label' }, t('node.roads', { count: roads.length })),
     h('div', { class: 'node-roads' }, roads.map((r) => h('button', {

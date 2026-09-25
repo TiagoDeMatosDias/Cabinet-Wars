@@ -1,4 +1,4 @@
-import { formatMessage, MESSAGES, type HistoryEntry, type MessageKey, type MessageParams } from '@krieg/engine';
+import { formatMessage, MESSAGES, type HistoryEntry, type MessageKey, type MessageParams } from '@cabinet-wars/engine';
 import { EN, type UiKey } from './en';
 
 /**
