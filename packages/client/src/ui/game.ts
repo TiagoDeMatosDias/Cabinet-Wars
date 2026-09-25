@@ -6,6 +6,8 @@ import { MapView, type HighlightKind, type MapScene } from '../render/MapView';
 import { backgroundName } from '../maps';
 import type { Session } from '../net/session';
 import { HostSession } from '../net/host';
+import { ReplaySession } from '../net/replay';
+import { replayControls } from './replayControls';
 import { idb } from '../storage/idb';
 import { describe, Plan, type Projection } from '../orders/plan';
 import { onThemeChange, useThemeForMap } from '../theme/theme';
@@ -30,11 +32,26 @@ export interface SaveRecord {
 }
 
 /** The in-game screen (docs/game-screen.md). */
-export async function gameScreen(root: HTMLElement, session: Session, onExit: () => void) {
+export async function gameScreen(root: HTMLElement, session: Session, onExit: () => void, onReplay?: (replay: ReplaySession) => void) {
   await useThemeForMap(session.map.config);
   useMapText(session.map.config);
   setDefaultNames(session.map.config);
   const nations = () => session.map.config.nations as Parameters<typeof buildEmblems>[0];
+  /** Replay mode: read-only, driven by the replay bar instead of the turn controls. */
+  const replay = session instanceof ReplaySession ? session : null;
+  let playing: ReturnType<typeof setInterval> | null = null;
+  let speed = 1;
+  const stopPlaying = () => { if (playing) clearInterval(playing); playing = null; };
+  const startPlaying = () => {
+    stopPlaying();
+    if (!replay) return;
+    if (replay.position() >= replay.length()) replay.seek(0);
+    playing = setInterval(() => {
+      replay.stepBy(1);
+      if (replay.position() >= replay.length()) { stopPlaying(); render(); }
+    }, speed * 1000);
+    render();
+  };
   let emblems = buildEmblems(nations(), session.map);
 
   const slots = {
@@ -46,13 +63,15 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     log: h('div', { class: 'slot-log' }),
     banner: h('div', { class: 'slot-banner' }),
     war: h('div', { class: 'slot-war' }),
+    replay: h('div', { class: 'slot-replay' }),
     modal: h('div', { class: 'slot-modal' }),
     editor: h('div', { class: 'slot-editor' }),
     handoff: h('div', { class: 'slot-handoff' }),
   };
   const mapEl = h('div', { class: 'map' });
   clear(root, h('div', { class: 'game' }, slots.top,
-    h('div', { class: 'stage' }, mapEl, slots.army, slots.hand, slots.controls, slots.orders, slots.log, slots.banner, slots.war, slots.modal, slots.editor),
+    h('div', { class: `stage ${session instanceof ReplaySession ? 'replaying' : ''}` },
+      mapEl, slots.army, slots.hand, slots.controls, slots.orders, slots.log, slots.banner, slots.war, slots.replay, slots.modal, slots.editor),
     slots.handoff));
 
   const map = await MapView.create(mapEl, session.map.files[backgroundName(session.map)] ?? null);
@@ -371,12 +390,15 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     const planning = canPlan(v);
     selected = selected.filter((id) => state.armies[id] || v.armies[id]);
     // Fog of war for the player at the screen (none once the game is over).
-    const visible = seat && v.phase !== 'gameOver' ? visibleNodes(v, sideOf(v, seat)) : undefined;
+    const viewer = seat ?? replay?.perspective ?? null;
+    const visible = viewer && v.phase !== 'gameOver' ? visibleNodes(v, sideOf(v, viewer)) : undefined;
 
     // Every battle this player could see gets a Battle over popup once it ends.
     for (const e of v.history) {
       if (!e.report || seenReports.has(e.report.id)) continue;
       seenReports.add(e.report.id);
+      // A replay shows battles as they are fought, without stopping for popups.
+      if (replay) continue;
       // The last round is only in the view of those who fought (or watch everything).
       recaps.push({ report: e.report, panel: Boolean(e.report.finalRound) });
     }
@@ -395,7 +417,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     const handoff = hotseat && seat !== null && seat !== shownSeat && v.phase !== 'gameOver';
     slots.handoff.replaceChildren(handoff ? handoffDialog(v, seat!, emblems, () => { shownSeat = seat; render(); }) : '');
 
-    const statusLine = v.phase === 'gameOver' ? t('status.gameOver')
+    const statusLine = replay ? t('replay.statusLine')
+      : v.phase === 'gameOver' ? t('status.gameOver')
       : v.battle ? t('status.battle')
         : myTurn(v) ? (progress ?? (running ? t('status.executing') : t('status.yourTurn')))
           : t('status.waitingFor', { names: [...new Set(v.pending.map((p) => nationName(v, p.nation)))].join(', ') || nationName(v, v.current) });
@@ -510,7 +533,12 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       onFocus: focusNode,
     }) : '');
 
-    slots.controls.replaceChildren(handoff ? '' : turnControls({
+    slots.replay.replaceChildren(replay ? replayControls({
+      view: v, replay, emblems, playing: Boolean(playing), speed,
+      onPlay: () => { if (playing) { stopPlaying(); render(); } else startPlaying(); },
+      onSpeed: (sp) => { speed = sp; if (playing) startPlaying(); else render(); },
+    }) : '');
+    slots.controls.replaceChildren(replay || handoff ? '' : turnControls({
       myTurn: myTurn(v) && !v.battle,
       canStep: planning && Boolean(plan?.orders.length),
       canEnd: planning,
@@ -534,7 +562,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     const seenKey = v.battle ? `${v.battle.id}:${seat}` : '';
     const popup = handoff ? null : battlePopup({
       view: v, me: seat, emblems, ui: battleUi, history: battleEntries, send: (i) => void send(i), rerender: render,
-      roundSeen: roundsSeen.get(seenKey) ?? 0,
+      // A replay moves on by itself: no round results waiting for a click.
+      roundSeen: replay ? Infinity : roundsSeen.get(seenKey) ?? 0,
       onRoundSeen: (round) => { roundsSeen.set(seenKey, round); render(); },
     });
     const isBanner = Boolean(popup?.classList.contains('retreat-banner'));
@@ -553,7 +582,9 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
         onStop: () => { stopRequested = true; recaps = []; render(); },
       }) : null)
       || (handoff ? null : promptDialog(v, seat, emblems, (i) => void send(i)))
-      || gameOverDialog(v, emblems, onExit)
+      || (replay ? null : gameOverDialog(v, emblems, onExit, session instanceof HostSession && onReplay
+        ? () => onReplay(new ReplaySession(session.map, session.config, [...session.entries()]))
+        : undefined))
       || null;
     // Any popup can be minimized to a pill, so the player can look around the map first.
     if (!modalEl) popupMinimized = false;
@@ -639,6 +670,18 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   // Keyboard: N = next step, L = log, M = minimize / restore the popup, Esc = close / deselect / stop running.
   const onKey = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement) return;
+    if (replay && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+      // Arrows step through the replay; with Shift, a whole turn.
+      const dir = e.key === 'ArrowRight' ? 1 : -1;
+      if (e.shiftKey) replay.turnBy(dir); else replay.stepBy(dir);
+      e.preventDefault();
+      return;
+    }
+    if (replay && e.key === ' ') {
+      if (playing) { stopPlaying(); render(); } else startPlaying();
+      e.preventDefault();
+      return;
+    }
     if (e.key === 'Escape') {
       if (editorOpen) closeEditor();
       else if (progress) { stopRequested = true; toast(t('game.stopping')); }
@@ -663,7 +706,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   const unsub = session.subscribe(() => {
     const v = view();
     if (v) {
-      for (const e of v.history.slice(seenHistory)) if (e.kind === 'event') toast(logText(e));
+      if (!replay) for (const e of v.history.slice(seenHistory)) if (e.kind === 'event') toast(logText(e));
       seenHistory = v.history.length;
     }
     render();
@@ -679,5 +722,5 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   render();
   // Test hook: ?debug exposes the map and session to automated browser tests.
   if (new URLSearchParams(location.search).has('debug')) (window as unknown as Record<string, unknown>).__krieg = { map, session, plan: () => plan };
-  return () => { unsub(); unsubTheme(); unsubLang(); window.removeEventListener('keydown', onKey); map.destroy(); };
+  return () => { stopPlaying(); unsub(); unsubTheme(); unsubLang(); window.removeEventListener('keydown', onKey); map.destroy(); };
 }

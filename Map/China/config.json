@@ -5350,6 +5350,10 @@
       }
     }
   ],
+  "rules": {
+    "endGameFromRound": 6,
+    "mode": "freeForAll"
+  },
   "text": {
     "zh": {
       "node.n1": "襄武",

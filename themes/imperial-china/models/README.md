@@ -14,7 +14,7 @@ Animated 3D models for the Imperial China theme. They show the Qing army of abou
 
 ## In the game
 
-The theme's `army.model` token lists these files (see [docs/design-system.md](../../../docs/design-system.md#49-game-screen-components)). The client bakes them into sprite sheets per nation color and shows every army as a group of figures sized by its composition. The **Theme gallery** on the main menu shows them live.
+The theme's `army.model` token lists these files (see [docs/design-system.md](../../../docs/design-system.md#49-game-screen-components)). The client bakes them into sprite sheets per nation color and shows every army as a group of figures sized by its composition. The **Theme gallery** (main menu → Settings) shows them live.
 
 ## Nation color
 

@@ -1,0 +1,216 @@
+{
+  "id": "peninsular-war",
+  "name": "Peninsular War",
+  "version": 1,
+  "extends": "imperial-china",
+  "scheme": "light",
+  "assets": {},
+  "fonts": {},
+  "color": {
+    "surface": {
+      "app": "#d9ceb2",
+      "panel": "#f2ecda",
+      "raised": "#faf7ee",
+      "sunken": "#e4dac0",
+      "scrim": "#1f2633e6"
+    },
+    "text": {
+      "primary": "#1f2633",
+      "muted": "#52555a",
+      "heading": "#1f2633"
+    },
+    "border": {
+      "subtle": "#cbbf9f",
+      "control": "#7d7560"
+    },
+    "action": {
+      "primary": "#1f2633",
+      "onPrimary": "#faf7ee",
+      "secondary": "#faf7ee",
+      "onSecondary": "#1f2633",
+      "hoverBorder": "#b8322a"
+    },
+    "focus": "#2f5d8a",
+    "state": {
+      "danger": "#9b2c20",
+      "warning": "#855410",
+      "success": "#3d5f45",
+      "info": "#2f5d8a"
+    },
+    "seal": {
+      "fill": "#8c1c24",
+      "text": "#faf7ee"
+    },
+    "card": {
+      "face": "#fffdf6",
+      "faceDisabled": "#ece5d3",
+      "ink": "#1f2633",
+      "border": "#7d7560",
+      "back": "#1f3a5f"
+    },
+    "die": {
+      "face": "#faf7ee",
+      "pip": "#1f2633",
+      "attackerRing": "#b8322a",
+      "defenderRing": "#1f4e8c"
+    },
+    "will": {
+      "track": "#e4dac0",
+      "threshold": "#1f2633"
+    }
+  },
+  "map": {
+    "canvas": {
+      "background": "#b9cfd6",
+      "blank": "#eee6cf",
+      "blankBorder": "#7d7560"
+    },
+    "road": {
+      "major": {
+        "fill": "#7a4a2a",
+        "casing": "#f5efdd"
+      },
+      "minor": {
+        "color": "#7a4a2a"
+      }
+    },
+    "node": {
+      "outline": "#1f2633"
+    },
+    "selection": {
+      "color": "#1f2633"
+    },
+    "highlight": {
+      "casing": "#1f2633",
+      "here": "#b8322a"
+    },
+    "order": {
+      "arrow": "#1f2633",
+      "badge": "#faf7ee"
+    },
+    "label": {
+      "fill": "#1f2633",
+      "halo": "#f5efdd"
+    },
+    "vp": {
+      "fill": "#8c1c24",
+      "text": "#faf7ee"
+    },
+    "army": {
+      "textHalo": "#1f2633",
+      "border": "#1f2633"
+    },
+    "nationPalette": [
+      "#b8322a",
+      "#1f4e8c",
+      "#3f6146",
+      "#6d3b62"
+    ],
+    "fog": {
+      "color": "#4d5560",
+      "hatch": "#1f2633"
+    }
+  },
+  "type": {
+    "family": {
+      "display": [
+        "IM Fell English SC",
+        "Georgia",
+        "serif"
+      ],
+      "body": [
+        "IM Fell English",
+        "Georgia",
+        "serif"
+      ],
+      "numeric": [
+        "Georgia",
+        "serif"
+      ],
+      "map": [
+        "IM Fell English",
+        "Georgia",
+        "serif"
+      ]
+    },
+    "tracking": {
+      "heading": "0.02em",
+      "display": "0.06em"
+    }
+  },
+  "emblem": {
+    "shapes": [
+      "heater-shield",
+      "roundel",
+      "banner",
+      "lozenge"
+    ],
+    "styles": [
+      "field",
+      "outline"
+    ]
+  },
+  "tooltip": {
+    "surface": "#1f2633",
+    "text": "#f2ecda"
+  },
+  "army": {
+    "model": {
+      "units": {
+        "infantry": "models/infantry.glb",
+        "cavalry": "models/cavalry.glb",
+        "artillery": "models/artillery.glb",
+        "supply": "models/supply.glb",
+        "general": "models/general.glb"
+      },
+      "tint": "Nation",
+      "scale": {
+        "artillery": 0.85,
+        "supply": 0.6
+      }
+    },
+    "shadow": {
+      "color": "#1f26336e"
+    }
+  },
+  "orders": {
+    "next": "#b8322a",
+    "done": {
+      "fill": "#e4dac0",
+      "text": "#52555a"
+    },
+    "removed": {
+      "fill": "#efe3d8",
+      "text": "#9b2c20"
+    }
+  },
+  "controls": {
+    "endTurn": {
+      "fill": "#1f2633",
+      "text": "#faf7ee",
+      "border": "#1f2633"
+    },
+    "nextStep": {
+      "fill": "#faf7ee",
+      "text": "#1f2633",
+      "border": "#1f2633"
+    }
+  },
+  "battle": {
+    "scrim": "#1f263396",
+    "stepDone": "#1f2633",
+    "stepTodo": "#7d7560",
+    "lostUnit": "#e4dac0"
+  },
+  "drawer": {
+    "tab": "#f2ecda",
+    "unreadDot": "#b8322a"
+  },
+  "ornament": {
+    "divider": "❦",
+    "mapVignette": {
+      "color": "#d9ceb2",
+      "strength": 0.2
+    }
+  }
+}

@@ -22,7 +22,7 @@ function reset() {
 const actions: MenuActions = {
   play(session: Session) {
     reset();
-    void gameScreen(root, session, () => { if (confirm(t('game.leaveConfirm'))) location.reload(); })
+    void gameScreen(root, session, () => { if (confirm(t('game.leaveConfirm'))) location.reload(); }, (replay) => actions.play(replay))
       .then((c) => { cleanup = c; });
   },
   lobby(session: Session) {
@@ -32,22 +32,22 @@ const actions: MenuActions = {
   edit(map: MapBundle | null) {
     reset();
     void editorScreen(root, map, {
-      back: () => menu(),
+      back: () => menu('editor'),
       play: (m) => void startGame(m, false, actions),
     }).then((c) => { cleanup = c; });
   },
   gallery() {
     reset();
-    void galleryScreen(root, () => menu()).then((c) => { cleanup = c; });
+    void galleryScreen(root, () => menu('settings')).then((c) => { cleanup = c; });
   },
 };
 
-function menu() {
+function menu(view?: Parameters<typeof menuScreen>[2]) {
   reset();
   // Outside a game: the player's chosen theme, or the canonical one.
   void resolveTheme(playerOverride() ?? CANONICAL_ID).then(applyTheme);
   void listThemes();
-  void menuScreen(root, actions);
+  void menuScreen(root, actions, view);
 }
 
 menu();

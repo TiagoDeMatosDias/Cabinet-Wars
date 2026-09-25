@@ -323,7 +323,7 @@ export function recruitBanner(
       h('button', { class: 'primary', onclick: () => recruit(townSelect.value) }, t('recruit.place'))));
 }
 
-export function gameOverDialog(v: GameView, emblems: Map<string, Emblem>, onMenu: () => void): HTMLElement | null {
+export function gameOverDialog(v: GameView, emblems: Map<string, Emblem>, onMenu: () => void, onReplay?: () => void): HTMLElement | null {
   if (v.phase !== 'gameOver') return null;
   const ffa = v.rules.mode === 'freeForAll';
   const winners = v.nations.filter((n) => sideOf(v, n.id) === v.winner);
@@ -331,7 +331,9 @@ export function gameOverDialog(v: GameView, emblems: Map<string, Emblem>, onMenu
     h('div', { class: 'big-icon' }, iconEl(currentTheme().icons.victory, 64)),
     h('h2', {}, ffa ? t('log.winnerNation', { nation: v.winner ?? '' }) : t('log.winner', { side: `side.${v.winner}` })),
     h('div', { class: 'row center' }, winners.map((n) => h('span', { class: 'chip' }, emblemEl(emblems.get(n.id), 22), nationName(v, n.id)))),
-    h('button', { class: 'primary', onclick: onMenu }, t('gameover.menu'))));
+    h('div', { class: 'row center' },
+      onReplay ? h('button', { onclick: onReplay }, t('gameover.replay')) : null,
+      h('button', { class: 'primary', onclick: onMenu }, t('gameover.menu')))));
 }
 
 export function handoffDialog(v: GameView, seat: string, emblems: Map<string, Emblem>, onContinue: () => void): HTMLElement {

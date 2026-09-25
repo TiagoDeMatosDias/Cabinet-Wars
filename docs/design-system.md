@@ -6,7 +6,7 @@
 - The default themes are `imperial-china` and `prussian-baroque`. Like every theme they are folders in `themes/` (`themes/<id>/theme.json`), which the server lists at `/api/themes`.
 - Extra themes can be shared from the server's `themes/` folder.
 - A map can name a theme id in `config.json`, or embed a partial theme object there. A theme folder *inside* a map or `.krieg` bundle is not supported yet, and the texture and ornament images aren't shipped.
-- The editor has a theme picker with live preview and shows contrast and highlight-vs-nation warnings. The main menu has the player's own theme setting.
+- The editor has a theme picker with live preview and shows contrast and highlight-vs-nation warnings. The main menu's Settings have the player's own theme setting.
 
 See the [README](../Readme.md) for the game rules, map format and how to run the game.
 

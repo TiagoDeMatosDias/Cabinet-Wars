@@ -212,12 +212,12 @@ The game is flexible: players can bring their own maps, nations, armies and deck
 
 ### Map editor
 
-Maps are made in the in-browser map editor ("New map in editor…" on the main menu):
+Maps are made in the in-browser map editor (main menu → **Map editor** → "New map in editor…"):
 
 - **Base map…** uploads the background image.
 - **Node map…** (optional) uploads an image with one colored dot per node on a transparent background, the same size as the base map; nodes are created from the dots. Without one, use **Place node** to click nodes onto the map (Shift+click moves the selected node).
 - **Download** saves the map as a `.krieg` file: a zip with `config.json`, `map.png` and `nodes.png` (generated from the node positions if you placed nodes by hand). Unzip it into `Map/<Name>/` to serve it from the server, or share the file as is.
-- **Open…** loads a `.krieg` file or a `config.json` back into the editor. "Import .krieg file…" on the main menu adds one to the browser's map list.
+- **Open…** loads a `.krieg` file or a `config.json` back into the editor. "Import map…" under **Map editor** on the main menu adds one to the browser's map list.
 - **Rules & decks** sets the round from which the End Game card can end the war, and how many of each card the Event and General decks contain.
 - **Languages & translations** adds languages to the map and translates its names and any interface text (see [Languages](#languages)).
 
@@ -234,7 +234,7 @@ All text in the game is English by default. A map can add any number of language
 
 - The keys are map content (`map.name`, `nation.<id>`, `node.<id>`, `general.<id>`), interface text (the keys in `packages/client/src/i18n/en.ts`), and the game's messages (log entries such as `log.moved`, events, and error messages as `error:<English message>`). Keep `{placeholders}` as they are.
 - Anything not translated shows in English.
-- Players choose their language on the main menu or in the game's top bar, from the languages the map offers.
+- Players choose their language under **Settings** on the main menu or in the game's top bar, from the languages the map offers.
 - Icons contain no text, so they look the same in every language.
 
 ## Computer players
@@ -254,6 +254,12 @@ The game is transactional: every move by every player, every dice roll, and ever
 - This file can be saved and loaded later; the game replays up to that point and carries on from there.
 - Saves are listed in the `saves` folder and come bundled with the map being played, so users can share save files and maps.
 - By default, the server serves the maps available to it, while each user's browser holds the maps they created or loaded, as well as the games they saved.
+- **Replays.** Any saved game can be watched again: open **Replays** on the main menu and choose **Watch replay** next to it, or **Watch replay** when a game ends. A bar along the bottom of the screen controls the replay:
+  - go back or forward one **step** (a player's action, with the dice and cards that follow it) or one **turn**;
+  - jump to the start or the end, or drag the slider to any point;
+  - **play** it at 2, 1, ½ or ¼ seconds per step.
+  - Keyboard: ← → steps, Shift + ← → turns, Space plays or pauses.
+  - **View** shows everything, or a single nation's view with its fog of war. A replay can't change the game.
 
 ## Running the game
 

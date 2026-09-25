@@ -99,3 +99,21 @@ it('AI-only games on the China map finish and see fighting', () => {
   expect(battles).toBeGreaterThan(0);
   expect(captures).toBeGreaterThan(0);
 }, 240_000);
+
+it('AI-only games on the Iberia map finish and see fighting', () => {
+  const cfg = parseConfig(JSON.parse(readFileSync(new URL('../../../Map/Iberia/config.json', import.meta.url), 'utf8')));
+  let battles = 0;
+  let captures = 0;
+  for (let g = 0; g < 6; g++) {
+    seed = 1801 + g;
+    const { state, stats } = aiGame(cfg);
+    expect(state.phase).toBe('gameOver');
+    battles += stats.battles;
+    captures += stats.captures;
+    // eslint-disable-next-line no-console
+    console.log(`game ${g}: winner ${state.winner} round ${state.round}`, stats,
+      state.nations.map((n) => `${n.id}${n.knockedOut ? '✗' : ''}`).join(' '));
+  }
+  expect(battles).toBeGreaterThan(0);
+  expect(captures).toBeGreaterThan(0);
+}, 240_000);

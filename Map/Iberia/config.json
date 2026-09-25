@@ -1,0 +1,4035 @@
+{
+  "name": "Iberia 1801: The War of the Oranges",
+  "version": 1,
+  "theme": "peninsular-war",
+  "background": "Map.png",
+  "nodesImage": "nodes.png",
+  "nations": [
+    {
+      "id": "Spain",
+      "name": "Spain",
+      "color": "#b8322a",
+      "side": "attacker",
+      "threshold": 40,
+      "emblem": {
+        "glyph": "E",
+        "shape": "heater-shield"
+      }
+    },
+    {
+      "id": "Portugal",
+      "name": "Portugal",
+      "color": "#1f4e8c",
+      "side": "defender",
+      "threshold": 60,
+      "emblem": {
+        "glyph": "P",
+        "shape": "roundel"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "valenca",
+      "name": "Valença",
+      "color": "#3bc49a",
+      "x": 440,
+      "y": 695,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "viana-do-castelo",
+      "name": "Viana do Castelo",
+      "color": "#c78b28",
+      "x": 398,
+      "y": 745,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "braga",
+      "name": "Braga",
+      "color": "#680922",
+      "x": 467,
+      "y": 788,
+      "owner": "Portugal",
+      "vp": 3
+    },
+    {
+      "id": "porto",
+      "name": "Porto",
+      "color": "#25e9f5",
+      "x": 427,
+      "y": 890,
+      "owner": "Portugal",
+      "vp": 8
+    },
+    {
+      "id": "amarante",
+      "name": "Amarante",
+      "color": "#6a010f",
+      "x": 526,
+      "y": 860,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "montalegre",
+      "name": "Montalegre",
+      "color": "#85bed2",
+      "x": 568,
+      "y": 752,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "chaves",
+      "name": "Chaves",
+      "color": "#33ee6c",
+      "x": 637,
+      "y": 747,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "vila-real",
+      "name": "Vila Real",
+      "color": "#c154b4",
+      "x": 589,
+      "y": 852,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "mirandela",
+      "name": "Mirandela",
+      "color": "#addcc0",
+      "x": 692,
+      "y": 805,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "braganca",
+      "name": "Bragança",
+      "color": "#bba308",
+      "x": 763,
+      "y": 729,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "miranda-do-douro",
+      "name": "Miranda do Douro",
+      "color": "#7b3aa4",
+      "x": 818,
+      "y": 802,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "torre-de-moncorvo",
+      "name": "Torre de Moncorvo",
+      "color": "#53c277",
+      "x": 718,
+      "y": 878,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "lamego",
+      "name": "Lamego",
+      "color": "#fccd86",
+      "x": 576,
+      "y": 900,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "oliveira-de-azemeis",
+      "name": "Oliveira de Azeméis",
+      "color": "#685b6c",
+      "x": 449,
+      "y": 966,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "aveiro",
+      "name": "Aveiro",
+      "color": "#b0cb65",
+      "x": 419,
+      "y": 1012,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "viseu",
+      "name": "Viseu",
+      "color": "#4f2b52",
+      "x": 555,
+      "y": 1005,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "guarda",
+      "name": "Guarda",
+      "color": "#f20b10",
+      "x": 674,
+      "y": 1027,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "almeida",
+      "name": "Almeida",
+      "color": "#f87a12",
+      "x": 712,
+      "y": 975,
+      "owner": "Portugal",
+      "vp": 3
+    },
+    {
+      "id": "sabugal",
+      "name": "Sabugal",
+      "color": "#ec4457",
+      "x": 705,
+      "y": 1070,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "coimbra",
+      "name": "Coimbra",
+      "color": "#26f37f",
+      "x": 459,
+      "y": 1111,
+      "owner": "Portugal",
+      "vp": 4
+    },
+    {
+      "id": "figueira-da-foz",
+      "name": "Figueira da Foz",
+      "color": "#4e31ba",
+      "x": 384,
+      "y": 1122,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "covilha",
+      "name": "Covilhã",
+      "color": "#5575f4",
+      "x": 629,
+      "y": 1090,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "castelo-branco",
+      "name": "Castelo Branco",
+      "color": "#7016ff",
+      "x": 626,
+      "y": 1194,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "pombal",
+      "name": "Pombal",
+      "color": "#8bd3fc",
+      "x": 430,
+      "y": 1168,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "leiria",
+      "name": "Leiria",
+      "color": "#db37e3",
+      "x": 394,
+      "y": 1214,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "abrantes",
+      "name": "Abrantes",
+      "color": "#9c1ff3",
+      "x": 499,
+      "y": 1279,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "rio-maior",
+      "name": "Rio Maior",
+      "color": "#ea86e0",
+      "x": 373,
+      "y": 1302,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "santarem",
+      "name": "Santarém",
+      "color": "#f3bf35",
+      "x": 417,
+      "y": 1326,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "torres-vedras",
+      "name": "Torres Vedras",
+      "color": "#b57f03",
+      "x": 320,
+      "y": 1354,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "vila-franca-de-xira",
+      "name": "Vila Franca de Xira",
+      "color": "#2c7624",
+      "x": 378,
+      "y": 1362,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "lisboa",
+      "name": "Lisboa",
+      "color": "#cba307",
+      "x": 330,
+      "y": 1408,
+      "owner": "Portugal",
+      "vp": 10
+    },
+    {
+      "id": "setubal",
+      "name": "Setúbal",
+      "color": "#a21ce2",
+      "x": 382,
+      "y": 1483,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "montemor-o-novo",
+      "name": "Montemor-o-Novo",
+      "color": "#ded15b",
+      "x": 495,
+      "y": 1460,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "ponte-de-sor",
+      "name": "Ponte de Sor",
+      "color": "#e30025",
+      "x": 531,
+      "y": 1325,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "portalegre",
+      "name": "Portalegre",
+      "color": "#ed475d",
+      "x": 620,
+      "y": 1290,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "campo-maior",
+      "name": "Campo Maior",
+      "color": "#31ab0b",
+      "x": 648,
+      "y": 1345,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "estremoz",
+      "name": "Estremoz",
+      "color": "#39caff",
+      "x": 601,
+      "y": 1418,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "elvas",
+      "name": "Elvas",
+      "color": "#72a76a",
+      "x": 662,
+      "y": 1408,
+      "owner": "Portugal",
+      "vp": 4
+    },
+    {
+      "id": "olivenca",
+      "name": "Olivença",
+      "color": "#57240c",
+      "x": 695,
+      "y": 1485,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "evora",
+      "name": "Évora",
+      "color": "#d9cae7",
+      "x": 547,
+      "y": 1480,
+      "owner": "Portugal",
+      "vp": 3
+    },
+    {
+      "id": "alcacer-do-sal",
+      "name": "Alcácer do Sal",
+      "color": "#f6061e",
+      "x": 446,
+      "y": 1520,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "moura",
+      "name": "Moura",
+      "color": "#e0243f",
+      "x": 625,
+      "y": 1581,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "beja",
+      "name": "Beja",
+      "color": "#970f96",
+      "x": 556,
+      "y": 1607,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "santiago-do-cacem",
+      "name": "Santiago do Cacém",
+      "color": "#dca687",
+      "x": 415,
+      "y": 1595,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "ourique",
+      "name": "Ourique",
+      "color": "#2cd29e",
+      "x": 493,
+      "y": 1685,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "mertola",
+      "name": "Mértola",
+      "color": "#2c3883",
+      "x": 591,
+      "y": 1698,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "odemira",
+      "name": "Odemira",
+      "color": "#fa8455",
+      "x": 422,
+      "y": 1688,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "lagos",
+      "name": "Lagos",
+      "color": "#27c36f",
+      "x": 415,
+      "y": 1798,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "albufeira",
+      "name": "Albufeira",
+      "color": "#5bbbfb",
+      "x": 489,
+      "y": 1811,
+      "owner": "Portugal",
+      "vp": 0
+    },
+    {
+      "id": "faro",
+      "name": "Faro",
+      "color": "#299814",
+      "x": 545,
+      "y": 1835,
+      "owner": "Portugal",
+      "vp": 2
+    },
+    {
+      "id": "castro-marim",
+      "name": "Castro Marim",
+      "color": "#26b087",
+      "x": 631,
+      "y": 1799,
+      "owner": "Portugal",
+      "vp": 1
+    },
+    {
+      "id": "la-coruna",
+      "name": "La Coruña",
+      "color": "#abe52e",
+      "x": 441,
+      "y": 374,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "ferrol",
+      "name": "Ferrol",
+      "color": "#67c1f3",
+      "x": 505,
+      "y": 335,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "santiago",
+      "name": "Santiago",
+      "color": "#673e88",
+      "x": 432,
+      "y": 475,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "lugo",
+      "name": "Lugo",
+      "color": "#a673d3",
+      "x": 597,
+      "y": 460,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "pontevedra",
+      "name": "Pontevedra",
+      "color": "#4b56f5",
+      "x": 430,
+      "y": 562,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "vigo",
+      "name": "Vigo",
+      "color": "#818ec6",
+      "x": 414,
+      "y": 620,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "orense",
+      "name": "Orense",
+      "color": "#3e7421",
+      "x": 560,
+      "y": 605,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "monforte-de-lemos",
+      "name": "Monforte de Lemos",
+      "color": "#c15dcb",
+      "x": 617,
+      "y": 568,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "verin",
+      "name": "Verín",
+      "color": "#ac7d45",
+      "x": 640,
+      "y": 680,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "mondonedo",
+      "name": "Mondoñedo",
+      "color": "#c3cad0",
+      "x": 623,
+      "y": 370,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "villafranca-del-bierzo",
+      "name": "Villafranca del Bierzo",
+      "color": "#438972",
+      "x": 741,
+      "y": 550,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "puebla-de-sanabria",
+      "name": "Puebla de Sanabria",
+      "color": "#894204",
+      "x": 782,
+      "y": 675,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "alcanices",
+      "name": "Alcañices",
+      "color": "#d3c5b0",
+      "x": 852,
+      "y": 742,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "astorga",
+      "name": "Astorga",
+      "color": "#48385d",
+      "x": 880,
+      "y": 582,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "leon",
+      "name": "León",
+      "color": "#8fc8b2",
+      "x": 970,
+      "y": 551,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "benavente",
+      "name": "Benavente",
+      "color": "#508367",
+      "x": 954,
+      "y": 684,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "zamora",
+      "name": "Zamora",
+      "color": "#2da2ef",
+      "x": 945,
+      "y": 797,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "ledesma",
+      "name": "Ledesma",
+      "color": "#43ce86",
+      "x": 902,
+      "y": 892,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "vitigudino",
+      "name": "Vitigudino",
+      "color": "#28100c",
+      "x": 825,
+      "y": 912,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "salamanca",
+      "name": "Salamanca",
+      "color": "#a363b0",
+      "x": 962,
+      "y": 919,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "ciudad-rodrigo",
+      "name": "Ciudad Rodrigo",
+      "color": "#4ee992",
+      "x": 808,
+      "y": 1007,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "bejar",
+      "name": "Béjar",
+      "color": "#8a6cec",
+      "x": 942,
+      "y": 1053,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "plasencia",
+      "name": "Plasencia",
+      "color": "#5822fc",
+      "x": 879,
+      "y": 1138,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "coria",
+      "name": "Coria",
+      "color": "#8b05dc",
+      "x": 798,
+      "y": 1151,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "alcantara",
+      "name": "Alcántara",
+      "color": "#c76a87",
+      "x": 733,
+      "y": 1213,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "caceres",
+      "name": "Cáceres",
+      "color": "#2c28ac",
+      "x": 821,
+      "y": 1268,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "valencia-de-alcantara",
+      "name": "Valencia de Alcántara",
+      "color": "#5ba874",
+      "x": 700,
+      "y": 1270,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "alburquerque",
+      "name": "Alburquerque",
+      "color": "#45be08",
+      "x": 707,
+      "y": 1330,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "badajoz",
+      "name": "Badajoz",
+      "color": "#a30c8a",
+      "x": 748,
+      "y": 1402,
+      "owner": "Spain",
+      "vp": 4
+    },
+    {
+      "id": "merida",
+      "name": "Mérida",
+      "color": "#47f5a9",
+      "x": 821,
+      "y": 1397,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "jerez-de-los-caballeros",
+      "name": "Jerez de los Caballeros",
+      "color": "#474cad",
+      "x": 742,
+      "y": 1539,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "zafra",
+      "name": "Zafra",
+      "color": "#651f4e",
+      "x": 804,
+      "y": 1515,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "llerena",
+      "name": "Llerena",
+      "color": "#6cecb8",
+      "x": 876,
+      "y": 1560,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "trujillo",
+      "name": "Trujillo",
+      "color": "#6c1a96",
+      "x": 910,
+      "y": 1270,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "almaraz",
+      "name": "Almaraz",
+      "color": "#a48f4a",
+      "x": 949,
+      "y": 1188,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "oropesa",
+      "name": "Oropesa",
+      "color": "#6af57d",
+      "x": 1042,
+      "y": 1163,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "talavera-de-la-reina",
+      "name": "Talavera de la Reina",
+      "color": "#3b90f7",
+      "x": 1106,
+      "y": 1154,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "medellin",
+      "name": "Medellín",
+      "color": "#897995",
+      "x": 890,
+      "y": 1387,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "guadalupe",
+      "name": "Guadalupe",
+      "color": "#8c1620",
+      "x": 1010,
+      "y": 1273,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "castuera",
+      "name": "Castuera",
+      "color": "#733429",
+      "x": 966,
+      "y": 1445,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "aroche",
+      "name": "Aroche",
+      "color": "#a83168",
+      "x": 710,
+      "y": 1630,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "aracena",
+      "name": "Aracena",
+      "color": "#c8b89c",
+      "x": 779,
+      "y": 1641,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "huelva",
+      "name": "Huelva",
+      "color": "#41e59e",
+      "x": 714,
+      "y": 1791,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "sevilla",
+      "name": "Sevilla",
+      "color": "#ef9f36",
+      "x": 880,
+      "y": 1759,
+      "owner": "Spain",
+      "vp": 6
+    },
+    {
+      "id": "jerez-de-la-frontera",
+      "name": "Jerez de la Frontera",
+      "color": "#a99529",
+      "x": 868,
+      "y": 1918,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "cadiz",
+      "name": "Cádiz",
+      "color": "#d2252d",
+      "x": 829,
+      "y": 1961,
+      "owner": "Spain",
+      "vp": 5
+    },
+    {
+      "id": "algeciras",
+      "name": "Algeciras",
+      "color": "#d39d65",
+      "x": 982,
+      "y": 2066,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "ronda",
+      "name": "Ronda",
+      "color": "#26be56",
+      "x": 1031,
+      "y": 1920,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "malaga",
+      "name": "Málaga",
+      "color": "#29989c",
+      "x": 1167,
+      "y": 1928,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "antequera",
+      "name": "Antequera",
+      "color": "#65a650",
+      "x": 1142,
+      "y": 1855,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "ecija",
+      "name": "Écija",
+      "color": "#f09650",
+      "x": 1046,
+      "y": 1728,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "carmona",
+      "name": "Carmona",
+      "color": "#92ef6a",
+      "x": 944,
+      "y": 1742,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "cordoba",
+      "name": "Córdoba",
+      "color": "#d89191",
+      "x": 1102,
+      "y": 1647,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "bailen",
+      "name": "Bailén",
+      "color": "#e54c57",
+      "x": 1286,
+      "y": 1600,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "jaen",
+      "name": "Jaén",
+      "color": "#758748",
+      "x": 1283,
+      "y": 1675,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "ubeda",
+      "name": "Úbeda",
+      "color": "#bb1afe",
+      "x": 1361,
+      "y": 1621,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "granada",
+      "name": "Granada",
+      "color": "#217325",
+      "x": 1317,
+      "y": 1819,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "loja",
+      "name": "Loja",
+      "color": "#b80d3c",
+      "x": 1217,
+      "y": 1820,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "guadix",
+      "name": "Guadix",
+      "color": "#f7a323",
+      "x": 1400,
+      "y": 1791,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "motril",
+      "name": "Motril",
+      "color": "#fb8e45",
+      "x": 1331,
+      "y": 1922,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "almeria",
+      "name": "Almería",
+      "color": "#fa1cd8",
+      "x": 1522,
+      "y": 1901,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "baza",
+      "name": "Baza",
+      "color": "#f1590a",
+      "x": 1468,
+      "y": 1746,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "lorca",
+      "name": "Lorca",
+      "color": "#973701",
+      "x": 1659,
+      "y": 1702,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "murcia",
+      "name": "Murcia",
+      "color": "#fe7b58",
+      "x": 1760,
+      "y": 1629,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "cartagena",
+      "name": "Cartagena",
+      "color": "#46bd0a",
+      "x": 1783,
+      "y": 1722,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "alicante",
+      "name": "Alicante",
+      "color": "#4839e2",
+      "x": 1875,
+      "y": 1544,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "san-felipe",
+      "name": "San Felipe",
+      "color": "#2c7766",
+      "x": 1872,
+      "y": 1393,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "valencia",
+      "name": "Valencia",
+      "color": "#99ecb5",
+      "x": 1899,
+      "y": 1281,
+      "owner": "Spain",
+      "vp": 5
+    },
+    {
+      "id": "almansa",
+      "name": "Almansa",
+      "color": "#4d5d9d",
+      "x": 1770,
+      "y": 1421,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "albacete",
+      "name": "Albacete",
+      "color": "#4f1d62",
+      "x": 1637,
+      "y": 1391,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "hellin",
+      "name": "Hellín",
+      "color": "#a4b331",
+      "x": 1662,
+      "y": 1505,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "cuenca",
+      "name": "Cuenca",
+      "color": "#5d5883",
+      "x": 1597,
+      "y": 1136,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "motilla-del-palancar",
+      "name": "Motilla del Palancar",
+      "color": "#bf1ba3",
+      "x": 1638,
+      "y": 1256,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "requena",
+      "name": "Requena",
+      "color": "#a6801b",
+      "x": 1775,
+      "y": 1275,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "teruel",
+      "name": "Teruel",
+      "color": "#3a7190",
+      "x": 1781,
+      "y": 1073,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "segorbe",
+      "name": "Segorbe",
+      "color": "#63ecd6",
+      "x": 1883,
+      "y": 1192,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "castellon",
+      "name": "Castellón",
+      "color": "#e54a22",
+      "x": 1960,
+      "y": 1161,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "vinaroz",
+      "name": "Vinaroz",
+      "color": "#bc0364",
+      "x": 2052,
+      "y": 1051,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "tortosa",
+      "name": "Tortosa",
+      "color": "#477117",
+      "x": 2064,
+      "y": 973,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "tarragona",
+      "name": "Tarragona",
+      "color": "#7aa2f0",
+      "x": 2191,
+      "y": 902,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "barcelona",
+      "name": "Barcelona",
+      "color": "#f8e2e8",
+      "x": 2351,
+      "y": 840,
+      "owner": "Spain",
+      "vp": 6
+    },
+    {
+      "id": "gerona",
+      "name": "Gerona",
+      "color": "#e77f91",
+      "x": 2467,
+      "y": 703,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "figueras",
+      "name": "Figueras",
+      "color": "#c804bd",
+      "x": 2493,
+      "y": 636,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "vich",
+      "name": "Vich",
+      "color": "#7d78ab",
+      "x": 2369,
+      "y": 714,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "manresa",
+      "name": "Manresa",
+      "color": "#26100d",
+      "x": 2296,
+      "y": 761,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "lerida",
+      "name": "Lérida",
+      "color": "#b2c018",
+      "x": 2090,
+      "y": 784,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "cervera",
+      "name": "Cervera",
+      "color": "#645272",
+      "x": 2200,
+      "y": 774,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "urgel",
+      "name": "Urgel",
+      "color": "#8fc106",
+      "x": 2239,
+      "y": 613,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "puigcerda",
+      "name": "Puigcerdá",
+      "color": "#802181",
+      "x": 2319,
+      "y": 598,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "monzon",
+      "name": "Monzón",
+      "color": "#a3e9b6",
+      "x": 2021,
+      "y": 715,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "huesca",
+      "name": "Huesca",
+      "color": "#e752cd",
+      "x": 1923,
+      "y": 659,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "jaca",
+      "name": "Jaca",
+      "color": "#b687ac",
+      "x": 1904,
+      "y": 559,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "zaragoza",
+      "name": "Zaragoza",
+      "color": "#f55ed8",
+      "x": 1836,
+      "y": 771,
+      "owner": "Spain",
+      "vp": 4
+    },
+    {
+      "id": "alcaniz",
+      "name": "Alcañiz",
+      "color": "#43a903",
+      "x": 1957,
+      "y": 914,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "calatayud",
+      "name": "Calatayud",
+      "color": "#e971cd",
+      "x": 1700,
+      "y": 839,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "daroca",
+      "name": "Daroca",
+      "color": "#4f906e",
+      "x": 1738,
+      "y": 895,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "tudela",
+      "name": "Tudela",
+      "color": "#28c733",
+      "x": 1714,
+      "y": 674,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "pamplona",
+      "name": "Pamplona",
+      "color": "#a820a4",
+      "x": 1717,
+      "y": 498,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "logrono",
+      "name": "Logroño",
+      "color": "#8eaad6",
+      "x": 1566,
+      "y": 578,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "vitoria",
+      "name": "Vitoria",
+      "color": "#a82c80",
+      "x": 1527,
+      "y": 491,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "bilbao",
+      "name": "Bilbao",
+      "color": "#3fc637",
+      "x": 1478,
+      "y": 398,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "san-sebastian",
+      "name": "San Sebastián",
+      "color": "#b67c7d",
+      "x": 1659,
+      "y": 384,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "santander",
+      "name": "Santander",
+      "color": "#ddf090",
+      "x": 1309,
+      "y": 355,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "reinosa",
+      "name": "Reinosa",
+      "color": "#9b6785",
+      "x": 1243,
+      "y": 459,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "oviedo",
+      "name": "Oviedo",
+      "color": "#ff90d3",
+      "x": 909,
+      "y": 383,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "llanes",
+      "name": "Llanes",
+      "color": "#d9d066",
+      "x": 1123,
+      "y": 366,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "luarca",
+      "name": "Luarca",
+      "color": "#6554da",
+      "x": 774,
+      "y": 346,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "burgos",
+      "name": "Burgos",
+      "color": "#45ccfd",
+      "x": 1328,
+      "y": 607,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "miranda-de-ebro",
+      "name": "Miranda de Ebro",
+      "color": "#72a360",
+      "x": 1473,
+      "y": 528,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "aranda-de-duero",
+      "name": "Aranda de Duero",
+      "color": "#5e63a6",
+      "x": 1328,
+      "y": 760,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "somosierra",
+      "name": "Somosierra",
+      "color": "#becb78",
+      "x": 1345,
+      "y": 885,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "palencia",
+      "name": "Palencia",
+      "color": "#5ab1ff",
+      "x": 1170,
+      "y": 682,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "valladolid",
+      "name": "Valladolid",
+      "color": "#44584a",
+      "x": 1134,
+      "y": 764,
+      "owner": "Spain",
+      "vp": 3
+    },
+    {
+      "id": "sahagun",
+      "name": "Sahagún",
+      "color": "#743b9d",
+      "x": 1074,
+      "y": 601,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "medina-del-campo",
+      "name": "Medina del Campo",
+      "color": "#79291a",
+      "x": 1098,
+      "y": 841,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "arevalo",
+      "name": "Arévalo",
+      "color": "#dfac48",
+      "x": 1133,
+      "y": 896,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "avila",
+      "name": "Ávila",
+      "color": "#48b7e4",
+      "x": 1135,
+      "y": 991,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "segovia",
+      "name": "Segovia",
+      "color": "#ab7620",
+      "x": 1243,
+      "y": 925,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "guadarrama",
+      "name": "Guadarrama",
+      "color": "#827bee",
+      "x": 1247,
+      "y": 990,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "soria",
+      "name": "Soria",
+      "color": "#21ec57",
+      "x": 1557,
+      "y": 741,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "medinaceli",
+      "name": "Medinaceli",
+      "color": "#e7f92e",
+      "x": 1557,
+      "y": 878,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "molina-de-aragon",
+      "name": "Molina de Aragón",
+      "color": "#3b02ec",
+      "x": 1650,
+      "y": 957,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "guadalajara",
+      "name": "Guadalajara",
+      "color": "#c295b6",
+      "x": 1416,
+      "y": 1002,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "madrid",
+      "name": "Madrid",
+      "color": "#c86332",
+      "x": 1317,
+      "y": 1049,
+      "owner": "Spain",
+      "vp": 10
+    },
+    {
+      "id": "aranjuez",
+      "name": "Aranjuez",
+      "color": "#b6638e",
+      "x": 1332,
+      "y": 1141,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "toledo",
+      "name": "Toledo",
+      "color": "#5ccb6b",
+      "x": 1254,
+      "y": 1180,
+      "owner": "Spain",
+      "vp": 2
+    },
+    {
+      "id": "tarancon",
+      "name": "Tarancón",
+      "color": "#da747b",
+      "x": 1440,
+      "y": 1147,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "madridejos",
+      "name": "Madridejos",
+      "color": "#e4eb38",
+      "x": 1340,
+      "y": 1273,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "ciudad-real",
+      "name": "Ciudad Real",
+      "color": "#a75124",
+      "x": 1264,
+      "y": 1385,
+      "owner": "Spain",
+      "vp": 1
+    },
+    {
+      "id": "almaden",
+      "name": "Almadén",
+      "color": "#9aeb6a",
+      "x": 1095,
+      "y": 1432,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "valdepenas",
+      "name": "Valdepeñas",
+      "color": "#9a5497",
+      "x": 1363,
+      "y": 1442,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "la-carolina",
+      "name": "La Carolina",
+      "color": "#8102c2",
+      "x": 1316,
+      "y": 1555,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "alcaraz",
+      "name": "Alcaraz",
+      "color": "#210af3",
+      "x": 1523,
+      "y": 1465,
+      "owner": "Spain",
+      "vp": 0
+    },
+    {
+      "id": "san-clemente",
+      "name": "San Clemente",
+      "color": "#f29c6e",
+      "x": 1539,
+      "y": 1293,
+      "owner": "Spain",
+      "vp": 0
+    }
+  ],
+  "edges": [
+    {
+      "a": "almaraz",
+      "b": "oropesa",
+      "type": "major"
+    },
+    {
+      "a": "aranda-de-duero",
+      "b": "somosierra",
+      "type": "major"
+    },
+    {
+      "a": "aranjuez",
+      "b": "madridejos",
+      "type": "major"
+    },
+    {
+      "a": "arevalo",
+      "b": "guadarrama",
+      "type": "major"
+    },
+    {
+      "a": "astorga",
+      "b": "benavente",
+      "type": "major"
+    },
+    {
+      "a": "badajoz",
+      "b": "merida",
+      "type": "major"
+    },
+    {
+      "a": "bailen",
+      "b": "la-carolina",
+      "type": "major"
+    },
+    {
+      "a": "barcelona",
+      "b": "cervera",
+      "type": "major"
+    },
+    {
+      "a": "barcelona",
+      "b": "gerona",
+      "type": "major"
+    },
+    {
+      "a": "benavente",
+      "b": "medina-del-campo",
+      "type": "major"
+    },
+    {
+      "a": "braga",
+      "b": "porto",
+      "type": "major"
+    },
+    {
+      "a": "burgos",
+      "b": "aranda-de-duero",
+      "type": "major"
+    },
+    {
+      "a": "burgos",
+      "b": "miranda-de-ebro",
+      "type": "major"
+    },
+    {
+      "a": "calatayud",
+      "b": "medinaceli",
+      "type": "major"
+    },
+    {
+      "a": "castellon",
+      "b": "vinaroz",
+      "type": "major"
+    },
+    {
+      "a": "coimbra",
+      "b": "pombal",
+      "type": "major"
+    },
+    {
+      "a": "cordoba",
+      "b": "bailen",
+      "type": "major"
+    },
+    {
+      "a": "ecija",
+      "b": "carmona",
+      "type": "major"
+    },
+    {
+      "a": "ecija",
+      "b": "cordoba",
+      "type": "major"
+    },
+    {
+      "a": "elvas",
+      "b": "badajoz",
+      "type": "major"
+    },
+    {
+      "a": "estremoz",
+      "b": "elvas",
+      "type": "major"
+    },
+    {
+      "a": "gerona",
+      "b": "figueras",
+      "type": "major"
+    },
+    {
+      "a": "guadalajara",
+      "b": "madrid",
+      "type": "major"
+    },
+    {
+      "a": "guadarrama",
+      "b": "madrid",
+      "type": "major"
+    },
+    {
+      "a": "jerez-de-la-frontera",
+      "b": "cadiz",
+      "type": "major"
+    },
+    {
+      "a": "la-coruna",
+      "b": "lugo",
+      "type": "major"
+    },
+    {
+      "a": "leiria",
+      "b": "rio-maior",
+      "type": "major"
+    },
+    {
+      "a": "lerida",
+      "b": "cervera",
+      "type": "major"
+    },
+    {
+      "a": "lerida",
+      "b": "zaragoza",
+      "type": "major"
+    },
+    {
+      "a": "lisboa",
+      "b": "montemor-o-novo",
+      "type": "major"
+    },
+    {
+      "a": "lugo",
+      "b": "villafranca-del-bierzo",
+      "type": "major"
+    },
+    {
+      "a": "madrid",
+      "b": "aranjuez",
+      "type": "major"
+    },
+    {
+      "a": "madrid",
+      "b": "tarancon",
+      "type": "major"
+    },
+    {
+      "a": "madridejos",
+      "b": "valdepenas",
+      "type": "major"
+    },
+    {
+      "a": "medina-del-campo",
+      "b": "arevalo",
+      "type": "major"
+    },
+    {
+      "a": "medinaceli",
+      "b": "guadalajara",
+      "type": "major"
+    },
+    {
+      "a": "merida",
+      "b": "trujillo",
+      "type": "major"
+    },
+    {
+      "a": "montemor-o-novo",
+      "b": "estremoz",
+      "type": "major"
+    },
+    {
+      "a": "motilla-del-palancar",
+      "b": "requena",
+      "type": "major"
+    },
+    {
+      "a": "motilla-del-palancar",
+      "b": "tarancon",
+      "type": "major"
+    },
+    {
+      "a": "oliveira-de-azemeis",
+      "b": "coimbra",
+      "type": "major"
+    },
+    {
+      "a": "oropesa",
+      "b": "talavera-de-la-reina",
+      "type": "major"
+    },
+    {
+      "a": "pombal",
+      "b": "leiria",
+      "type": "major"
+    },
+    {
+      "a": "porto",
+      "b": "oliveira-de-azemeis",
+      "type": "major"
+    },
+    {
+      "a": "reinosa",
+      "b": "burgos",
+      "type": "major"
+    },
+    {
+      "a": "rio-maior",
+      "b": "vila-franca-de-xira",
+      "type": "major"
+    },
+    {
+      "a": "santander",
+      "b": "reinosa",
+      "type": "major"
+    },
+    {
+      "a": "sevilla",
+      "b": "carmona",
+      "type": "major"
+    },
+    {
+      "a": "sevilla",
+      "b": "jerez-de-la-frontera",
+      "type": "major"
+    },
+    {
+      "a": "somosierra",
+      "b": "madrid",
+      "type": "major"
+    },
+    {
+      "a": "talavera-de-la-reina",
+      "b": "madrid",
+      "type": "major"
+    },
+    {
+      "a": "tarragona",
+      "b": "barcelona",
+      "type": "major"
+    },
+    {
+      "a": "tortosa",
+      "b": "tarragona",
+      "type": "major"
+    },
+    {
+      "a": "trujillo",
+      "b": "almaraz",
+      "type": "major"
+    },
+    {
+      "a": "valdepenas",
+      "b": "la-carolina",
+      "type": "major"
+    },
+    {
+      "a": "valencia",
+      "b": "castellon",
+      "type": "major"
+    },
+    {
+      "a": "valencia",
+      "b": "requena",
+      "type": "major"
+    },
+    {
+      "a": "vila-franca-de-xira",
+      "b": "lisboa",
+      "type": "major"
+    },
+    {
+      "a": "villafranca-del-bierzo",
+      "b": "astorga",
+      "type": "major"
+    },
+    {
+      "a": "vinaroz",
+      "b": "tortosa",
+      "type": "major"
+    },
+    {
+      "a": "vitoria",
+      "b": "miranda-de-ebro",
+      "type": "major"
+    },
+    {
+      "a": "vitoria",
+      "b": "san-sebastian",
+      "type": "major"
+    },
+    {
+      "a": "zaragoza",
+      "b": "calatayud",
+      "type": "major"
+    },
+    {
+      "a": "abrantes",
+      "b": "santarem",
+      "type": "minor"
+    },
+    {
+      "a": "albacete",
+      "b": "alcaraz",
+      "type": "minor"
+    },
+    {
+      "a": "albacete",
+      "b": "hellin",
+      "type": "minor"
+    },
+    {
+      "a": "albacete",
+      "b": "motilla-del-palancar",
+      "type": "minor"
+    },
+    {
+      "a": "albacete",
+      "b": "requena",
+      "type": "minor"
+    },
+    {
+      "a": "albacete",
+      "b": "san-clemente",
+      "type": "minor"
+    },
+    {
+      "a": "albufeira",
+      "b": "faro",
+      "type": "minor"
+    },
+    {
+      "a": "alburquerque",
+      "b": "badajoz",
+      "type": "minor"
+    },
+    {
+      "a": "alcacer-do-sal",
+      "b": "beja",
+      "type": "minor"
+    },
+    {
+      "a": "alcacer-do-sal",
+      "b": "santiago-do-cacem",
+      "type": "minor"
+    },
+    {
+      "a": "alcanices",
+      "b": "astorga",
+      "type": "minor"
+    },
+    {
+      "a": "alcanices",
+      "b": "benavente",
+      "type": "minor"
+    },
+    {
+      "a": "alcanices",
+      "b": "zamora",
+      "type": "minor"
+    },
+    {
+      "a": "alcaraz",
+      "b": "san-clemente",
+      "type": "minor"
+    },
+    {
+      "a": "algeciras",
+      "b": "ronda",
+      "type": "minor"
+    },
+    {
+      "a": "alicante",
+      "b": "almansa",
+      "type": "minor"
+    },
+    {
+      "a": "alicante",
+      "b": "san-felipe",
+      "type": "minor"
+    },
+    {
+      "a": "almansa",
+      "b": "albacete",
+      "type": "minor"
+    },
+    {
+      "a": "almansa",
+      "b": "hellin",
+      "type": "minor"
+    },
+    {
+      "a": "almansa",
+      "b": "requena",
+      "type": "minor"
+    },
+    {
+      "a": "almaraz",
+      "b": "guadalupe",
+      "type": "minor"
+    },
+    {
+      "a": "almeida",
+      "b": "ciudad-rodrigo",
+      "type": "minor"
+    },
+    {
+      "a": "almeida",
+      "b": "vitigudino",
+      "type": "minor"
+    },
+    {
+      "a": "almeria",
+      "b": "baza",
+      "type": "minor"
+    },
+    {
+      "a": "amarante",
+      "b": "lamego",
+      "type": "minor"
+    },
+    {
+      "a": "amarante",
+      "b": "montalegre",
+      "type": "minor"
+    },
+    {
+      "a": "amarante",
+      "b": "oliveira-de-azemeis",
+      "type": "minor"
+    },
+    {
+      "a": "amarante",
+      "b": "vila-real",
+      "type": "minor"
+    },
+    {
+      "a": "antequera",
+      "b": "ecija",
+      "type": "minor"
+    },
+    {
+      "a": "antequera",
+      "b": "loja",
+      "type": "minor"
+    },
+    {
+      "a": "aracena",
+      "b": "huelva",
+      "type": "minor"
+    },
+    {
+      "a": "aracena",
+      "b": "sevilla",
+      "type": "minor"
+    },
+    {
+      "a": "aranda-de-duero",
+      "b": "palencia",
+      "type": "minor"
+    },
+    {
+      "a": "aranda-de-duero",
+      "b": "valladolid",
+      "type": "minor"
+    },
+    {
+      "a": "aranjuez",
+      "b": "tarancon",
+      "type": "minor"
+    },
+    {
+      "a": "aranjuez",
+      "b": "toledo",
+      "type": "minor"
+    },
+    {
+      "a": "arevalo",
+      "b": "avila",
+      "type": "minor"
+    },
+    {
+      "a": "arevalo",
+      "b": "segovia",
+      "type": "minor"
+    },
+    {
+      "a": "aroche",
+      "b": "aracena",
+      "type": "minor"
+    },
+    {
+      "a": "aroche",
+      "b": "huelva",
+      "type": "minor"
+    },
+    {
+      "a": "astorga",
+      "b": "leon",
+      "type": "minor"
+    },
+    {
+      "a": "astorga",
+      "b": "oviedo",
+      "type": "minor"
+    },
+    {
+      "a": "aveiro",
+      "b": "coimbra",
+      "type": "minor"
+    },
+    {
+      "a": "aveiro",
+      "b": "figueira-da-foz",
+      "type": "minor"
+    },
+    {
+      "a": "avila",
+      "b": "guadarrama",
+      "type": "minor"
+    },
+    {
+      "a": "badajoz",
+      "b": "zafra",
+      "type": "minor"
+    },
+    {
+      "a": "bailen",
+      "b": "jaen",
+      "type": "minor"
+    },
+    {
+      "a": "bailen",
+      "b": "ubeda",
+      "type": "minor"
+    },
+    {
+      "a": "barcelona",
+      "b": "manresa",
+      "type": "minor"
+    },
+    {
+      "a": "barcelona",
+      "b": "vich",
+      "type": "minor"
+    },
+    {
+      "a": "baza",
+      "b": "lorca",
+      "type": "minor"
+    },
+    {
+      "a": "beja",
+      "b": "mertola",
+      "type": "minor"
+    },
+    {
+      "a": "beja",
+      "b": "ourique",
+      "type": "minor"
+    },
+    {
+      "a": "beja",
+      "b": "santiago-do-cacem",
+      "type": "minor"
+    },
+    {
+      "a": "bejar",
+      "b": "almaraz",
+      "type": "minor"
+    },
+    {
+      "a": "bejar",
+      "b": "avila",
+      "type": "minor"
+    },
+    {
+      "a": "bejar",
+      "b": "oropesa",
+      "type": "minor"
+    },
+    {
+      "a": "bejar",
+      "b": "plasencia",
+      "type": "minor"
+    },
+    {
+      "a": "benavente",
+      "b": "sahagun",
+      "type": "minor"
+    },
+    {
+      "a": "benavente",
+      "b": "valladolid",
+      "type": "minor"
+    },
+    {
+      "a": "bilbao",
+      "b": "miranda-de-ebro",
+      "type": "minor"
+    },
+    {
+      "a": "bilbao",
+      "b": "santander",
+      "type": "minor"
+    },
+    {
+      "a": "braga",
+      "b": "amarante",
+      "type": "minor"
+    },
+    {
+      "a": "braga",
+      "b": "montalegre",
+      "type": "minor"
+    },
+    {
+      "a": "braganca",
+      "b": "alcanices",
+      "type": "minor"
+    },
+    {
+      "a": "braganca",
+      "b": "miranda-do-douro",
+      "type": "minor"
+    },
+    {
+      "a": "braganca",
+      "b": "puebla-de-sanabria",
+      "type": "minor"
+    },
+    {
+      "a": "braganca",
+      "b": "verin",
+      "type": "minor"
+    },
+    {
+      "a": "burgos",
+      "b": "palencia",
+      "type": "minor"
+    },
+    {
+      "a": "caceres",
+      "b": "alburquerque",
+      "type": "minor"
+    },
+    {
+      "a": "caceres",
+      "b": "merida",
+      "type": "minor"
+    },
+    {
+      "a": "caceres",
+      "b": "trujillo",
+      "type": "minor"
+    },
+    {
+      "a": "caceres",
+      "b": "valencia-de-alcantara",
+      "type": "minor"
+    },
+    {
+      "a": "cadiz",
+      "b": "algeciras",
+      "type": "minor"
+    },
+    {
+      "a": "calatayud",
+      "b": "daroca",
+      "type": "minor"
+    },
+    {
+      "a": "calatayud",
+      "b": "molina-de-aragon",
+      "type": "minor"
+    },
+    {
+      "a": "calatayud",
+      "b": "soria",
+      "type": "minor"
+    },
+    {
+      "a": "calatayud",
+      "b": "tudela",
+      "type": "minor"
+    },
+    {
+      "a": "campo-maior",
+      "b": "alburquerque",
+      "type": "minor"
+    },
+    {
+      "a": "campo-maior",
+      "b": "elvas",
+      "type": "minor"
+    },
+    {
+      "a": "campo-maior",
+      "b": "estremoz",
+      "type": "minor"
+    },
+    {
+      "a": "campo-maior",
+      "b": "valencia-de-alcantara",
+      "type": "minor"
+    },
+    {
+      "a": "castelo-branco",
+      "b": "abrantes",
+      "type": "minor"
+    },
+    {
+      "a": "castelo-branco",
+      "b": "alcantara",
+      "type": "minor"
+    },
+    {
+      "a": "castelo-branco",
+      "b": "pombal",
+      "type": "minor"
+    },
+    {
+      "a": "castelo-branco",
+      "b": "portalegre",
+      "type": "minor"
+    },
+    {
+      "a": "castelo-branco",
+      "b": "valencia-de-alcantara",
+      "type": "minor"
+    },
+    {
+      "a": "castro-marim",
+      "b": "huelva",
+      "type": "minor"
+    },
+    {
+      "a": "castuera",
+      "b": "almaden",
+      "type": "minor"
+    },
+    {
+      "a": "cervera",
+      "b": "urgel",
+      "type": "minor"
+    },
+    {
+      "a": "chaves",
+      "b": "braganca",
+      "type": "minor"
+    },
+    {
+      "a": "chaves",
+      "b": "mirandela",
+      "type": "minor"
+    },
+    {
+      "a": "chaves",
+      "b": "verin",
+      "type": "minor"
+    },
+    {
+      "a": "chaves",
+      "b": "vila-real",
+      "type": "minor"
+    },
+    {
+      "a": "ciudad-real",
+      "b": "la-carolina",
+      "type": "minor"
+    },
+    {
+      "a": "ciudad-real",
+      "b": "valdepenas",
+      "type": "minor"
+    },
+    {
+      "a": "ciudad-rodrigo",
+      "b": "bejar",
+      "type": "minor"
+    },
+    {
+      "a": "ciudad-rodrigo",
+      "b": "coria",
+      "type": "minor"
+    },
+    {
+      "a": "ciudad-rodrigo",
+      "b": "plasencia",
+      "type": "minor"
+    },
+    {
+      "a": "coimbra",
+      "b": "castelo-branco",
+      "type": "minor"
+    },
+    {
+      "a": "coimbra",
+      "b": "covilha",
+      "type": "minor"
+    },
+    {
+      "a": "coimbra",
+      "b": "figueira-da-foz",
+      "type": "minor"
+    },
+    {
+      "a": "cordoba",
+      "b": "jaen",
+      "type": "minor"
+    },
+    {
+      "a": "cordoba",
+      "b": "loja",
+      "type": "minor"
+    },
+    {
+      "a": "coria",
+      "b": "alcantara",
+      "type": "minor"
+    },
+    {
+      "a": "coria",
+      "b": "caceres",
+      "type": "minor"
+    },
+    {
+      "a": "covilha",
+      "b": "castelo-branco",
+      "type": "minor"
+    },
+    {
+      "a": "cuenca",
+      "b": "molina-de-aragon",
+      "type": "minor"
+    },
+    {
+      "a": "cuenca",
+      "b": "motilla-del-palancar",
+      "type": "minor"
+    },
+    {
+      "a": "cuenca",
+      "b": "tarancon",
+      "type": "minor"
+    },
+    {
+      "a": "cuenca",
+      "b": "teruel",
+      "type": "minor"
+    },
+    {
+      "a": "daroca",
+      "b": "molina-de-aragon",
+      "type": "minor"
+    },
+    {
+      "a": "elvas",
+      "b": "alburquerque",
+      "type": "minor"
+    },
+    {
+      "a": "elvas",
+      "b": "olivenca",
+      "type": "minor"
+    },
+    {
+      "a": "estremoz",
+      "b": "evora",
+      "type": "minor"
+    },
+    {
+      "a": "evora",
+      "b": "beja",
+      "type": "minor"
+    },
+    {
+      "a": "evora",
+      "b": "moura",
+      "type": "minor"
+    },
+    {
+      "a": "faro",
+      "b": "castro-marim",
+      "type": "minor"
+    },
+    {
+      "a": "ferrol",
+      "b": "lugo",
+      "type": "minor"
+    },
+    {
+      "a": "ferrol",
+      "b": "mondonedo",
+      "type": "minor"
+    },
+    {
+      "a": "figueira-da-foz",
+      "b": "leiria",
+      "type": "minor"
+    },
+    {
+      "a": "figueira-da-foz",
+      "b": "pombal",
+      "type": "minor"
+    },
+    {
+      "a": "figueras",
+      "b": "puigcerda",
+      "type": "minor"
+    },
+    {
+      "a": "gerona",
+      "b": "vich",
+      "type": "minor"
+    },
+    {
+      "a": "granada",
+      "b": "guadix",
+      "type": "minor"
+    },
+    {
+      "a": "granada",
+      "b": "motril",
+      "type": "minor"
+    },
+    {
+      "a": "guadalajara",
+      "b": "tarancon",
+      "type": "minor"
+    },
+    {
+      "a": "guadalupe",
+      "b": "almaden",
+      "type": "minor"
+    },
+    {
+      "a": "guadalupe",
+      "b": "castuera",
+      "type": "minor"
+    },
+    {
+      "a": "guadix",
+      "b": "almeria",
+      "type": "minor"
+    },
+    {
+      "a": "guadix",
+      "b": "baza",
+      "type": "minor"
+    },
+    {
+      "a": "guarda",
+      "b": "almeida",
+      "type": "minor"
+    },
+    {
+      "a": "guarda",
+      "b": "covilha",
+      "type": "minor"
+    },
+    {
+      "a": "guarda",
+      "b": "sabugal",
+      "type": "minor"
+    },
+    {
+      "a": "hellin",
+      "b": "alcaraz",
+      "type": "minor"
+    },
+    {
+      "a": "huelva",
+      "b": "jerez-de-la-frontera",
+      "type": "minor"
+    },
+    {
+      "a": "huelva",
+      "b": "sevilla",
+      "type": "minor"
+    },
+    {
+      "a": "huesca",
+      "b": "jaca",
+      "type": "minor"
+    },
+    {
+      "a": "huesca",
+      "b": "tudela",
+      "type": "minor"
+    },
+    {
+      "a": "huesca",
+      "b": "zaragoza",
+      "type": "minor"
+    },
+    {
+      "a": "jaca",
+      "b": "pamplona",
+      "type": "minor"
+    },
+    {
+      "a": "jaen",
+      "b": "granada",
+      "type": "minor"
+    },
+    {
+      "a": "jaen",
+      "b": "guadix",
+      "type": "minor"
+    },
+    {
+      "a": "jaen",
+      "b": "loja",
+      "type": "minor"
+    },
+    {
+      "a": "jaen",
+      "b": "ubeda",
+      "type": "minor"
+    },
+    {
+      "a": "jerez-de-la-frontera",
+      "b": "algeciras",
+      "type": "minor"
+    },
+    {
+      "a": "jerez-de-la-frontera",
+      "b": "ronda",
+      "type": "minor"
+    },
+    {
+      "a": "jerez-de-los-caballeros",
+      "b": "aracena",
+      "type": "minor"
+    },
+    {
+      "a": "jerez-de-los-caballeros",
+      "b": "aroche",
+      "type": "minor"
+    },
+    {
+      "a": "jerez-de-los-caballeros",
+      "b": "zafra",
+      "type": "minor"
+    },
+    {
+      "a": "la-coruna",
+      "b": "santiago",
+      "type": "minor"
+    },
+    {
+      "a": "lagos",
+      "b": "albufeira",
+      "type": "minor"
+    },
+    {
+      "a": "lamego",
+      "b": "almeida",
+      "type": "minor"
+    },
+    {
+      "a": "lamego",
+      "b": "guarda",
+      "type": "minor"
+    },
+    {
+      "a": "lamego",
+      "b": "viseu",
+      "type": "minor"
+    },
+    {
+      "a": "ledesma",
+      "b": "salamanca",
+      "type": "minor"
+    },
+    {
+      "a": "ledesma",
+      "b": "vitigudino",
+      "type": "minor"
+    },
+    {
+      "a": "leiria",
+      "b": "abrantes",
+      "type": "minor"
+    },
+    {
+      "a": "leon",
+      "b": "benavente",
+      "type": "minor"
+    },
+    {
+      "a": "leon",
+      "b": "oviedo",
+      "type": "minor"
+    },
+    {
+      "a": "leon",
+      "b": "sahagun",
+      "type": "minor"
+    },
+    {
+      "a": "lerida",
+      "b": "monzon",
+      "type": "minor"
+    },
+    {
+      "a": "lisboa",
+      "b": "setubal",
+      "type": "minor"
+    },
+    {
+      "a": "llerena",
+      "b": "aracena",
+      "type": "minor"
+    },
+    {
+      "a": "llerena",
+      "b": "carmona",
+      "type": "minor"
+    },
+    {
+      "a": "llerena",
+      "b": "castuera",
+      "type": "minor"
+    },
+    {
+      "a": "llerena",
+      "b": "medellin",
+      "type": "minor"
+    },
+    {
+      "a": "llerena",
+      "b": "sevilla",
+      "type": "minor"
+    },
+    {
+      "a": "logrono",
+      "b": "miranda-de-ebro",
+      "type": "minor"
+    },
+    {
+      "a": "logrono",
+      "b": "soria",
+      "type": "minor"
+    },
+    {
+      "a": "logrono",
+      "b": "vitoria",
+      "type": "minor"
+    },
+    {
+      "a": "loja",
+      "b": "motril",
+      "type": "minor"
+    },
+    {
+      "a": "lorca",
+      "b": "cartagena",
+      "type": "minor"
+    },
+    {
+      "a": "lorca",
+      "b": "hellin",
+      "type": "minor"
+    },
+    {
+      "a": "lorca",
+      "b": "murcia",
+      "type": "minor"
+    },
+    {
+      "a": "lugo",
+      "b": "mondonedo",
+      "type": "minor"
+    },
+    {
+      "a": "lugo",
+      "b": "monforte-de-lemos",
+      "type": "minor"
+    },
+    {
+      "a": "madridejos",
+      "b": "ciudad-real",
+      "type": "minor"
+    },
+    {
+      "a": "madridejos",
+      "b": "san-clemente",
+      "type": "minor"
+    },
+    {
+      "a": "malaga",
+      "b": "antequera",
+      "type": "minor"
+    },
+    {
+      "a": "malaga",
+      "b": "loja",
+      "type": "minor"
+    },
+    {
+      "a": "malaga",
+      "b": "motril",
+      "type": "minor"
+    },
+    {
+      "a": "manresa",
+      "b": "cervera",
+      "type": "minor"
+    },
+    {
+      "a": "manresa",
+      "b": "urgel",
+      "type": "minor"
+    },
+    {
+      "a": "medellin",
+      "b": "castuera",
+      "type": "minor"
+    },
+    {
+      "a": "medellin",
+      "b": "guadalupe",
+      "type": "minor"
+    },
+    {
+      "a": "medinaceli",
+      "b": "molina-de-aragon",
+      "type": "minor"
+    },
+    {
+      "a": "merida",
+      "b": "medellin",
+      "type": "minor"
+    },
+    {
+      "a": "merida",
+      "b": "zafra",
+      "type": "minor"
+    },
+    {
+      "a": "mertola",
+      "b": "albufeira",
+      "type": "minor"
+    },
+    {
+      "a": "mertola",
+      "b": "aroche",
+      "type": "minor"
+    },
+    {
+      "a": "mertola",
+      "b": "castro-marim",
+      "type": "minor"
+    },
+    {
+      "a": "mertola",
+      "b": "faro",
+      "type": "minor"
+    },
+    {
+      "a": "miranda-do-douro",
+      "b": "alcanices",
+      "type": "minor"
+    },
+    {
+      "a": "miranda-do-douro",
+      "b": "ledesma",
+      "type": "minor"
+    },
+    {
+      "a": "miranda-do-douro",
+      "b": "torre-de-moncorvo",
+      "type": "minor"
+    },
+    {
+      "a": "miranda-do-douro",
+      "b": "vitigudino",
+      "type": "minor"
+    },
+    {
+      "a": "mirandela",
+      "b": "braganca",
+      "type": "minor"
+    },
+    {
+      "a": "mirandela",
+      "b": "miranda-do-douro",
+      "type": "minor"
+    },
+    {
+      "a": "mirandela",
+      "b": "torre-de-moncorvo",
+      "type": "minor"
+    },
+    {
+      "a": "mondonedo",
+      "b": "luarca",
+      "type": "minor"
+    },
+    {
+      "a": "monforte-de-lemos",
+      "b": "verin",
+      "type": "minor"
+    },
+    {
+      "a": "monforte-de-lemos",
+      "b": "villafranca-del-bierzo",
+      "type": "minor"
+    },
+    {
+      "a": "montalegre",
+      "b": "chaves",
+      "type": "minor"
+    },
+    {
+      "a": "montalegre",
+      "b": "orense",
+      "type": "minor"
+    },
+    {
+      "a": "montalegre",
+      "b": "verin",
+      "type": "minor"
+    },
+    {
+      "a": "montalegre",
+      "b": "vila-real",
+      "type": "minor"
+    },
+    {
+      "a": "montemor-o-novo",
+      "b": "alcacer-do-sal",
+      "type": "minor"
+    },
+    {
+      "a": "montemor-o-novo",
+      "b": "evora",
+      "type": "minor"
+    },
+    {
+      "a": "montemor-o-novo",
+      "b": "ponte-de-sor",
+      "type": "minor"
+    },
+    {
+      "a": "monzon",
+      "b": "huesca",
+      "type": "minor"
+    },
+    {
+      "a": "monzon",
+      "b": "zaragoza",
+      "type": "minor"
+    },
+    {
+      "a": "motilla-del-palancar",
+      "b": "san-clemente",
+      "type": "minor"
+    },
+    {
+      "a": "motril",
+      "b": "almeria",
+      "type": "minor"
+    },
+    {
+      "a": "moura",
+      "b": "aroche",
+      "type": "minor"
+    },
+    {
+      "a": "moura",
+      "b": "beja",
+      "type": "minor"
+    },
+    {
+      "a": "moura",
+      "b": "jerez-de-los-caballeros",
+      "type": "minor"
+    },
+    {
+      "a": "moura",
+      "b": "mertola",
+      "type": "minor"
+    },
+    {
+      "a": "murcia",
+      "b": "alicante",
+      "type": "minor"
+    },
+    {
+      "a": "murcia",
+      "b": "almansa",
+      "type": "minor"
+    },
+    {
+      "a": "murcia",
+      "b": "cartagena",
+      "type": "minor"
+    },
+    {
+      "a": "murcia",
+      "b": "hellin",
+      "type": "minor"
+    },
+    {
+      "a": "odemira",
+      "b": "lagos",
+      "type": "minor"
+    },
+    {
+      "a": "oliveira-de-azemeis",
+      "b": "aveiro",
+      "type": "minor"
+    },
+    {
+      "a": "oliveira-de-azemeis",
+      "b": "viseu",
+      "type": "minor"
+    },
+    {
+      "a": "olivenca",
+      "b": "badajoz",
+      "type": "minor"
+    },
+    {
+      "a": "olivenca",
+      "b": "evora",
+      "type": "minor"
+    },
+    {
+      "a": "olivenca",
+      "b": "jerez-de-los-caballeros",
+      "type": "minor"
+    },
+    {
+      "a": "orense",
+      "b": "monforte-de-lemos",
+      "type": "minor"
+    },
+    {
+      "a": "orense",
+      "b": "verin",
+      "type": "minor"
+    },
+    {
+      "a": "oropesa",
+      "b": "guadalupe",
+      "type": "minor"
+    },
+    {
+      "a": "ourique",
+      "b": "albufeira",
+      "type": "minor"
+    },
+    {
+      "a": "ourique",
+      "b": "lagos",
+      "type": "minor"
+    },
+    {
+      "a": "ourique",
+      "b": "mertola",
+      "type": "minor"
+    },
+    {
+      "a": "ourique",
+      "b": "odemira",
+      "type": "minor"
+    },
+    {
+      "a": "oviedo",
+      "b": "llanes",
+      "type": "minor"
+    },
+    {
+      "a": "oviedo",
+      "b": "luarca",
+      "type": "minor"
+    },
+    {
+      "a": "palencia",
+      "b": "sahagun",
+      "type": "minor"
+    },
+    {
+      "a": "pamplona",
+      "b": "logrono",
+      "type": "minor"
+    },
+    {
+      "a": "pamplona",
+      "b": "san-sebastian",
+      "type": "minor"
+    },
+    {
+      "a": "pamplona",
+      "b": "vitoria",
+      "type": "minor"
+    },
+    {
+      "a": "plasencia",
+      "b": "almaraz",
+      "type": "minor"
+    },
+    {
+      "a": "plasencia",
+      "b": "caceres",
+      "type": "minor"
+    },
+    {
+      "a": "plasencia",
+      "b": "coria",
+      "type": "minor"
+    },
+    {
+      "a": "pombal",
+      "b": "abrantes",
+      "type": "minor"
+    },
+    {
+      "a": "ponte-de-sor",
+      "b": "campo-maior",
+      "type": "minor"
+    },
+    {
+      "a": "ponte-de-sor",
+      "b": "estremoz",
+      "type": "minor"
+    },
+    {
+      "a": "ponte-de-sor",
+      "b": "portalegre",
+      "type": "minor"
+    },
+    {
+      "a": "pontevedra",
+      "b": "orense",
+      "type": "minor"
+    },
+    {
+      "a": "pontevedra",
+      "b": "vigo",
+      "type": "minor"
+    },
+    {
+      "a": "portalegre",
+      "b": "campo-maior",
+      "type": "minor"
+    },
+    {
+      "a": "portalegre",
+      "b": "valencia-de-alcantara",
+      "type": "minor"
+    },
+    {
+      "a": "porto",
+      "b": "amarante",
+      "type": "minor"
+    },
+    {
+      "a": "puebla-de-sanabria",
+      "b": "alcanices",
+      "type": "minor"
+    },
+    {
+      "a": "puebla-de-sanabria",
+      "b": "astorga",
+      "type": "minor"
+    },
+    {
+      "a": "reinosa",
+      "b": "llanes",
+      "type": "minor"
+    },
+    {
+      "a": "requena",
+      "b": "segorbe",
+      "type": "minor"
+    },
+    {
+      "a": "requena",
+      "b": "teruel",
+      "type": "minor"
+    },
+    {
+      "a": "rio-maior",
+      "b": "santarem",
+      "type": "minor"
+    },
+    {
+      "a": "rio-maior",
+      "b": "torres-vedras",
+      "type": "minor"
+    },
+    {
+      "a": "ronda",
+      "b": "antequera",
+      "type": "minor"
+    },
+    {
+      "a": "ronda",
+      "b": "carmona",
+      "type": "minor"
+    },
+    {
+      "a": "ronda",
+      "b": "ecija",
+      "type": "minor"
+    },
+    {
+      "a": "ronda",
+      "b": "malaga",
+      "type": "minor"
+    },
+    {
+      "a": "sabugal",
+      "b": "alcantara",
+      "type": "minor"
+    },
+    {
+      "a": "sabugal",
+      "b": "ciudad-rodrigo",
+      "type": "minor"
+    },
+    {
+      "a": "sabugal",
+      "b": "coria",
+      "type": "minor"
+    },
+    {
+      "a": "sabugal",
+      "b": "covilha",
+      "type": "minor"
+    },
+    {
+      "a": "salamanca",
+      "b": "arevalo",
+      "type": "minor"
+    },
+    {
+      "a": "salamanca",
+      "b": "avila",
+      "type": "minor"
+    },
+    {
+      "a": "salamanca",
+      "b": "bejar",
+      "type": "minor"
+    },
+    {
+      "a": "salamanca",
+      "b": "ciudad-rodrigo",
+      "type": "minor"
+    },
+    {
+      "a": "salamanca",
+      "b": "medina-del-campo",
+      "type": "minor"
+    },
+    {
+      "a": "san-felipe",
+      "b": "almansa",
+      "type": "minor"
+    },
+    {
+      "a": "san-felipe",
+      "b": "requena",
+      "type": "minor"
+    },
+    {
+      "a": "san-felipe",
+      "b": "valencia",
+      "type": "minor"
+    },
+    {
+      "a": "santarem",
+      "b": "montemor-o-novo",
+      "type": "minor"
+    },
+    {
+      "a": "santarem",
+      "b": "ponte-de-sor",
+      "type": "minor"
+    },
+    {
+      "a": "santarem",
+      "b": "vila-franca-de-xira",
+      "type": "minor"
+    },
+    {
+      "a": "santiago",
+      "b": "lugo",
+      "type": "minor"
+    },
+    {
+      "a": "santiago",
+      "b": "pontevedra",
+      "type": "minor"
+    },
+    {
+      "a": "santiago-do-cacem",
+      "b": "odemira",
+      "type": "minor"
+    },
+    {
+      "a": "santiago-do-cacem",
+      "b": "ourique",
+      "type": "minor"
+    },
+    {
+      "a": "segorbe",
+      "b": "castellon",
+      "type": "minor"
+    },
+    {
+      "a": "segovia",
+      "b": "guadarrama",
+      "type": "minor"
+    },
+    {
+      "a": "setubal",
+      "b": "alcacer-do-sal",
+      "type": "minor"
+    },
+    {
+      "a": "somosierra",
+      "b": "guadalajara",
+      "type": "minor"
+    },
+    {
+      "a": "somosierra",
+      "b": "medinaceli",
+      "type": "minor"
+    },
+    {
+      "a": "somosierra",
+      "b": "segovia",
+      "type": "minor"
+    },
+    {
+      "a": "soria",
+      "b": "medinaceli",
+      "type": "minor"
+    },
+    {
+      "a": "talavera-de-la-reina",
+      "b": "avila",
+      "type": "minor"
+    },
+    {
+      "a": "talavera-de-la-reina",
+      "b": "toledo",
+      "type": "minor"
+    },
+    {
+      "a": "tarancon",
+      "b": "madridejos",
+      "type": "minor"
+    },
+    {
+      "a": "tarancon",
+      "b": "san-clemente",
+      "type": "minor"
+    },
+    {
+      "a": "tarragona",
+      "b": "cervera",
+      "type": "minor"
+    },
+    {
+      "a": "tarragona",
+      "b": "lerida",
+      "type": "minor"
+    },
+    {
+      "a": "teruel",
+      "b": "daroca",
+      "type": "minor"
+    },
+    {
+      "a": "teruel",
+      "b": "molina-de-aragon",
+      "type": "minor"
+    },
+    {
+      "a": "teruel",
+      "b": "segorbe",
+      "type": "minor"
+    },
+    {
+      "a": "toledo",
+      "b": "madridejos",
+      "type": "minor"
+    },
+    {
+      "a": "torre-de-moncorvo",
+      "b": "almeida",
+      "type": "minor"
+    },
+    {
+      "a": "torre-de-moncorvo",
+      "b": "vitigudino",
+      "type": "minor"
+    },
+    {
+      "a": "torres-vedras",
+      "b": "lisboa",
+      "type": "minor"
+    },
+    {
+      "a": "torres-vedras",
+      "b": "vila-franca-de-xira",
+      "type": "minor"
+    },
+    {
+      "a": "tortosa",
+      "b": "alcaniz",
+      "type": "minor"
+    },
+    {
+      "a": "tortosa",
+      "b": "lerida",
+      "type": "minor"
+    },
+    {
+      "a": "trujillo",
+      "b": "guadalupe",
+      "type": "minor"
+    },
+    {
+      "a": "trujillo",
+      "b": "medellin",
+      "type": "minor"
+    },
+    {
+      "a": "tudela",
+      "b": "logrono",
+      "type": "minor"
+    },
+    {
+      "a": "tudela",
+      "b": "pamplona",
+      "type": "minor"
+    },
+    {
+      "a": "tudela",
+      "b": "soria",
+      "type": "minor"
+    },
+    {
+      "a": "ubeda",
+      "b": "baza",
+      "type": "minor"
+    },
+    {
+      "a": "ubeda",
+      "b": "guadix",
+      "type": "minor"
+    },
+    {
+      "a": "ubeda",
+      "b": "la-carolina",
+      "type": "minor"
+    },
+    {
+      "a": "urgel",
+      "b": "puigcerda",
+      "type": "minor"
+    },
+    {
+      "a": "valdepenas",
+      "b": "alcaraz",
+      "type": "minor"
+    },
+    {
+      "a": "valenca",
+      "b": "braga",
+      "type": "minor"
+    },
+    {
+      "a": "valenca",
+      "b": "montalegre",
+      "type": "minor"
+    },
+    {
+      "a": "valenca",
+      "b": "orense",
+      "type": "minor"
+    },
+    {
+      "a": "valenca",
+      "b": "viana-do-castelo",
+      "type": "minor"
+    },
+    {
+      "a": "valenca",
+      "b": "vigo",
+      "type": "minor"
+    },
+    {
+      "a": "valencia",
+      "b": "segorbe",
+      "type": "minor"
+    },
+    {
+      "a": "valencia-de-alcantara",
+      "b": "alburquerque",
+      "type": "minor"
+    },
+    {
+      "a": "valladolid",
+      "b": "medina-del-campo",
+      "type": "minor"
+    },
+    {
+      "a": "verin",
+      "b": "puebla-de-sanabria",
+      "type": "minor"
+    },
+    {
+      "a": "verin",
+      "b": "villafranca-del-bierzo",
+      "type": "minor"
+    },
+    {
+      "a": "viana-do-castelo",
+      "b": "braga",
+      "type": "minor"
+    },
+    {
+      "a": "vich",
+      "b": "manresa",
+      "type": "minor"
+    },
+    {
+      "a": "vich",
+      "b": "puigcerda",
+      "type": "minor"
+    },
+    {
+      "a": "vigo",
+      "b": "orense",
+      "type": "minor"
+    },
+    {
+      "a": "vila-franca-de-xira",
+      "b": "montemor-o-novo",
+      "type": "minor"
+    },
+    {
+      "a": "vila-real",
+      "b": "lamego",
+      "type": "minor"
+    },
+    {
+      "a": "vila-real",
+      "b": "mirandela",
+      "type": "minor"
+    },
+    {
+      "a": "vila-real",
+      "b": "torre-de-moncorvo",
+      "type": "minor"
+    },
+    {
+      "a": "villafranca-del-bierzo",
+      "b": "luarca",
+      "type": "minor"
+    },
+    {
+      "a": "villafranca-del-bierzo",
+      "b": "puebla-de-sanabria",
+      "type": "minor"
+    },
+    {
+      "a": "viseu",
+      "b": "coimbra",
+      "type": "minor"
+    },
+    {
+      "a": "viseu",
+      "b": "covilha",
+      "type": "minor"
+    },
+    {
+      "a": "viseu",
+      "b": "guarda",
+      "type": "minor"
+    },
+    {
+      "a": "vitigudino",
+      "b": "ciudad-rodrigo",
+      "type": "minor"
+    },
+    {
+      "a": "vitoria",
+      "b": "bilbao",
+      "type": "minor"
+    },
+    {
+      "a": "zafra",
+      "b": "aracena",
+      "type": "minor"
+    },
+    {
+      "a": "zafra",
+      "b": "llerena",
+      "type": "minor"
+    },
+    {
+      "a": "zamora",
+      "b": "ledesma",
+      "type": "minor"
+    },
+    {
+      "a": "zamora",
+      "b": "medina-del-campo",
+      "type": "minor"
+    },
+    {
+      "a": "zamora",
+      "b": "salamanca",
+      "type": "minor"
+    },
+    {
+      "a": "zaragoza",
+      "b": "alcaniz",
+      "type": "minor"
+    },
+    {
+      "a": "zaragoza",
+      "b": "daroca",
+      "type": "minor"
+    },
+    {
+      "a": "zaragoza",
+      "b": "tudela",
+      "type": "minor"
+    }
+  ],
+  "generals": [
+    {
+      "id": "godoy",
+      "name": "Manuel Godoy",
+      "nation": "Spain"
+    },
+    {
+      "id": "solano",
+      "name": "Marqués del Socorro",
+      "nation": "Spain"
+    },
+    {
+      "id": "cuesta",
+      "name": "Gregorio de la Cuesta",
+      "nation": "Spain"
+    },
+    {
+      "id": "castanos",
+      "name": "Francisco Javier Castaños",
+      "nation": "Spain"
+    },
+    {
+      "id": "la-romana",
+      "name": "Marqués de La Romana",
+      "nation": "Spain"
+    },
+    {
+      "id": "lafoes",
+      "name": "Duque de Lafões",
+      "nation": "Portugal"
+    },
+    {
+      "id": "forbes",
+      "name": "John Forbes-Skellater",
+      "nation": "Portugal"
+    },
+    {
+      "id": "gomes-freire",
+      "name": "Gomes Freire de Andrade",
+      "nation": "Portugal"
+    },
+    {
+      "id": "alorna",
+      "name": "Marquês de Alorna",
+      "nation": "Portugal"
+    },
+    {
+      "id": "bernardim",
+      "name": "Bernardim Freire de Andrade",
+      "nation": "Portugal"
+    }
+  ],
+  "armies": [
+    {
+      "id": "spain-extremadura",
+      "nation": "Spain",
+      "node": "badajoz",
+      "generals": [
+        "godoy",
+        "solano"
+      ],
+      "units": {
+        "cavalry": 3,
+        "infantry": 6,
+        "artillery": 3,
+        "supply": 2
+      }
+    },
+    {
+      "id": "spain-castilla",
+      "nation": "Spain",
+      "node": "ciudad-rodrigo",
+      "generals": [
+        "cuesta"
+      ],
+      "units": {
+        "cavalry": 2,
+        "infantry": 4,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "spain-galicia",
+      "nation": "Spain",
+      "node": "orense",
+      "generals": [
+        "la-romana"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "spain-andalucia",
+      "nation": "Spain",
+      "node": "sevilla",
+      "generals": [
+        "castanos"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 2,
+        "artillery": 0,
+        "supply": 1
+      }
+    },
+    {
+      "id": "spain-reserve",
+      "nation": "Spain",
+      "node": "madrid",
+      "generals": [],
+      "units": {
+        "cavalry": 1,
+        "infantry": 2,
+        "artillery": 1,
+        "supply": 0
+      }
+    },
+    {
+      "id": "portugal-alentejo",
+      "nation": "Portugal",
+      "node": "elvas",
+      "generals": [
+        "forbes"
+      ],
+      "units": {
+        "cavalry": 2,
+        "infantry": 4,
+        "artillery": 2,
+        "supply": 1
+      }
+    },
+    {
+      "id": "portugal-lisboa",
+      "nation": "Portugal",
+      "node": "lisboa",
+      "generals": [
+        "lafoes"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 2,
+        "supply": 1
+      }
+    },
+    {
+      "id": "portugal-beira",
+      "nation": "Portugal",
+      "node": "almeida",
+      "generals": [
+        "bernardim"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "portugal-norte",
+      "nation": "Portugal",
+      "node": "chaves",
+      "generals": [
+        "gomes-freire"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 3,
+        "artillery": 1,
+        "supply": 1
+      }
+    },
+    {
+      "id": "portugal-sul",
+      "nation": "Portugal",
+      "node": "beja",
+      "generals": [
+        "alorna"
+      ],
+      "units": {
+        "cavalry": 1,
+        "infantry": 1,
+        "artillery": 0,
+        "supply": 0
+      }
+    }
+  ],
+  "rules": {
+    "endGameFromRound": 8,
+    "mode": "sides"
+  },
+  "decks": {
+    "general": [
+      {
+        "card": "roll+1",
+        "count": 10
+      },
+      {
+        "card": "roll+2",
+        "count": 10
+      },
+      {
+        "card": "roll-1",
+        "count": 10
+      },
+      {
+        "card": "retreat",
+        "count": 10
+      },
+      {
+        "card": "blockRetreat",
+        "count": 5
+      },
+      {
+        "card": "moves+1",
+        "count": 15
+      }
+    ],
+    "event": [
+      {
+        "card": "recruit1",
+        "count": 14
+      },
+      {
+        "card": "recruit2",
+        "count": 7
+      },
+      {
+        "card": "recruitGeneral",
+        "count": 4
+      },
+      {
+        "card": "endGame",
+        "count": 1
+      },
+      {
+        "card": "exhaustion1",
+        "count": 10
+      },
+      {
+        "card": "exhaustion2",
+        "count": 5
+      },
+      {
+        "card": "exhaustion5",
+        "count": 1
+      },
+      {
+        "card": "spies",
+        "count": 5
+      },
+      {
+        "card": "enemySpies",
+        "count": 5
+      },
+      {
+        "card": "sabotage",
+        "count": 5
+      },
+      {
+        "card": "sabotaged",
+        "count": 5
+      },
+      {
+        "card": "nothing",
+        "count": 20
+      }
+    ]
+  }
+}

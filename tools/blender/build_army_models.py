@@ -1282,4 +1282,5 @@ def main():
             preview(name, m.ao, m.mesh, PREVIEW_FRAMES)
 
 
-main()
+if __name__ == "__main__":  # also imported as a library by the other theme builds
+    main()
