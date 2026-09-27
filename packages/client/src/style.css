@@ -416,6 +416,8 @@ button.tb-own:hover:not(:disabled) { border-color: currentColor; }
 .turn-controls { display: flex; align-items: flex-end; gap: 10px; }
 .next-step { padding: 10px 18px; font-weight: 700; background: var(--k-controls-nextStep-fill, var(--secondary)); color: var(--k-controls-nextStep-text, var(--text)); border: 2px solid var(--k-controls-nextStep-border, var(--text)); box-shadow: var(--shadow-overlay); }
 .end-turn { display: flex; flex-direction: column; align-items: center; min-width: 200px; padding: 10px 22px; background: var(--k-controls-endTurn-fill, var(--primary)); color: var(--k-controls-endTurn-text, var(--on-primary)); border: 2px solid var(--k-controls-endTurn-border, var(--primary)); box-shadow: var(--shadow-overlay); }
+.muster-btn { display: inline-flex; align-items: center; gap: 4px; padding: 10px 16px; font-weight: 700; background: var(--k-controls-nextStep-fill, var(--secondary)); color: var(--k-controls-nextStep-text, var(--text)); border: 2px solid var(--k-controls-nextStep-border, var(--text)); box-shadow: var(--shadow-overlay); }
+.muster-btn.active { outline: 3px solid var(--seal); outline-offset: 1px; }
 .end-turn span { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.1; }
 .end-turn small { font-size: 11px; opacity: 0.85; }
 

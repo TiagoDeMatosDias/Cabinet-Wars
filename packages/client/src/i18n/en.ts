@@ -337,6 +337,8 @@ export const EN = {
   'controls.remainingOne': 'runs 1 remaining order',
   'controls.remainingMany': 'runs {count} remaining orders',
   'controls.noneLeft': 'no orders left',
+  'controls.muster': 'Muster',
+  'controls.musterTitle': 'Raise one new unit in one of your towns (once per turn, below your unit cap)',
 
   // ---- log drawer ----
   'logui.tab': 'Log · {count}',
@@ -561,6 +563,10 @@ export const EN = {
   'muster.used': 'You have already mustered a unit this turn.',
   'muster.atCap': 'Your nation is at its unit cap. Recruit events can still add units.',
   'muster.notNow': 'Once per turn, during your orders, you can raise one unit in a town of yours worth more than 5 VP (or, if you have none to use, any town of yours with victory points).',
+  'muster.noTown': 'None of your towns with victory points is free: it must be under your control, with no other army in it.',
+  'muster.bannerTitle': 'Muster: raise one new unit in one of your towns',
+  'muster.clickTown': 'Click a highlighted town (or choose one below). The unit joins your army there, or forms a new army.',
+  'muster.place': 'Muster here',
   'muster.townBlocked': 'Not here now: the town must be under your control, with no other army in it.',
   'node.armyOption': '{nation} army {army}',
   // ---- online games ----
@@ -695,7 +701,7 @@ export const EN = {
   'howto.events.title': 'Events',
   'howto.events.body': 'Each turn begins with an Event: recruits, war exhaustion (less willingness), spies (see the enemy armies for a turn), sabotage (lose or destroy supply units), or nothing. The End Game card ends the war — before the map\'s End Game round it goes to the bottom of the deck instead.',
   'howto.raising.title': 'New units',
-  'howto.raising.body': 'Once per turn, a nation below its unit cap (half its starting victory points) may muster a unit in one of its own free towns worth more than 5 victory points. Open the town\'s card to do it. Recruit events add units too, even past the cap.',
+  'howto.raising.body': 'Once per turn, a nation below its unit cap (half its starting victory points) may muster a unit in one of its own free towns worth more than 5 victory points. Use the Muster button next to End Turn, or open the town\'s card. Recruit events add units too, even past the cap.',
   'howto.fog.title': 'Fog of war',
   'howto.fog.body': 'You see armies only in and next to the towns your side holds or stands in. Hidden armies can block your roads, cut your supply, or surprise you in battle. Spies show you everything for a turn.',
   'howto.control.title': 'Taking towns',

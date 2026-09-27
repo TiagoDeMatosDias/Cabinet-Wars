@@ -3813,7 +3813,7 @@
     {
       "id": "spain-extremadura",
       "nation": "Spain",
-      "node": "badajoz",
+      "node": "merida",
       "generals": [
         "godoy",
         "solano"
@@ -3828,7 +3828,7 @@
     {
       "id": "spain-castilla",
       "nation": "Spain",
-      "node": "ciudad-rodrigo",
+      "node": "salamanca",
       "generals": [
         "cuesta"
       ],

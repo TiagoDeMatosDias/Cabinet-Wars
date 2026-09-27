@@ -282,6 +282,14 @@ When a player draws a **Recruit** event (1 unit, 2 units, or a general), a banne
 - The recruit joins the player's army in that town, or forms a new army there. Recruit 2 Units asks twice, so the two units can go to different towns.
 - The army card shows generals as their own row with movement dots (they ride at cavalry speed). Armies without a general show a warning while they stand in enemy territory, where they cannot move.
 
+### 5.7 Mustering
+
+Once per turn, during their orders, a player below their unit cap can raise one unit. The **Muster** button next to Next Step opens a banner at the top of the screen, and every town they can muster in is highlighted.
+
+- The banner shows the unit count against the cap. The player picks a type (cavalry, infantry, artillery, supply), then clicks a highlighted town, or chooses one from the list.
+- The unit joins the player's army in that town, or forms a new army there. The banner closes; Cancel or Escape closes it without mustering.
+- The node card offers the same muster for the town it shows.
+
 ---
 
 ## 6. Orders and steps
@@ -357,6 +365,7 @@ Both buttons sit in the **bottom-right corner**: End Turn is large, and Next Ste
 
 | Button | Enabled when | Label detail | Action |
 |---|---|---|---|
+| **Muster** | It's your turn, during your orders, below your unit cap, with a free town to muster in, and not yet used this turn | Its tooltip says why it's disabled | Opens the muster banner ([5.7](#57-mustering)) |
 | **Next Step ▶** | It's your turn, a planned order exists, and nothing is running (no battle, no host reply pending) | — | Executes the next order ([6.4](#64-execution)) |
 | **End Turn** | It's your turn and nothing is running | "runs 4 remaining orders" when orders remain | Executes all remaining planned orders in order, then ends the turn |
 

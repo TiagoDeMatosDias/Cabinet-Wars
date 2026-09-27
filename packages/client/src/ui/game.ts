@@ -1,5 +1,5 @@
 import {
-  dependentsOf, orderToIntents, reachable, retreatPlan, sideOf, suppliedAt, unsuppliedArmies, visibleNodes,
+  dependentsOf, musterBlocked, musterNodes, orderToIntents, reachable, retreatPlan, sideOf, suppliedAt, unsuppliedArmies, visibleNodes,
   type Army, type BattleReport, type GameState, type GameView, type HistoryEntry, type Intent, type OrderIntent, type UnitType,
 } from '@cabinet-wars/engine';
 import { MapView, type HighlightKind, type MapScene } from '../render/MapView';
@@ -26,7 +26,7 @@ import { clear, download, h, toast } from './dom';
 import { buildEmblems } from './emblem';
 import { nationColor, nationName } from './labels';
 import {
-  gameOverDialog, handoffDialog, handPanel, logDrawer, ordersPanel, promptDialog, recruitBanner, topBar, turnControls, warPanel, type LogFilter,
+  gameOverDialog, handoffDialog, handPanel, logDrawer, ordersPanel, promptDialog, musterBanner, recruitBanner, topBar, turnControls, warPanel, type LogFilter,
 } from './panels';
 
 export interface SaveRecord {
@@ -122,6 +122,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   const seenReports = new Set(session.view()?.history.flatMap((e) => (e.report ? [e.report.id] : [])) ?? []);
   let editorOpen = false;
   let recruitType: UnitType = 'infantry';
+  /** The Muster banner is open: clicking a highlighted town raises the turn's unit there. */
+  let mustering = false;
   let shownSeat: string | null = null;
   /** The battle the map was last panned to. */
   let shownBattle: string | null = null;
@@ -147,6 +149,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
 
   const myTurn = (v: GameView) => me() !== null && v.current === me() && v.phase !== 'gameOver';
   const canPlan = (v: GameView) => myTurn(v) && !running && !progress && v.phase === 'movement' && v.pending.some((p) => p.nation === me() && p.kind === 'movement');
+  /** Why the player can't muster now, or null when the Muster button works. */
+  const musterState = (v: GameView) => (canPlan(v) ? musterBlocked(v, me()!) : 'turn');
   const projection = (v: GameView): Projection | null => (plan && myTurn(v) ? plan.project(v, v.current) : null);
 
   function addOrder(intent: OrderIntent) {
@@ -302,6 +306,10 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     const state = displayState(v, proj);
     if (p?.kind === 'recruit' && node && p.options.includes(node)) {
       void send(p.what === 'general' ? { type: 'recruit', node } : { type: 'recruit', node, unit: recruitType });
+      return;
+    }
+    if (mustering && node && !musterState(v) && musterNodes(v, me()!).includes(node)) {
+      void send({ type: 'muster', node, unit: recruitType });
       return;
     }
     if (selectedCard && army && canPlan(v) && plan && proj && state.armies[army]?.nation === me()) {
@@ -568,6 +576,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       progress,
       onNext: () => void runNext(),
       onEnd: () => void endTurn(),
+      muster: seat ? { blocked: musterState(v), active: mustering, onToggle: () => { mustering = !mustering; render(); } } : undefined,
     }) ?? '');
 
     if (logOpen) logSeen = v.history.length;
@@ -590,7 +599,11 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     });
     const isBanner = Boolean(popup?.classList.contains('retreat-banner'));
     const recruit = handoff ? null : recruitBanner(v, seat, emblems, recruitType, (ty) => { recruitType = ty; render(); }, (i) => void send(i));
-    slots.banner.replaceChildren((isBanner && popup) || recruit || '');
+    if (musterState(v)) mustering = false;
+    const muster = mustering && !handoff && seat
+      ? musterBanner(v, seat, emblems, musterNodes(v, seat), recruitType, (ty) => { recruitType = ty; render(); }, (i) => void send(i), () => { mustering = false; render(); })
+      : null;
+    slots.banner.replaceChildren((isBanner && popup) || recruit || muster || '');
     const modalEl = (!isBanner && popup)
       || (recaps.length && recaps[0].panel && !handoff
         ? battleOverPanel(v, recaps[0].report, emblems, () => { recaps[0] = { ...recaps[0], panel: false }; render(); })
@@ -640,6 +653,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     }
     else if (p?.kind === 'sabotage' || p?.kind === 'chooseBattle') for (const id of p.options) { if (v.armies[id]) highlights.set(v.armies[id].node, 'target'); }
     else if (p?.kind === 'recruit') for (const n of p.options) highlights.set(n, 'move');
+    else if (mustering && seat) for (const n of musterNodes(v, seat)) highlights.set(n, 'move');
     else if (planning) for (const [n, k] of moveHighlights(state)) highlights.set(n, k);
     // Supply: destinations that would leave the selected armies unsupplied, and armies out of supply now.
     const noSupply = new Set([...noSupplyNodes].filter((n) => highlights.get(n) === 'move'));
@@ -729,6 +743,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       if (editorOpen) closeEditor();
       else if (progress) { stopRequested = true; toast(t('game.stopping')); }
       else if (selectedCard) selectedCard = null;
+      else if (mustering) mustering = false;
       else { selected = []; selectedNode = null; }
       render();
     } else if (e.key === 'n' || e.key === 'N') {

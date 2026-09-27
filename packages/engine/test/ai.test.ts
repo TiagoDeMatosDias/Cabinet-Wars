@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import {
-  advanceCopy, aiFallback, aiIntent, aiRole, apply, filterForSeats, initialState, newAiMemory, parseConfig, randomOracle,
+  advanceCopy, aiFallback, enemyArmiesAdjacent, aiIntent, aiRole, apply, filterForSeats, initialState, newAiMemory, parseConfig, randomOracle,
   type AiMemory, type GameState, type LogEntry, type MapConfig,
 } from '../src';
 import { TestGame, testConfig } from './helpers';
@@ -94,6 +94,13 @@ it('AI-only games on the China map finish and see fighting', () => {
   expect(battles).toBeGreaterThan(0);
   expect(captures).toBeGreaterThan(0);
 }, 240_000);
+
+it('the Iberia map starts without enemy armies side by side (no battles before the first move)', () => {
+  const cfg = parseConfig(JSON.parse(readFileSync(new URL('../../../Map/Iberia/config.json', import.meta.url), 'utf8')));
+  const s = initialState(cfg);
+  expect(Object.values(s.armies).flatMap((a) => enemyArmiesAdjacent(s, a).map((e) => `${a.id}–${e.id}`))).toEqual([]);
+  expect(advanceCopy(s).oracle?.kind).not.toBe('engage');
+});
 
 it('AI-only games on the Iberia map finish and see fighting', () => {
   const cfg = parseConfig(JSON.parse(readFileSync(new URL('../../../Map/Iberia/config.json', import.meta.url), 'utf8')));

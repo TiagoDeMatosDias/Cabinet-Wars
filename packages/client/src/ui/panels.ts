@@ -1,4 +1,4 @@
-import { sideOf, UNIT_TYPES, warStatus, type GameView, type WarStatus, type HistoryEntry, type Intent, type UnitType } from '@cabinet-wars/engine';
+import { sideOf, unitCount, UNIT_TYPES, warStatus, type GameView, type WarStatus, type HistoryEntry, type Intent, type UnitType } from '@cabinet-wars/engine';
 import { add, h } from './dom';
 import { cardEl } from './cards';
 import { emblemEl, type Emblem } from './emblem';
@@ -210,9 +210,16 @@ export function ordersPanel(opts: {
 export function turnControls(opts: {
   myTurn: boolean; canStep: boolean; canEnd: boolean; remaining: number; progress: string | null;
   onNext(): void; onEnd(): void;
+  /** The turn's muster: null when it can be raised now, else why not ('turn' outside the orders). */
+  muster?: { blocked: 'used' | 'cap' | 'noTown' | 'turn' | null; active: boolean; onToggle(): void };
 }): HTMLElement | null {
   if (!opts.myTurn) return null;
+  const m = opts.muster;
   return h('div', { class: 'turn-controls' },
+    m ? h('button', {
+      class: `muster-btn ${m.active ? 'active' : ''}`, disabled: Boolean(m.blocked), 'aria-pressed': String(m.active),
+      onclick: m.onToggle, title: m.blocked ? t(musterWhy(m.blocked)) : t('controls.musterTitle'),
+    }, unitIcon('infantry', 18), ` ${t('controls.muster')}`) : null,
     h('button', { class: 'next-step', disabled: !opts.canStep, onclick: opts.onNext, title: t('controls.nextTitle') }, `${t('controls.next')} ▶`),
     h('button', { class: 'end-turn', disabled: !opts.canEnd, onclick: opts.onEnd, title: t('controls.endTitle') },
       h('span', {}, opts.progress ? t('controls.ending') : t('controls.end')),
@@ -321,6 +328,33 @@ export function recruitBanner(
     h('span', { class: 'muted small' }, t('recruit.clickTown')),
     h('span', { class: 'row' }, `${t('recruit.town')} `, townSelect,
       h('button', { class: 'primary', onclick: () => recruit(townSelect.value) }, t('recruit.place'))));
+}
+
+/** The message explaining why the turn's muster isn't available. */
+export function musterWhy(blocked: 'used' | 'cap' | 'noTown' | 'turn') {
+  return blocked === 'used' ? 'muster.used' as const : blocked === 'cap' ? 'muster.atCap' as const : blocked === 'turn' ? 'muster.notNow' as const : 'muster.noTown' as const;
+}
+
+/** The turn's muster: choose a unit type, then a town — on the map or from the list. */
+export function musterBanner(
+  v: GameView, me: string, emblems: Map<string, Emblem>, towns: string[], unitType: UnitType,
+  onType: (t: UnitType) => void, send: (i: Intent) => void, onCancel: () => void,
+): HTMLElement {
+  const cap = v.nations.find((x) => x.id === me)?.unitCap ?? 0;
+  const townSelect = h('select', {}, towns.map((n) => h('option', { value: n }, nodeName(v, n))));
+  return h('div', { class: 'retreat-banner recruit-banner muster-banner', style: `--c:${nationColor(v, me)}` },
+    emblemEl(emblems.get(me), 30),
+    h('strong', {}, t('muster.bannerTitle')),
+    h('span', { class: 'muted small' }, t('muster.cap', { count: unitCount(v, me), cap })),
+    h('span', { class: 'row', role: 'radiogroup', 'aria-label': t('recruit.chooseType') },
+      UNIT_TYPES.map((ty) => h('button', {
+        class: ty === unitType ? 'active' : '', role: 'radio', 'aria-checked': String(ty === unitType),
+        onclick: () => onType(ty),
+      }, unitIcon(ty, 18), ` ${unitName(ty)}`))),
+    h('span', { class: 'muted small' }, t('muster.clickTown')),
+    h('span', { class: 'row' }, `${t('recruit.town')} `, townSelect,
+      h('button', { class: 'primary', onclick: () => send({ type: 'muster', node: townSelect.value, unit: unitType }) }, t('muster.place')),
+      h('button', { onclick: onCancel }, t('common.cancel'))));
 }
 
 export function gameOverDialog(v: GameView, emblems: Map<string, Emblem>, onMenu: () => void, onReplay?: () => void): HTMLElement | null {
