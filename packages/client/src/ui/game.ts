@@ -312,8 +312,9 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       void send({ type: 'muster', node, unit: recruitType });
       return;
     }
-    if (selectedCard && army && canPlan(v) && plan && proj && state.armies[army]?.nation === me()) {
-      addOrder({ type: 'playMoves', army: plan.refFor(army, proj), card: selectedCard });
+    const cardTarget = selectedCard && canPlan(v) && plan && proj ? movesCardTarget(v, state, army, node) : null;
+    if (cardTarget) {
+      addOrder({ type: 'playMoves', army: plan!.refFor(cardTarget, proj!), card: selectedCard! });
       selectedCard = null;
       render();
       return;
@@ -336,6 +337,20 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     }
     render();
   };
+  /**
+   * The army a selected +1 Moves card goes to. Clicks on a town circle report the town, not the
+   * army standing on it, so the player's army there counts too (the selected one, if several).
+   */
+  function movesCardTarget(v: GameView, state: GameState, army: string | null, node: string | null): string | null {
+    if (army) return state.armies[army]?.nation === me() ? army : null;
+    if (!node) return null;
+    // Real pieces stand where the armies are now, ghosts where the plan takes them.
+    const here = [...new Set([v, state].flatMap((s) => Object.values(s.armies).filter((a) => a.node === node && a.nation === me()).map((a) => a.id)))]
+      .filter((id) => state.armies[id]);
+    if (here.length === 1) return here[0];
+    return here.find((id) => selected.includes(id)) ?? null;
+  }
+
   /** Plans a move of every selected army to a highlighted node. Returns false if that isn't possible. */
   function moveSelectedTo(node: string): boolean {
     const v = view();
@@ -375,13 +390,15 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     if (!raw) return;
     e.preventDefault();
     const { id } = JSON.parse(raw) as { id: string };
-    const { army } = map.pick(e.clientX, e.clientY);
+    const { army, node } = map.pick(e.clientX, e.clientY);
     const v = view();
-    if (!v || !army) { toast(t('game.dropOnArmy'), 'error'); return; }
+    if (!v) return;
     const p = v.pending.find((x) => x.nation === me());
     if (p?.kind === 'retreat') { void send({ type: 'playMoves', army: p.army, card: id }); return; }
     const proj = projection(v);
-    if (canPlan(v) && plan && proj) addOrder({ type: 'playMoves', army: plan.refFor(army, proj), card: id });
+    const target = proj ? movesCardTarget(v, proj.state, army, node) : null;
+    if (!target) { toast(t('game.dropOnArmy'), 'error'); return; }
+    if (canPlan(v) && plan && proj) addOrder({ type: 'playMoves', army: plan.refFor(target, proj), card: id });
   });
 
   function focusNode(id: string, screenDy = 0) {
@@ -513,7 +530,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
           render();
         },
         playMoves: (a) => {
-          const moves = cardState.hands[seat!]?.find((c) => c.type === 'moves+1');
+          // The projected hand: cards already given to planned orders are gone from it.
+          const moves = proj?.state.hands[seat!]?.find((c) => c.type === 'moves+1');
           if (moves && plan && proj) addOrder({ type: 'playMoves', army: plan.refFor(a.id, proj), card: moves.id });
         },
       },
