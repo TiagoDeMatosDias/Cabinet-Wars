@@ -474,7 +474,7 @@ function battleCards(c: Ctx): Intent {
   const typeIn = (a: Army) => (id: string) => a.units.find((u) => u.id === id)?.type;
   const armies = role === 'attacker' ? { attacker: mine, defender: theirs } : { attacker: theirs, defender: mine };
   const types = { attacker: b.units.attacker.map(typeIn(armies.attacker)), defender: b.units.defender.map(typeIn(armies.defender)) };
-  const value = (cards: PlacedCard[]) => scoreDuels(types, b.units, b.targets, b.dice!, cards)
+  const value = (cards: PlacedCard[]) => scoreDuels(types, b.units, b.matchups, b.dice!, cards)
     .reduce((sum, d) => sum + (d.winner === role ? 1 : -1), 0);
   const placed: PlacedCard[] = [];
   for (const card of (c.s.hands[c.me] ?? []).filter((x) => ROLL_CARDS.includes(x.type))) {

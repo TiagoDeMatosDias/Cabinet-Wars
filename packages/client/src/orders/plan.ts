@@ -145,8 +145,8 @@ export function armyLabel(ref: ArmyRef, ids: Map<ArmyRef, string>): string {
 }
 
 /** "70% to win, a win costs about 2 units": a straight fight simulated with the battle rules (no cards, no retreats). */
-export function oddsText(b: { attacker: UnitType[]; defenders: UnitType[][] }): string {
-  const o = battleOdds(b.attacker, b.defenders);
+export function oddsText(b: { attacker: UnitType[]; defenders: UnitType[][]; version: number }): string {
+  const o = battleOdds(b.attacker, b.defenders, b.version);
   const pct = Math.round(o.win * 100);
   const shown = pct === 100 && o.win < 1 ? 99 : pct === 0 && o.win > 0 ? 1 : pct;
   return o.win ? t('desc.odds', { pct: shown, losses: Math.max(0, Math.round(o.lossesIfWin)) }) : t('desc.oddsNone');

@@ -1,4 +1,4 @@
-import { GENERAL_SPEED, UNIT_SPEED, type Army, type GeneralCardType, type MapNode, type Nation, type UnitType } from '@cabinet-wars/engine';
+import { GENERAL_POINTS, MOVE_POINTS, type Army, type GeneralCardType, type MapNode, type Nation, type UnitType } from '@cabinet-wars/engine';
 import { MapView } from '../render/MapView';
 import { applyTheme, CANONICAL_ID, listThemes, loadFonts, playerOverride, resolveTheme, type Theme } from '../theme/theme';
 import { t, tn, useMapText } from '../i18n/i18n';
@@ -57,7 +57,7 @@ export async function galleryScreen(root: HTMLElement, back: () => void): Promis
       h('div', { class: 'gallery-viewer gallery-icon' }, kind === 'general' ? starSvg() : blockSvg(kind, color, theme)),
       h('figcaption', {},
         h('strong', {}, t(`gallery.kind.${kind}`)),
-        h('div', { class: 'muted small' }, tn('gallery.speed', kind === 'general' ? GENERAL_SPEED : UNIT_SPEED[kind]))))));
+        h('div', { class: 'muted small' }, tn('gallery.speed', kind === 'general' ? GENERAL_POINTS : MOVE_POINTS[kind]))))));
   }
 
   async function show(id: string) {
@@ -103,7 +103,7 @@ export async function galleryScreen(root: HTMLElement, back: () => void): Promis
       id: `a${i}`, nation: 'n', node: `s${i}`,
       generals: Array.from({ length: s.generals }, (_, g) => `g${i}.${g}`),
       units: (Object.entries(s.units) as [UnitType, number][]).flatMap(([type, n]) => Array.from({ length: n }, (_, u) => ({ id: `${type}${i}.${u}`, type }))),
-      moved: { edges: 0, allMajor: true, bonus: 0, stopped: false },
+      moved: { edges: 0, allMajor: true, points: 0, bonus: 0, stopped: false },
     } as unknown as Army));
     map.render({
       nodes, edges: nodes.slice(1).map((n, i) => ({ a: nodes[i].id, b: n.id, type: i % 2 ? 'minor' : 'major' })),

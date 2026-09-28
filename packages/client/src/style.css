@@ -223,7 +223,7 @@ input[type='color'] { padding: 0; width: 2.2em; height: 1.8em; }
 .slot-army { left: 16px; bottom: 16px; }
 .slot-hand { left: 50%; bottom: 8px; transform: translateX(-50%); }
 .slot-controls { right: 16px; bottom: 16px; }
-.slot-orders { right: 48px; top: 12px; }
+.slot-orders { right: 48px; top: 12px; bottom: 156px; display: flex; flex-direction: column; align-items: flex-end; }
 .slot-log { right: 0; top: 12px; bottom: 12px; display: flex; }
 .slot-banner { left: 50%; top: 12px; transform: translateX(-50%); }
 .slot-modal, .slot-editor { inset: 0; }
@@ -389,10 +389,12 @@ button.tb-own:hover:not(:disabled) { border-color: currentColor; }
 @keyframes tip-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* ---- orders ---- */
-.orders { width: 330px; max-height: calc(100% - 120px); display: flex; flex-direction: column; overflow: hidden; }
+.orders { width: 330px; max-height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.orders > * { flex-shrink: 0; }
 .orders > header { display: flex; align-items: baseline; gap: 10px; padding: 10px 12px 6px; }
 .orders > header strong { font-family: var(--font-display); font-size: 19px; }
-.orders-list { list-style: none; margin: 0; padding: 4px 10px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.orders > .orders-list { flex: 1 1 auto; min-height: 0; }
+.orders-list { list-style: none; margin: 0; padding: 4px 10px 10px; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 6px; }
 .order { display: grid; grid-template-columns: 30px 1fr auto auto; gap: 8px; align-items: center; padding: 6px 8px; background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-control); }
 .order.planned { cursor: grab; }
 .order.next { border: 2px solid var(--k-orders-next, var(--seal)); }
@@ -480,6 +482,9 @@ button.tb-own:hover:not(:disabled) { border-color: currentColor; }
 .bp-duel { display: grid; grid-template-columns: 1fr auto 70px auto 1fr; align-items: center; gap: 8px; padding: 3px 6px; background: var(--raised); border-radius: var(--r-control); }
 .bp-unit { display: flex; gap: 4px; align-items: center; }
 .bp-unit.attacker { justify-self: end; }
+.bp-dice { display: flex; gap: 4px; }
+.bp-duel > .bp-dice:nth-child(2) { justify-self: end; }
+.bp-die.unused { opacity: 0.4; }
 .bp-vs { text-align: center; color: var(--muted); font-family: var(--font-display); }
 .bp-total { font-family: var(--font-num); font-weight: 700; color: var(--text); }
 .bp-bonus { font-size: 11px; font-weight: 700; color: var(--raised); background: var(--text); border-radius: 999px; padding: 0 5px; }
@@ -598,7 +603,7 @@ table.grid td, table.grid th { padding: 3px 4px; text-align: left; font-size: 13
   .topbar { gap: 8px; padding: 4px 8px; }
   .tb-nations .will-name, .tb-nations .bar, .tb-right .status, .tb-turn .muted { display: none; }
   .tb-nations .bar.wide { display: inline-block; }
-  .slot-orders { left: 8px; right: 36px; top: 8px; }
+  .slot-orders { left: 8px; right: 36px; top: 8px; bottom: auto; align-items: stretch; }
   .orders { width: auto; max-height: 30vh; }
   .slot-army { left: 8px; right: 8px; bottom: 150px; }
   .army-card { width: auto; }

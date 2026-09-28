@@ -578,7 +578,7 @@ export async function editorScreen(root: HTMLElement, source: MapBundle | null, 
       armies: cfg.armies.map((a) => ({
         id: a.id, nation: a.nation, node: a.node, generals: a.generals,
         units: (['cavalry', 'infantry', 'artillery', 'supply'] as const).flatMap((t) => Array.from({ length: a.units[t] }, (_, i) => ({ id: `${a.id}.${t}${i}`, type: t }))),
-        moved: { edges: 0, allMajor: true, bonus: 0, stopped: false },
+        moved: { edges: 0, allMajor: true, points: 0, bonus: 0, stopped: false },
       })),
       selectedNode: selected,
       pendingEdgeFrom: edgeFrom,

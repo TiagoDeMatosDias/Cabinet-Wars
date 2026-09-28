@@ -42,7 +42,7 @@ export class TestGame {
   state: GameState;
   log: LogEntry[] = [];
   dice: number[] = [];
-  /** Scripted unit picks for the next battle rounds; by default the first units, each attacker facing defender i mod n. */
+  /** Scripted unit picks for the next battle rounds; by default the first units, unit i of the larger side (the attacker's, by the original rules) facing unit i mod n of the other. */
   picks: { attacker: number[]; defender: number[]; targets: number[] }[] = [];
   initial: GameState;
 
@@ -66,7 +66,9 @@ export class TestGame {
         const pick = this.picks.shift() ?? {
           attacker: [...Array(o.attackerPick).keys()],
           defender: [...Array(o.defenderPick).keys()],
-          targets: [...Array(o.attackerPick).keys()].map((i) => i % o.defenderPick),
+          targets: o.groups
+            ? [...Array(Math.max(o.attackerPick, o.defenderPick)).keys()].map((i) => i % Math.min(o.attackerPick, o.defenderPick))
+            : [...Array(o.attackerPick).keys()].map((i) => i % o.defenderPick),
         };
         this.push({ seq, by: 'host', intent: { type: 'select', ...pick } });
       } else if (o.kind === 'engage') {

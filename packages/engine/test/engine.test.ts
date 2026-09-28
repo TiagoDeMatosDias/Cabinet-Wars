@@ -103,7 +103,7 @@ describe('movement', () => {
     g.act('red', { type: 'move', army: inf, path: ['a2', 'a3', 'n1'] }); // infantry: 3 moves, starts on friendly soil
     expect(g.state.armies[inf].node).toBe('n1');
     // Standing on enemy-controlled soil without a general (n1 is still blue until the turn ends): stuck.
-    g.state.armies[inf].moved = { edges: 0, allMajor: true, bonus: 0, stopped: false };
+    g.state.armies[inf].moved = { edges: 0, allMajor: true, points: 0, bonus: 0, stopped: false };
     expect(() => g.act('red', { type: 'move', army: inf, path: ['a3'] })).toThrow(/without a general/);
   });
 
@@ -200,7 +200,7 @@ describe('battle', () => {
     g.dice = [6, 1];
     fight(g); // round 1 with the default picks: blue is down to 4 units, so 2 of them are picked
     expect(g.state.battle!.units.defender).toEqual([unitsOf(g, 'B')[3]]);
-    expect(g.state.battle!.targets).toEqual([0]);
+    expect(g.state.battle!.matchups).toEqual([{ attacker: [0], defender: [0] }]);
   });
 
   it('keeps each choice secret until both sides have chosen', () => {

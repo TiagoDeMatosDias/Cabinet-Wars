@@ -1,14 +1,15 @@
 import type {
   Army, Battle, BattleChoice, BattleReport, BattleRole, BattleRound, BattleSideReport, CardPlacement, Duel, GameState, GeneralCardType,
-  NodeId, PlacedCard, Team, UnitType,
+  Matchup, NodeId, PlacedCard, Team, UnitType,
 } from './types';
-import { GENERAL_SPEED, UNIT_SPEED } from './types';
 import {
-  army, combatUnits, diceFor, distances, edgeType, enemyArmiesAdjacent, fail, fitsSpeed, log, neighbors, removeArmy, sideOf,
+  army, combatUnits, diceFor, distances, edgeType, enemyArmiesAdjacent, fail, log, memberFits, neighbors, NO_TRAVEL, removeArmy, sideOf,
+  travelOn, type Travel,
 } from './graph';
 import { canEnter } from './movement';
 import { liberate } from './control';
 import { visibleNodes } from './view';
+import { GROUP_BATTLES_VERSION } from './config';
 
 export const BATTLE_CARDS: GeneralCardType[] = ['roll+1', 'roll+2', 'roll-1', 'retreat', 'blockRetreat'];
 /** Cards put on dice after the roll. */
@@ -61,7 +62,7 @@ export function startBattle(state: GameState, attackerArmy: string, defenderArmy
     step: 'select',
     round: 0,
     units: { attacker: [], defender: [] },
-    targets: [],
+    matchups: [],
     choice: { attacker: null, defender: null },
     dice: null,
     cards: { attacker: null, defender: null },
@@ -94,19 +95,48 @@ function beginRound(state: GameState) {
   b.round += 1;
   b.step = 'select';
   b.units = { attacker: [], defender: [] };
-  b.targets = [];
+  b.matchups = [];
   b.choice = { attacker: null, defender: null };
   b.dice = null;
   b.cards = { attacker: null, defender: null };
   state.pending = [];
   const att = combatUnits(battleArmy(state, b, 'attacker')).length;
   const def = combatUnits(battleArmy(state, b, 'defender')).length;
-  state.oracle = { kind: 'select', attacker: att, attackerPick: diceFor(att), defender: def, defenderPick: diceFor(def) };
+  const groups = state.rules.version >= GROUP_BATTLES_VERSION;
+  state.oracle = { kind: 'select', attacker: att, attackerPick: diceFor(att), defender: def, defenderPick: diceFor(def), ...(groups ? { groups } : {}) };
 }
 
 /**
- * The host's random pick: `attacker` and `defender` index the sides' combat units, `targets[i]`
- * indexes `defender` for attacking unit i. Defending units nobody faces sit the round out.
+ * Whom each picked unit faces, drawn with `rnd(n)` (an integer from 0 to n−1).
+ * Original rules: for each attacking unit, the defending unit it faces.
+ * Groups (version 3): for each unit of the side with more picked units (the attacker on a tie),
+ * the unit of the other side it faces, each of those facing at least one.
+ */
+export function randomTargets(attackerPick: number, defenderPick: number, groups: boolean, rnd: (n: number) => number): number[] {
+  if (!groups) return Array.from({ length: attackerPick }, () => rnd(defenderPick));
+  const many = Math.max(attackerPick, defenderPick);
+  const few = Math.min(attackerPick, defenderPick);
+  const order = [...Array(many).keys()];
+  for (let i = many - 1; i > 0; i--) { const j = rnd(i + 1); [order[i], order[j]] = [order[j], order[i]]; }
+  const targets = new Array<number>(many);
+  order.forEach((u, k) => { targets[u] = k < few ? k : rnd(few); });
+  return targets;
+}
+
+/** The matchups `targets` describe (see randomTargets). */
+export function matchupsFrom(attackerPick: number, defenderPick: number, targets: number[], groups: boolean): Matchup[] {
+  if (!groups) return targets.map((j, i) => ({ attacker: [i], defender: [j] }));
+  const attackerMany = attackerPick >= defenderPick;
+  const few = attackerMany ? defenderPick : attackerPick;
+  return [...Array(few).keys()].map((k) => {
+    const group = targets.flatMap((t, i) => (t === k ? [i] : []));
+    return attackerMany ? { attacker: group, defender: [k] } : { attacker: [k], defender: group };
+  });
+}
+
+/**
+ * The host's random pick: `attacker` and `defender` index the sides' combat units, `targets` says
+ * who faces whom (see randomTargets). Original rules: defending units nobody faces sit the round out.
  */
 export function applySelect(state: GameState, attacker: number[], defender: number[], targets: number[]) {
   const b = state.battle;
@@ -115,13 +145,18 @@ export function applySelect(state: GameState, attacker: number[], defender: numb
   const distinct = (xs: number[], n: number, pool: number) =>
     xs.length === n && new Set(xs).size === n && xs.every((i) => Number.isInteger(i) && i >= 0 && i < pool);
   if (!distinct(attacker, req.attackerPick, req.attacker) || !distinct(defender, req.defenderPick, req.defender)) fail('Bad unit selection');
-  if (targets.length !== attacker.length || !targets.every((t) => Number.isInteger(t) && t >= 0 && t < defender.length)) fail('Bad targets');
+  const groups = Boolean(req.groups);
+  const many = groups ? Math.max(attacker.length, defender.length) : attacker.length;
+  const few = groups ? Math.min(attacker.length, defender.length) : defender.length;
+  const inRange = targets.every((t) => Number.isInteger(t) && t >= 0 && t < few);
+  if (targets.length !== many || !inRange || (groups && new Set(targets).size !== few)) fail('Bad targets');
   state.oracle = null;
   const att = combatUnits(battleArmy(state, b, 'attacker'));
   const def = combatUnits(battleArmy(state, b, 'defender'));
-  const facing = defender.filter((_, k) => targets.includes(k));
+  const facing = groups ? defender : defender.filter((_, k) => targets.includes(k));
   b.units = { attacker: attacker.map((i) => att[i].id), defender: facing.map((i) => def[i].id) };
-  b.targets = targets.map((k) => facing.indexOf(defender[k]));
+  const faced = groups ? targets : targets.map((k) => facing.indexOf(defender[k]));
+  b.matchups = matchupsFrom(attacker.length, facing.length, faced, groups);
   b.step = 'choose';
   state.pending = ROLES.map((r) => ({ nation: battleNation(state, b, r), kind: 'battleChoice' as const }));
 }
@@ -182,7 +217,7 @@ function resolveChoices(state: GameState) {
     state.oracle = { kind: 'roll', attacker: b.units.attacker.length, defender: b.units.defender.length };
     return;
   }
-  b.lastRound = { round: b.round, units: b.units, types, targets: b.targets, choices, dice: null, cards: { attacker: [], defender: [] }, duels: [] };
+  b.lastRound = { round: b.round, units: b.units, types, matchups: b.matchups, choices, dice: null, cards: { attacker: [], defender: [] }, duels: [] };
   state.pending = [];
   if (removeBeaten(state)) { endBattle(state); return; }
   b.retreats = leaving;
@@ -254,26 +289,35 @@ export function typeBonus(unit: UnitType | undefined, opponents: (UnitType | und
 }
 
 /**
- * Scores every duel: each attacking unit's die against the die of the unit it faces, plus roll
- * cards and type bonuses. The higher total wins; ties go to the defender. The loser is destroyed.
+ * Scores every matchup: each unit's die plus roll cards and its type bonus. A group counts only
+ * its best total (the first of equals), and the lone unit gets its type bonus against that unit.
+ * The higher total wins; ties go to the defender. The losing unit is destroyed: the lone unit, or
+ * the group's best.
  */
 export function scoreDuels(
   types: Record<BattleRole, (UnitType | undefined)[]>,
   units: Record<BattleRole, string[]>,
-  targets: number[],
+  matchups: Matchup[],
   dice: Record<BattleRole, number[]>,
   cards: PlacedCard[],
 ): Duel[] {
   const mod = (role: BattleRole, die: number) => cards.filter((p) => p.role === role && p.die === die).reduce((s, p) => s + (ROLL_MOD[p.type] ?? 0), 0);
-  return targets.map((j, i) => {
-    const attackerBonus = typeBonus(types.attacker[i], [types.defender[j]]);
-    const defenderBonus = typeBonus(types.defender[j], [types.attacker[i]]);
-    const attackerPoints = dice.attacker[i] + mod('attacker', i) + attackerBonus;
-    const defenderPoints = dice.defender[j] + mod('defender', j) + defenderBonus;
-    const winner: BattleRole = attackerPoints > defenderPoints ? 'attacker' : 'defender';
+  const score = (role: BattleRole, i: number, foe: number) => {
+    const bonus = typeBonus(types[role][i], [types[other(role)][foe]]);
+    return { i, bonus, points: dice[role][i] + mod(role, i) + bonus };
+  };
+  return matchups.map((m) => {
+    const group: BattleRole = m.attacker.length > 1 ? 'attacker' : 'defender';
+    const lone = other(group);
+    const foe = m[lone][0];
+    const best = m[group].map((i) => score(group, i, foe)).reduce((x, y) => (y.points > x.points ? y : x));
+    const scored = { [group]: best, [lone]: score(lone, foe, best.i) } as Record<BattleRole, ReturnType<typeof score>>;
+    const { attacker: a, defender: d } = scored;
+    const winner: BattleRole = a.points > d.points ? 'attacker' : 'defender';
     return {
-      attacker: i, defender: j, attackerPoints, defenderPoints, attackerBonus, defenderBonus, winner,
-      destroyed: winner === 'attacker' ? units.defender[j] : units.attacker[i],
+      matchup: m, attacker: a.i, defender: d.i, attackerPoints: a.points, defenderPoints: d.points,
+      attackerBonus: a.bonus, defenderBonus: d.bonus, winner,
+      destroyed: winner === 'attacker' ? units.defender[d.i] : units.attacker[a.i],
     };
   });
 }
@@ -283,11 +327,11 @@ function resolveRound(state: GameState) {
   const b = state.battle!;
   const cards = { attacker: b.cards.attacker ?? [], defender: b.cards.defender ?? [] };
   const types = typesOf(state, b);
-  const duels = scoreDuels(types, b.units, b.targets, b.dice!, [...cards.attacker, ...cards.defender]);
+  const duels = scoreDuels(types, b.units, b.matchups, b.dice!, [...cards.attacker, ...cards.defender]);
   for (const r of ROLES) destroyUnits(state, r, duels.filter((d) => d.winner !== r).map((d) => d.destroyed));
   for (const r of ROLES) for (const p of cards[r]) state.generalDeck.discard.push({ id: p.cardId, type: p.type });
   b.lastRound = {
-    round: b.round, units: b.units, types, targets: b.targets,
+    round: b.round, units: b.units, types, matchups: b.matchups,
     choices: { attacker: b.choice.attacker as BattleChoice, defender: b.choice.defender as BattleChoice },
     dice: b.dice, cards, duels,
   };
@@ -305,21 +349,23 @@ function enemyNodeOf(state: GameState, a: Army): NodeId | null {
   return (otherId && state.armies[otherId]?.node) || null;
 }
 
-function allMajorPath(state: GameState, from: NodeId, path: NodeId[]): boolean {
+/** A retreat's travel: it starts afresh, whatever the army moved before. */
+function retreatTravel(state: GameState, from: NodeId, path: NodeId[]): Travel {
+  let t = NO_TRAVEL;
   let prev = from;
-  for (const n of path) { if (edgeType(state, prev, n) !== 'major') return false; prev = n; }
-  return true;
+  for (const n of path) { t = travelOn(t, edgeType(state, prev, n)!); prev = n; }
+  return t;
 }
 
 /** Units of an army fast enough to follow a retreat path. */
 export function retreatSurvivors(state: GameState, a: Army, path: NodeId[]) {
-  const allMajor = allMajorPath(state, a.node, path);
-  return a.units.filter((u) => fitsSpeed(path.length, allMajor, UNIT_SPEED[u.type] + a.moved.bonus));
+  const t = retreatTravel(state, a.node, path);
+  return a.units.filter((u) => memberFits(state, u.type, t, a.moved.bonus));
 }
 
 /** Whether the army's generals can keep up with a retreat path (they ride at cavalry speed). */
 export function generalsSurvive(state: GameState, a: Army, path: NodeId[]): boolean {
-  return a.generals.length > 0 && fitsSpeed(path.length, allMajorPath(state, a.node, path), GENERAL_SPEED + a.moved.bonus);
+  return a.generals.length > 0 && memberFits(state, 'general', retreatTravel(state, a.node, path), a.moved.bonus);
 }
 
 export interface RetreatPlan {

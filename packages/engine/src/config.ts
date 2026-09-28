@@ -36,9 +36,17 @@ export const DEFAULT_EVENT_DECK: { card: EventCardType; count: number }[] = [
 /**
  * The rules version new games are played by. Version 1 is the original rules; version 2 adds
  * the hand limit, decks that grow with the number of nations, and battles between armies that
- * stand next to each other.
+ * stand next to each other. Version 3 moves armies by movement points (major roads cost 1, minor
+ * roads 2) and fights battles in groups: every drawn unit fights, the
+ * larger side's units share out the smaller side's, and a group's best total counts.
  */
-export const RULES_VERSION = 2;
+export const RULES_VERSION = 3;
+
+/** Version 3: armies move by movement points (see MOVE_POINTS and ROAD_COST). */
+export const MOVE_POINTS_VERSION = 3;
+
+/** Version 3: battles are fought in groups (see randomTargets and scoreDuels). */
+export const GROUP_BATTLES_VERSION = 3;
 
 /** Version 2: a nation holding this many General cards draws no more. */
 export const HAND_LIMIT = 10;
@@ -229,7 +237,7 @@ export function initialState(cfg: MapConfig): GameState {
       node: a.node,
       generals: [...a.generals],
       units,
-      moved: { edges: 0, allMajor: true, bonus: 0, stopped: false },
+      moved: { edges: 0, allMajor: true, points: 0, bonus: 0, stopped: false },
     };
   }
   return {

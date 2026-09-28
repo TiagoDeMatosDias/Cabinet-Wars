@@ -1,7 +1,7 @@
 import type { BattleChoice, CardPlacement, GameState, NationId, NodeId, OracleRequest, Prompt, UnitType } from './types';
 import { fail, log, nation, removeArmy, sideOf } from './graph';
 import { mergeArmies, moveArmy, resetMovement, splitArmy, transferArmies, type TransferGroup } from './movement';
-import { applyEngage, applyRoll, applySelect, chooseBattle, chooseInBattle, queueBattles, retreat, roleOf, standingBattle, submitCards } from './battle';
+import { applyEngage, applyRoll, applySelect, chooseBattle, chooseInBattle, queueBattles, randomTargets, retreat, roleOf, standingBattle, submitCards } from './battle';
 import { unsuppliedArmies } from './supply';
 import { checkVictory, finish, updateControl } from './control';
 import { applyMuster, applyRecruit, applySabotage, applyShuffle, drawCard, resolveEvent } from './decks';
@@ -73,7 +73,7 @@ export function randomOracle(req: OracleRequest, rnd: (n: number) => number): Or
       type: 'select',
       attacker: order(req.attacker).slice(0, req.attackerPick),
       defender: order(req.defender).slice(0, req.defenderPick),
-      targets: Array.from({ length: req.attackerPick }, () => rnd(req.defenderPick)),
+      targets: randomTargets(req.attackerPick, req.defenderPick, Boolean(req.groups), rnd),
     };
     case 'roll': return {
       type: 'roll',

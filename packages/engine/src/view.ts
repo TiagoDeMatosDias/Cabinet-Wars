@@ -73,7 +73,7 @@ export function filterForSeats(state: GameState, seats: NationId[]): GameView {
     } else if (!fighting) {
       // Onlookers see that there is a battle, and its losses, but not how it is fought.
       b.units = { attacker: [], defender: [] };
-      b.targets = [];
+      b.matchups = [];
       b.choice = { attacker: null, defender: null };
       b.dice = null;
       b.cards = { attacker: null, defender: null };

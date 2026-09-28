@@ -583,6 +583,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     }) ?? '');
 
     const showOrders = Boolean(plan && proj && myTurn(v));
+    // The panel is rebuilt on every render: keep the list where the player scrolled it.
+    const ordersScroll = slots.orders.querySelector('.orders-list')?.scrollTop ?? 0;
     slots.orders.replaceChildren(showOrders && !handoff ? ordersPanel({
       view: v, plan: plan!, projection: proj!, planning, running: running || Boolean(progress),
       canAdd: Object.values(state.armies).some((a) => a.nation === seat && (!a.moved.stopped || a.units.length > 1)),
@@ -602,6 +604,18 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       },
       onFocus: focusNode,
     }) : '');
+    const ordersList = slots.orders.querySelector<HTMLElement>('.orders-list');
+    if (ordersList) {
+      ordersList.scrollTop = ordersScroll;
+      // While orders run, follow the one being carried out.
+      const next = running || progress ? ordersList.querySelector<HTMLElement>('.order.next') : null;
+      if (next) {
+        const box = ordersList.getBoundingClientRect();
+        const row = next.getBoundingClientRect();
+        if (row.top < box.top) ordersList.scrollTop -= box.top - row.top;
+        else if (row.bottom > box.bottom) ordersList.scrollTop += row.bottom - box.bottom;
+      }
+    }
 
     slots.replay.replaceChildren(replay ? replayControls({
       view: v, replay, emblems, playing: Boolean(playing), speed,

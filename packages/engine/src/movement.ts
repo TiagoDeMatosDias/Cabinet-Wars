@@ -1,6 +1,7 @@
 import type { Army, GameState, NodeId } from './types';
 import {
-  areFriends, army, armiesAt, baseSpeed, edgeType, enemyArmiesAdjacent, fail, fitsSpeed, log, newId, sideOf,
+  areFriends, army, armiesAt, armyFits, baseSpeed, edgeType, enemyArmiesAdjacent, fail, log, newId, sideOf, travelOn, usesMovePoints,
+  type Travel,
 } from './graph';
 import { liberate } from './control';
 
@@ -40,15 +41,13 @@ export function moveArmy(state: GameState, armyId: string, path: NodeId[]): stri
   if (a.moved.stopped) fail('This army cannot move further this turn');
   if (stuckInEnemyLand(state, a)) fail('An army without a general cannot leave enemy territory');
 
-  let edges = a.moved.edges;
-  let allMajor = a.moved.allMajor;
+  let travel: Travel = a.moved;
   let prev = a.node;
   for (const node of path) {
     const type = edgeType(state, prev, node) ?? fail('{from} is not connected to {to}', { from: prev, to: node });
     if (!state.nodes[node]) fail('Unknown node {node}', { node });
-    edges += 1;
-    allMajor = allMajor && type === 'major';
-    if (!fitsSpeed(edges, allMajor, armySpeed(a))) fail('Not enough movement for that path');
+    travel = travelOn(travel, type);
+    if (!armyFits(state, a, travel)) fail('Not enough movement for that path');
     prev = node;
   }
 
@@ -57,9 +56,7 @@ export function moveArmy(state: GameState, armyId: string, path: NodeId[]): stri
   prev = a.node;
   for (const node of path) {
     if (!canEnter(state, a, node)) break; // hidden foreign army blocks the road
-    const type = edgeType(state, prev, node)!;
-    a.moved.edges += 1;
-    a.moved.allMajor = a.moved.allMajor && type === 'major';
+    a.moved = { ...a.moved, ...travelOn(a.moved, edgeType(state, prev, node)!) };
     a.node = node;
     liberate(state, a, node);
     prev = node;
@@ -106,6 +103,7 @@ export function mergeArmies(state: GameState, intoId: string, fromId: string) {
   into.moved = {
     edges: Math.max(into.moved.edges, from.moved.edges),
     allMajor: into.moved.allMajor && from.moved.allMajor,
+    points: Math.max(into.moved.points, from.moved.points),
     bonus: Math.min(into.moved.bonus, from.moved.bonus),
     stopped: into.moved.stopped || from.moved.stopped,
   };
@@ -148,6 +146,7 @@ export function transferArmies(state: GameState, groups: TransferGroup[]): strin
   const moved = {
     edges: Math.max(...existing.map((a) => a.moved.edges)),
     allMajor: existing.every((a) => a.moved.allMajor),
+    points: Math.max(...existing.map((a) => a.moved.points)),
     bonus: Math.min(...existing.map((a) => a.moved.bonus)),
     stopped: existing.some((a) => a.moved.stopped),
   };
@@ -168,38 +167,43 @@ export function transferArmies(state: GameState, groups: TransferGroup[]): strin
 
 export function resetMovement(state: GameState, nationId: string) {
   for (const a of Object.values(state.armies)) {
-    if (a.nation === nationId) a.moved = { edges: 0, allMajor: true, bonus: 0, stopped: false };
+    if (a.nation === nationId) a.moved = { edges: 0, allMajor: true, points: 0, bonus: 0, stopped: false };
   }
 }
 
 /** Nodes an army can still reach this turn, keyed by node with the path to it. For UI previews. */
 export function reachable(state: GameState, a: Army): Map<NodeId, NodeId[]> {
-  const speed = armySpeed(a);
   const out = new Map<NodeId, NodeId[]>();
   if (a.moved.stopped) return out;
   if (stuckInEnemyLand(state, a)) return out;
-  const stack: { node: NodeId; path: NodeId[]; edges: number; allMajor: boolean }[] = [
-    { node: a.node, path: [], edges: a.moved.edges, allMajor: a.moved.allMajor },
-  ];
-  // Best seen (edges, allMajor) per node to prune. A shorter all-major path dominates.
+  const stack: { node: NodeId; path: NodeId[]; travel: Travel }[] = [{ node: a.node, path: [], travel: a.moved }];
+  // Best travel seen per node to prune: the fewest points, or by the original rules the fewest
+  // edges (a shorter all-major path dominates).
+  const points = usesMovePoints(state);
   const best = new Map<string, number>();
+  const spent = new Map<NodeId, number>();
   while (stack.length) {
     const cur = stack.pop()!;
     for (const e of state.edges) {
       const next = e.a === cur.node ? e.b : e.b === cur.node ? e.a : null;
       if (!next || next === a.node || cur.path.includes(next)) continue;
-      const edges = cur.edges + 1;
-      const allMajor = cur.allMajor && e.type === 'major';
-      if (!fitsSpeed(edges, allMajor, speed)) continue;
+      const travel = travelOn(cur.travel, e.type);
+      if (!armyFits(state, a, travel)) continue;
       if (!canEnter(state, a, next)) continue;
-      const key = `${next}|${allMajor}`;
-      if ((best.get(key) ?? Infinity) <= edges) continue;
-      best.set(key, edges);
+      const key = points ? next : `${next}|${travel.allMajor}`;
+      const cost = points ? travel.points : travel.edges;
+      if ((best.get(key) ?? Infinity) <= cost) continue;
+      best.set(key, cost);
       const path = [...cur.path, next];
+      // The path shown and taken: the cheapest in points (it leaves the most for later moves),
+      // or by the original rules the one through the fewest nodes.
       const prevPath = out.get(next);
-      if (!prevPath || prevPath.length > path.length) out.set(next, path);
+      if (!prevPath || (points ? cost < (spent.get(next) ?? Infinity) : prevPath.length > path.length)) {
+        out.set(next, path);
+        spent.set(next, cost);
+      }
       const stopsHere = enemyArmiesAdjacent(state, a, next).length > 0;
-      if (!stopsHere) stack.push({ node: next, path, edges, allMajor });
+      if (!stopsHere) stack.push({ node: next, path, travel });
     }
   }
   return out;

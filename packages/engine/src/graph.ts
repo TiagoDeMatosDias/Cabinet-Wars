@@ -1,6 +1,7 @@
-import type { Army, GameState, HistoryEntry, NationId, NodeId, RoadType, Team, Unit } from './types';
+import type { Army, GameState, HistoryEntry, Member, MoveState, NationId, NodeId, RoadType, Team, Unit } from './types';
 import { formatMessage, MESSAGES, type MessageKey, type MessageParams } from './messages';
-import { GENERAL_SPEED, UNIT_SPEED } from './types';
+import { GENERAL_POINTS, GENERAL_SPEED, MOVE_POINTS, MOVES_CARD_POINTS, ROAD_COST, UNIT_SPEED } from './types';
+import { MOVE_POINTS_VERSION } from './config';
 
 /** A rejected action. `template` is the English message with {placeholders}; clients translate it. */
 export class GameError extends Error {
@@ -96,6 +97,47 @@ export const MAJOR_ROAD_MULTIPLIER = 3;
 /** Whether a path of `edges` edges (all major or not) fits within `speed`. */
 export function fitsSpeed(edges: number, allMajor: boolean, speed: number): boolean {
   return edges <= speed || (allMajor && edges <= speed * MAJOR_ROAD_MULTIPLIER);
+}
+
+/** How far an army has travelled this turn, as the rules count it. */
+export type Travel = Pick<MoveState, 'edges' | 'allMajor' | 'points'>;
+
+export const NO_TRAVEL: Travel = { edges: 0, allMajor: true, points: 0 };
+
+/** Travel after one more road. */
+export function travelOn(t: Travel, road: RoadType): Travel {
+  return { edges: t.edges + 1, allMajor: t.allMajor && road === 'major', points: t.points + ROAD_COST[road] };
+}
+
+/** Whether the game moves armies by movement points (rules version 3). */
+export function usesMovePoints(state: GameState): boolean {
+  return state.rules.version >= MOVE_POINTS_VERSION;
+}
+
+/**
+ * A member's movement this turn, with `bonus` +1 Moves cards: movement points (rules version 3),
+ * or roads (three times as many on major roads only, by the original rules).
+ */
+export function memberMovement(state: GameState, m: Member, bonus: number): number {
+  if (usesMovePoints(state)) return (m === 'general' ? GENERAL_POINTS : MOVE_POINTS[m]) + bonus * MOVES_CARD_POINTS;
+  return (m === 'general' ? GENERAL_SPEED : UNIT_SPEED[m]) + bonus;
+}
+
+/** Whether a member can make the travel. */
+export function memberFits(state: GameState, m: Member, t: Travel, bonus: number): boolean {
+  const move = memberMovement(state, m, bonus);
+  return usesMovePoints(state) ? t.points <= move : fitsSpeed(t.edges, t.allMajor, move);
+}
+
+/** An army's members as far as movement goes: its unit types, and 'general' if it has any. */
+export function members(a: Army): Member[] {
+  return [...new Set<Member>(a.units.map((u) => u.type)), ...(a.generals.length ? ['general' as const] : [])];
+}
+
+/** Whether every member of the army can make the travel: it moves as far as its slowest member. */
+export function armyFits(state: GameState, a: Army, t: Travel): boolean {
+  const ms = members(a);
+  return ms.length > 0 && ms.every((m) => memberFits(state, m, t, a.moved.bonus));
 }
 
 export function newId(state: GameState, prefix: string): string {

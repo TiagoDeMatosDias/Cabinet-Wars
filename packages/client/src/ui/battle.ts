@@ -1,5 +1,5 @@
 import {
-  ROLL_CARDS, scoreDuels, TYPE_ADVANTAGE, retreatPlan, typeBonus,
+  other, ROLL_CARDS, scoreDuels, TYPE_ADVANTAGE, retreatPlan, typeBonus,
   type Army, type Battle, type BattleChoice, type BattleReport, type BattleRole, type BattleRound, type GameView, type HistoryEntry, type Intent,
   type PlacedCard, type UnitType,
 } from '@cabinet-wars/engine';
@@ -121,14 +121,14 @@ function battlePanel(ctx: BattleContext, b: Battle, att: Army | undefined, def: 
   const ownCards: PlacedCard[] = myRole && b.cards[myRole]
     ? b.cards[myRole]!
     : [...ui.placed].map(([cardId, p]) => ({ cardId, ...p, type: hand.find((c) => c.id === cardId)?.type ?? 'roll+1' }));
-  const duels = b.dice ? scoreDuels(types, b.units, b.targets, b.dice, ownCards) : null;
+  const duels = b.dice ? scoreDuels(types, b.units, b.matchups, b.dice, ownCards) : null;
   const placingCards = prompt?.kind === 'battleCards';
 
   const phase = b.step === 'select' ? 0 : b.step === 'choose' ? 1 : 2;
   const strip = h('ol', { class: 'bp-phases' }, PHASES.map((ph, i) =>
     h('li', { class: i < phase ? 'done' : i === phase ? 'active' : '' }, h('span', { class: 'bp-phase-n' }, String(i + 1)), t(`battle.phase.${ph}`))));
 
-  const dieEl = (r: BattleRole, i: number) => {
+  const dieEl = (r: BattleRole, i: number, unused = false) => {
     const value = b.dice?.[r][i];
     const mods = ownCards.filter((p) => p.role === r && p.die === i);
     const target = placingCards && ui.card !== null;
@@ -141,7 +141,7 @@ function battlePanel(ctx: BattleContext, b: Battle, att: Army | undefined, def: 
       }, ROLL_MOD[p.type] > 0 ? `+${ROLL_MOD[p.type]}` : String(ROLL_MOD[p.type]))),
     ];
     const attrs = {
-      class: `die bp-die ${value ? '' : 'empty'} ${target ? 'target' : ''}`,
+      class: `die bp-die ${value ? '' : 'empty'} ${target ? 'target' : ''} ${unused ? 'unused' : ''}`,
       style: `--ring:${colorOf(r)}`,
       title: value ? t('battle.dieOf', { nation: nationName(v, nationOf(r)), value }) : t('battle.notRolled'),
     };
@@ -150,20 +150,26 @@ function battlePanel(ctx: BattleContext, b: Battle, att: Army | undefined, def: 
       : h('span', attrs, ...inner);
   };
 
-  const rows = h('div', { class: 'bp-duels' }, b.units.attacker.map((aid, i) => {
-    const j = b.targets[i];
-    const at = types.attacker[i];
-    const dt = types.defender[j];
-    const d = duels?.[i];
-    const bonus = (mine: UnitType, theirs: UnitType) => (typeBonus(mine, [theirs]) ? h('span', { class: 'bp-bonus', title: t('battle.typeBonus') }, '+1') : null);
-    const shared = b.targets.filter((x) => x === j).length > 1;
-    return h('div', { class: 'bp-duel' },
-      h('span', { class: 'bp-unit attacker' }, bonus(at, dt), unitToken(at, colorOf('attacker'), '', unitName(at))),
-      dieEl('attacker', i),
+  // One row per matchup; a group's units and dice sit side by side, and only its best die counts.
+  const rows = h('div', { class: 'bp-duels' }, b.matchups.map((m, k) => {
+    const d = duels?.[k];
+    const counting = (r: BattleRole) => (r === 'attacker' ? d?.attacker : d?.defender);
+    const units = (r: BattleRole) => h('span', { class: `bp-unit ${r}` }, m[r].flatMap((i) => {
+      const ty = types[r][i];
+      const foes = m[other(r)].map((j) => types[other(r)][j]);
+      const has = d && counting(r) === i ? (r === 'attacker' ? d.attackerBonus : d.defenderBonus) : typeBonus(ty, foes);
+      const chip = has ? h('span', { class: 'bp-bonus', title: t('battle.typeBonus') }, '+1') : null;
+      const token = unitToken(ty, colorOf(r), '', unitName(ty));
+      return r === 'attacker' ? [chip, token] : [token, chip];
+    }));
+    const dice = (r: BattleRole) => h('span', { class: 'bp-dice' }, m[r].map((i) => dieEl(r, i, Boolean(d) && m[r].length > 1 && counting(r) !== i)));
+    const group = m.attacker.length > 1 || m.defender.length > 1;
+    return h('div', { class: 'bp-duel', title: group ? t('battle.groupHint') : undefined },
+      units('attacker'),
+      dice('attacker'),
       h('span', { class: 'bp-vs' }, d ? h('span', { class: `bp-total ${d.winner}` }, `${d.attackerPoints} : ${d.defenderPoints}`) : t('battle.vs')),
-      dieEl('defender', j),
-      h('span', { class: 'bp-unit defender' }, unitToken(dt, colorOf('defender'), '', unitName(dt)), bonus(dt, at),
-        shared ? h('span', { class: 'muted small' }, t('battle.sameUnit')) : null));
+      dice('defender'),
+      units('defender'));
   }));
 
   const status = h('div', { class: 'bp-status' });
@@ -241,7 +247,7 @@ function resultRows(v: GameView, lr: BattleRound, nations: Record<BattleRole, st
   const badges = (r: BattleRole, die: number) => [...lr.cards.attacker, ...lr.cards.defender]
     .filter((p) => p.role === r && p.die === die)
     .map((p) => h('span', { class: `die-mod ${ROLL_MOD[p.type] > 0 ? 'plus' : 'minus'}`, title: cardName(p.type) }, ROLL_MOD[p.type] > 0 ? `+${ROLL_MOD[p.type]}` : String(ROLL_MOD[p.type])));
-  const die = (r: BattleRole, i: number) => h('span', { class: 'die bp-die', style: `--ring:${color(r)}` },
+  const die = (r: BattleRole, i: number, unused: boolean) => h('span', { class: `die bp-die ${unused ? 'unused' : ''}`, style: `--ring:${color(r)}` },
     h('span', { class: 'die-value' }, String(lr.dice![r][i])), ...badges(r, i));
   const choices = h('div', { class: 'bp-status' }, ROLES.map((r) => h('span', { class: 'bp-chip', style: `--c:${color(r)}` },
     emblemEl(emblems.get(nations[r]), 16), t(`battle.choice.${lr.choices[r]}`))));
@@ -252,18 +258,23 @@ function resultRows(v: GameView, lr: BattleRound, nations: Record<BattleRole, st
   return h('div', { class: 'bp-result' },
     choices,
     h('div', { class: 'bp-duels' }, lr.duels.map((d) => {
-      const at = lr.types.attacker[d.attacker];
-      const dt = lr.types.defender[d.defender];
       const winner = nations[d.winner];
+      const counting = (r: BattleRole) => (r === 'attacker' ? d.attacker : d.defender);
+      const units = (r: BattleRole, ...extra: HTMLElement[]) => h('span', { class: `bp-unit ${r}` }, d.matchup[r].flatMap((i) => {
+        const ty = lr.types[r][i];
+        const bonus = counting(r) === i && (r === 'attacker' ? d.attackerBonus : d.defenderBonus);
+        const chip = bonus ? h('span', { class: 'bp-bonus', title: t('battle.typeBonus') }, '+1') : null;
+        const fell = counting(r) === i && d.winner !== r;
+        const token = unitToken(ty, color(r), fell ? 'lost' : '', unitName(ty));
+        return r === 'attacker' ? [chip, token] : [token, chip];
+      }), extra);
+      const dice = (r: BattleRole) => h('span', { class: 'bp-dice' }, d.matchup[r].map((i) => die(r, i, d.matchup[r].length > 1 && counting(r) !== i)));
       return h('div', { class: `bp-duel done ${d.winner}` },
-        h('span', { class: 'bp-unit attacker' }, d.attackerBonus ? h('span', { class: 'bp-bonus', title: t('battle.typeBonus') }, '+1') : null,
-          unitToken(at, color('attacker'), d.winner === 'defender' ? 'lost' : '', unitName(at))),
-        die('attacker', d.attacker),
+        units('attacker'),
+        dice('attacker'),
         h('span', { class: 'bp-vs' }, h('span', { class: 'bp-total' }, `${d.attackerPoints} : ${d.defenderPoints}`)),
-        die('defender', d.defender),
-        h('span', { class: 'bp-unit defender' }, unitToken(dt, color('defender'), d.winner === 'attacker' ? 'lost' : '', unitName(dt)),
-          d.defenderBonus ? h('span', { class: 'bp-bonus', title: t('battle.typeBonus') }, '+1') : null,
-          h('span', { class: 'bp-winner', title: t('battle.duelWon', { nation: nationName(v, winner) }) }, emblemEl(emblems.get(winner), 16))));
+        dice('defender'),
+        units('defender', h('span', { class: 'bp-winner', title: t('battle.duelWon', { nation: nationName(v, winner) }) }, emblemEl(emblems.get(winner), 16))));
     })));
 }
 

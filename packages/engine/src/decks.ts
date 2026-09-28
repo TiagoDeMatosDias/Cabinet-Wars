@@ -101,7 +101,7 @@ function armyToJoin(state: GameState, nat: string, node: string): Army {
   const found = Object.values(state.armies).find((x) => x.nation === nat && x.node === node);
   if (found) return found;
   const id = newId(state, `${nat}-a`);
-  return state.armies[id] = { id, nation: nat, node, generals: [], units: [], moved: { edges: 0, allMajor: true, bonus: 0, stopped: false } };
+  return state.armies[id] = { id, nation: nat, node, generals: [], units: [], moved: { edges: 0, allMajor: true, points: 0, bonus: 0, stopped: false } };
 }
 
 function addUnit(state: GameState, a: Army, type: UnitType) {

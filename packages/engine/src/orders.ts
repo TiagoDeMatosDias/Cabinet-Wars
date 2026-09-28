@@ -31,7 +31,7 @@ export interface OrderProjection {
   /** The move ends next to a known enemy army, so a battle will start there. */
   meetsEnemy?: boolean;
   /** When the move meets the enemy: the unit types of the moving army and of each enemy army it will fight. */
-  battle?: { attacker: UnitType[]; defenders: UnitType[][] };
+  battle?: { attacker: UnitType[]; defenders: UnitType[][]; version: number };
   /** Nodes the move passes through (for arrows), including the start. */
   path?: NodeId[];
 }
@@ -143,7 +143,7 @@ function applyOrder(state: GameState, o: OrderIntent, ids: Map<ArmyRef, string>,
         meetsEnemy = enemies.length > 0;
         if (meetsEnemy) {
           const types = (id: string) => state.armies[id].units.map((u) => u.type);
-          battle = { attacker: types(i.army), defenders: enemies.map(types) };
+          battle = { attacker: types(i.army), defenders: enemies.map(types), version: state.rules.version };
         }
         const end = state.armies[i.army].node;
         path = [start, ...i.path.slice(0, i.path.indexOf(end) + 1)];

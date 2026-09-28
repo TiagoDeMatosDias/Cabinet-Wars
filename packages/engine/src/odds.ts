@@ -1,6 +1,7 @@
 import type { UnitType } from './types';
 import { diceFor } from './graph';
-import { typeBonus } from './battle';
+import { matchupsFrom, randomTargets, scoreDuels } from './battle';
+import { GROUP_BATTLES_VERSION, RULES_VERSION } from './config';
 
 export interface BattleOdds {
   /** Share of simulated battles (0–1) the attacker won: every enemy army destroyed, the attacker still standing. */
@@ -38,23 +39,23 @@ function pick(n: number, k: number, rnd: () => number): number[] {
 
 /**
  * Fights one battle to the end with the rules of battle.ts: each round both sides draw units by
- * their dice count, each attacking unit faces a random drawn defender, the higher die (plus the
- * unit-type bonus) wins, ties go to the defender, and the loser is destroyed. No cards, no retreats.
+ * their dice count and are matched up at random, the higher die (plus the unit-type bonus; a
+ * group's best) wins, ties go to the defender, and the loser is destroyed. No cards, no retreats.
  * Mutates both unit lists; returns true when the attacker is left standing.
  */
-function fight(att: UnitType[], def: UnitType[], rnd: () => number): boolean {
-  const die = () => 1 + Math.floor(rnd() * 6);
+function fight(att: UnitType[], def: UnitType[], groups: boolean, rnd: () => number): boolean {
+  const int = (n: number) => Math.floor(rnd() * n);
+  const die = () => 1 + int(6);
   while (att.length && def.length) {
     const a = pick(att.length, diceFor(att.length), rnd);
     const d = pick(def.length, diceFor(def.length), rnd);
+    const matchups = matchupsFrom(a.length, d.length, randomTargets(a.length, d.length, groups, int), groups);
+    const units = { attacker: a.map(String), defender: d.map(String) };
+    const types = { attacker: a.map((i) => att[i]), defender: d.map((j) => def[j]) };
+    const duels = scoreDuels(types, units, matchups, { attacker: a.map(die), defender: d.map(die) }, []);
     const lostA = new Set<number>();
     const lostD = new Set<number>();
-    for (const i of a) {
-      const j = d[Math.floor(rnd() * d.length)];
-      const ap = die() + typeBonus(att[i], [def[j]]);
-      const dp = die() + typeBonus(def[j], [att[i]]);
-      if (ap > dp) lostD.add(j); else lostA.add(i);
-    }
+    for (const x of duels) (x.winner === 'attacker' ? lostD : lostA).add(Number(x.destroyed));
     for (const i of [...lostA].sort((x, y) => y - x)) att.splice(i, 1);
     for (const j of [...lostD].sort((x, y) => y - x)) def.splice(j, 1);
   }
@@ -66,11 +67,12 @@ function fight(att: UnitType[], def: UnitType[], rnd: () => number): boolean {
  * game does. Only combat units fight; an army without any is destroyed at once. Roll cards,
  * retreats and panics are left out, so this is the chance of a straight fight.
  */
-export function battleOdds(attacker: UnitType[], defenders: UnitType[][]): BattleOdds {
+export function battleOdds(attacker: UnitType[], defenders: UnitType[][], version = RULES_VERSION): BattleOdds {
+  const groups = version >= GROUP_BATTLES_VERSION;
   const combat = (xs: UnitType[]) => xs.filter((u) => u !== 'supply').sort();
   const att0 = combat(attacker);
   const defs0 = defenders.map(combat);
-  const key = `${att0.join()}|${defs0.map((d) => d.join()).join('/')}`;
+  const key = `${groups ? 'g' : ''}${att0.join()}|${defs0.map((d) => d.join()).join('/')}`;
   const hit = cache.get(key);
   if (hit) return hit;
   let seed = 0;
@@ -88,7 +90,7 @@ export function battleOdds(attacker: UnitType[], defenders: UnitType[][]): Battl
     for (const d0 of defs0) {
       if (!won) break;
       const def = [...d0];
-      won = fight(att, def, rnd);
+      won = fight(att, def, groups, rnd);
       left -= d0.length - def.length;
     }
     if (won) { wins++; winLost += att0.length - att.length; }

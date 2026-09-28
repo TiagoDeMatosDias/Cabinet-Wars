@@ -1,6 +1,6 @@
 import {
-  armySpeed, canMoveWithoutGeneral, GENERAL_SPEED, isFriendlyNode, MAJOR_ROAD_MULTIPLIER, isSupplied, UNIT_SPEED, UNIT_TYPES,
-  type Army, type GameState, type GameView, type Unit, type UnitType,
+  canMoveWithoutGeneral, isFriendlyNode, MAJOR_ROAD_MULTIPLIER, isSupplied, memberMovement, members, UNIT_TYPES, usesMovePoints,
+  type Army, type Member, type GameState, type GameView, type Unit, type UnitType,
 } from '@cabinet-wars/engine';
 import { add, clear, h } from './dom';
 import { emblemEl, type Emblem } from './emblem';
@@ -17,12 +17,19 @@ export interface ArmyCardActions {
   close(): void;
 }
 
-function movesLeft(a: Army): { any: number; major: number; speed: number } {
-  const speed = armySpeed(a);
-  if (a.moved.stopped) return { any: 0, major: 0, speed };
-  const any = Math.max(0, speed - a.moved.edges);
-  const major = a.moved.allMajor ? Math.max(0, speed * MAJOR_ROAD_MULTIPLIER - a.moved.edges) : any;
-  return { any, major, speed };
+/** A member's movement this turn and what is left of it: points (rules version 3) or roads. */
+function memberLeft(state: GameState, a: Army, m: Member): { left: number; speed: number } {
+  const speed = memberMovement(state, m, a.moved.bonus);
+  const spent = usesMovePoints(state) ? a.moved.points : a.moved.edges;
+  return { speed, left: a.moved.stopped ? 0 : Math.max(0, speed - spent) };
+}
+
+/** What the army has left: roads (and roads on major roads only), or movement points. */
+function movesLeft(state: GameState, a: Army): { any: number; major: number } {
+  const any = Math.min(...members(a).map((m) => memberLeft(state, a, m).left));
+  if (usesMovePoints(state) || a.moved.stopped) return { any, major: any };
+  const speed = Math.min(...members(a).map((m) => memberMovement(state, m, a.moved.bonus)));
+  return { any, major: a.moved.allMajor ? Math.max(0, speed * MAJOR_ROAD_MULTIPLIER - a.moved.edges) : any };
 }
 
 /** The army card (bottom left): units with movement pips, movement summary and actions. */
@@ -76,40 +83,40 @@ export function armyCard(opts: {
   for (const type of UNIT_TYPES) {
     const units = byType.get(type);
     if (!units) continue;
-    const speed = UNIT_SPEED[type] + a.moved.bonus;
-    const left = a.moved.stopped ? 0 : Math.max(0, speed - a.moved.edges);
+    const { speed, left } = memberLeft(state, a, type);
     add(rows, h('div', { class: 'unit-line' },
       h('span', { class: 'unit-token', style: `--c:${color}` }, unitIcon(type, 18)),
       h('span', { class: 'unit-name', 'data-tip': t(`tip.unit.${type}` as Parameters<typeof t>[0]) }, unitName(type)),
       h('span', { class: 'unit-count' }, `×${units.length}`),
-      mine ? h('span', { class: 'pips', title: t('army.pipsTitle', { left, speed }) }, Array.from({ length: speed }, (_, i) => h('span', { class: `pip ${i < left ? 'on' : ''}` }))) : null,
+      mine ? h('span', { class: 'pips', title: t(usesMovePoints(state) ? 'army.pointsTitle' : 'army.pipsTitle', { left, speed }) }, Array.from({ length: speed }, (_, i) => h('span', { class: `pip ${i < left ? 'on' : ''}` }))) : null,
       mine ? h('span', { class: 'muted small' }, t('army.pips', { left, speed })) : null));
   }
   if (a.generals.length) {
     // Generals are non-combat members; they ride at cavalry speed.
-    const speed = GENERAL_SPEED + a.moved.bonus;
-    const left = a.moved.stopped ? 0 : Math.max(0, speed - a.moved.edges);
+    const { speed, left } = memberLeft(state, a, 'general');
     add(rows, h('div', { class: 'unit-line' },
       h('span', { class: 'unit-token', style: `--c:${color}` }, iconEl(currentTheme().icons.general, 18)),
       h('span', { class: 'unit-name', 'data-tip': t('tip.unit.general') }, t('unit.general')),
       h('span', { class: 'unit-count' }, `×${a.generals.length}`),
-      mine ? h('span', { class: 'pips', title: t('army.pipsTitle', { left, speed }) }, Array.from({ length: speed }, (_, i) => h('span', { class: `pip ${i < left ? 'on' : ''}` }))) : null,
+      mine ? h('span', { class: 'pips', title: t(usesMovePoints(state) ? 'army.pointsTitle' : 'army.pipsTitle', { left, speed }) }, Array.from({ length: speed }, (_, i) => h('span', { class: `pip ${i < left ? 'on' : ''}` }))) : null,
       mine ? h('span', { class: 'muted small' }, t('army.pips', { left, speed })) : null));
   }
   add(card, rows);
   if (mine && !a.generals.length && !canMoveWithoutGeneral(a) && !isFriendlyNode(state, a)) add(card, h('div', { class: 'warn small' }, t('army.noGeneralEnemy')));
 
   if (mine) {
-    const m = movesLeft(a);
-    const slowest = a.units.length ? a.units.reduce((s, u) => (UNIT_SPEED[u.type] < UNIT_SPEED[s.type] ? u : s), a.units[0]) : null;
+    const m = movesLeft(state, a);
+    const points = usesMovePoints(state);
+    const move = (x: Member) => memberMovement(state, x, 0);
+    const slowest = a.units.length ? a.units.reduce((s, u) => (move(u.type) < move(s.type) ? u : s), a.units[0]) : null;
     const fasterIfSplit = slowest ? a.units.filter((u) => u.type !== slowest.type) : [];
-    const gain = slowest && fasterIfSplit.length ? Math.min(...fasterIfSplit.map((u) => UNIT_SPEED[u.type]), a.generals.length ? GENERAL_SPEED : 99) - UNIT_SPEED[slowest.type] : 0;
-    add(card, h('div', { class: 'move-summary', 'data-tip': t('tip.moves') },
-      h('strong', {}, a.moved.stopped ? t('army.stopped') : t('army.moves', { n: m.any })),
+    const gain = slowest && fasterIfSplit.length ? Math.min(...fasterIfSplit.map((u) => move(u.type)), a.generals.length ? move('general') : 99) - move(slowest.type) : 0;
+    add(card, h('div', { class: 'move-summary', 'data-tip': t(points ? 'tip.movePoints' : 'tip.moves') },
+      h('strong', {}, a.moved.stopped ? t('army.stopped') : t(points ? 'army.points' : 'army.moves', { n: m.any })),
       !a.moved.stopped && m.major !== m.any ? h('span', { class: 'muted' }, ` ${t('army.majorOnly', { n: m.major })}`) : null,
       h('span', { class: 'muted' }, ` · ${t('army.slowest', { unit: slowest ? unitName(slowest.type).toLowerCase() : t('unit.general').toLowerCase() })}`)),
     slowest && gain > 0 && !a.moved.stopped && opts.planning
-      ? h('div', { class: 'hint' }, t('army.splitHint', { unit: unitName(slowest.type).toLowerCase(), n: gain }))
+      ? h('div', { class: 'hint' }, t(points ? 'army.splitHintPoints' : 'army.splitHint', { unit: unitName(slowest.type).toLowerCase(), n: gain }))
       : null);
   }
 

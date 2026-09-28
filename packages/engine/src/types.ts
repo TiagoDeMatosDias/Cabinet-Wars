@@ -3,6 +3,15 @@ export const UNIT_TYPES: UnitType[] = ['cavalry', 'infantry', 'artillery', 'supp
 export const UNIT_SPEED: Record<UnitType, number> = { cavalry: 4, infantry: 3, artillery: 2, supply: 2 };
 /** Generals are non-combat units that ride with their army; alone they move like cavalry. */
 export const GENERAL_SPEED = 4;
+/** Rules version 3: movement points per turn (see ROAD_COST). */
+export const MOVE_POINTS: Record<UnitType, number> = { cavalry: 8, infantry: 6, artillery: 4, supply: 4 };
+export const GENERAL_POINTS = 8;
+/** Rules version 3: what a road costs in movement points. */
+export const ROAD_COST: Record<RoadType, number> = { major: 1, minor: 2 };
+/** Rules version 3: a +1 Moves card adds this many points, one more road of any kind. */
+export const MOVES_CARD_POINTS = 2;
+/** A member of an army, as far as movement goes. */
+export type Member = UnitType | 'general';
 
 export type Side = 'attacker' | 'defender';
 /**
@@ -59,6 +68,8 @@ export interface General {
 export interface MoveState {
   edges: number;
   allMajor: boolean;
+  /** Movement points spent (rules version 3). */
+  points: number;
   /** Bonus speed from +1 Moves cards this turn. */
   bonus: number;
   /** Movement ended (e.g. it triggered a battle). */
@@ -120,11 +131,21 @@ export interface PlacedCard extends CardPlacement {
  */
 export type BattleChoice = 'fight' | 'block' | 'retreat' | 'panic';
 
-/** One attacking unit against the defending unit it faces. */
+/**
+ * Who faces whom in a battle round: indexes in `units.attacker` and `units.defender` (and in the
+ * dice). One side has exactly one unit; the other has one or more, fighting it together.
+ */
+export interface Matchup {
+  attacker: number[];
+  defender: number[];
+}
+
+/** A matchup scored: a group's best total counts against the lone unit it faces. */
 export interface Duel {
-  /** Index of the attacking unit in `units.attacker` (and of its die). */
+  matchup: Matchup;
+  /** The attacking unit whose total counts (the best of a group), an index in `units.attacker`. */
   attacker: number;
-  /** Index of the defending unit in `units.defender` (and of its die). */
+  /** The defending unit whose total counts, an index in `units.defender`. */
   defender: number;
   attackerPoints: number;
   defenderPoints: number;
@@ -141,7 +162,7 @@ export interface BattleRound {
   round: number;
   units: Record<BattleRole, string[]>;
   types: Record<BattleRole, UnitType[]>;
-  targets: number[];
+  matchups: Matchup[];
   choices: Record<BattleRole, BattleChoice>;
   /** Null when the battle ended before the roll (a retreat or panic went through). */
   dice: Record<BattleRole, number[]> | null;
@@ -202,8 +223,8 @@ export interface Battle {
   round: number;
   /** The combat units fighting this round, picked at random. */
   units: Record<BattleRole, string[]>;
-  /** For each attacking unit, the index in `units.defender` of the unit it faces. */
-  targets: number[];
+  /** Who faces whom this round. */
+  matchups: Matchup[];
   choice: Record<BattleRole, BattleChoice | 'hidden' | null>;
   /** One die per fighting unit, in the order of `units`. */
   dice: Record<BattleRole, number[]> | null;
@@ -241,8 +262,11 @@ export type Prompt =
 export type OracleRequest =
   | { kind: 'shuffle'; deck: 'general' | 'event'; n: number }
   | { kind: 'roll'; attacker: number; defender: number }
-  /** Pick `attackerPick` of the attacker's `attacker` combat units, `defenderPick` of the defender's, and a target for each attacking unit. */
-  | { kind: 'select'; attacker: number; attackerPick: number; defender: number; defenderPick: number }
+  /**
+   * Pick `attackerPick` of the attacker's `attacker` combat units, `defenderPick` of the defender's,
+   * and who faces whom (see randomTargets): with `groups` (rules version 3), every picked unit fights.
+   */
+  | { kind: 'select'; attacker: number; attackerPick: number; defender: number; defenderPick: number; groups?: boolean }
   /** Two enemy armies stand next to each other: pick which one attacks (index into `armies`). */
   | { kind: 'engage'; armies: [string, string] };
 

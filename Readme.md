@@ -73,17 +73,17 @@ A game can be played **free for all** instead of attackers against defenders: ev
 ### Movement
 
 - An army is always on one specific node, and may only move to a node connected to it.
-- An army always moves at the speed of its slowest member:
+- Each member of an army has movement points to spend each turn, and each road costs points: **1 for a major road, 2 for a minor road**. An army can make a move as long as its member with the fewest points can:
 
-  | Unit      | Nodes per turn |
-  |-----------|----------------|
-  | Cavalry   | 4              |
-  | General   | 4              |
-  | Infantry  | 3              |
-  | Artillery | 2              |
-  | Supply    | 2              |
+  | Unit      | Movement points |
+  |-----------|-----------------|
+  | Cavalry   | 8               |
+  | General   | 8               |
+  | Infantry  | 6               |
+  | Artillery | 4               |
+  | Supply    | 4               |
 
-- If an army moves only along major roads, it can move three times as far in a single turn.
+  Infantry, for example, goes 3 minor roads, 6 major roads, or 2 major and 2 minor roads. Points left after a move can be spent on another move in the same turn.
 - An army may not move onto a node where a different army is present, unless that army belongs to the same nation.
 
 ### Supply
@@ -119,7 +119,7 @@ A battle is fought in rounds. Supply units and generals never fight; the other u
    | 7 to 9       | 3              |
    | More than 9  | 4              |
 
-   Each attacking unit is then matched, also at random, with one of the defender's drawn units. Several attacking units may face the same unit. A drawn defending unit that no attacking unit faces sits the round out. Both players see the matchups.
+   The drawn units are then matched up at random, and every drawn unit fights. When one side drew more units, its units are shared out among the other side's, so several units may face one: with 2 attacking units drawn against 1 defending unit, both face it. Each unit of the smaller side faces at least one. Both players see the matchups.
 2. **Stand or retreat.** Each player secretly chooses one of the following, and the choices are then revealed together:
    - **Fight.**
    - **Retreat card:** the battle ends and the army retreats.
@@ -127,7 +127,7 @@ A battle is fought in rounds. Supply units and generals never fight; the other u
    - **Panic retreat** (no card needed): one of the army's fighting units is destroyed, then the army retreats.
 
    A blocked Retreat card is still spent. If a retreat or panic goes through, the battle ends. If both sides get away, both retreat.
-3. **Roll.** Each fighting unit rolls one six-sided die (D6), and both players see every die. Each player may then secretly put roll cards on any die: +1 or +2 on their own dice, −1 on the enemy's. For each matchup, the attacker's total (die + cards + unit bonus) is compared with the total of the defending unit it faces. The higher total wins; ties go to the defender. The losing unit is destroyed. A defending unit that faces several attackers uses the same die against each of them, and is destroyed if it loses any of those comparisons.
+3. **Roll.** Each fighting unit rolls one six-sided die (D6), and both players see every die. Each player may then secretly put roll cards on any die: +1 or +2 on their own dice, −1 on the enemy's. For each matchup, the attacker's total (die + cards + unit bonus) is compared with the defender's. When several units face one, only their **best total** counts. The higher total wins; ties go to the defender. The losing unit is destroyed: the lone unit, or the group's best. So each matchup costs exactly one unit.
 4. If an army has no combat units left, it is destroyed. Otherwise, start again from step 1.
 
 **Unit types.** A unit gets **+1** when it fights a unit type it has the advantage over. This applies to both the attacker and the defender:
@@ -193,7 +193,7 @@ Both decks are shared between all players:
 | −1 Roll       | 10     | −1 to roll                                  |
 | Retreat       | 10     | Retreats the army                           |
 | Block Retreat | 5      | Counters an enemy Retreat card: that army makes a panic retreat instead |
-| +1 Moves      | 15     | Grants all units in an army +1 moves        |
+| +1 Moves      | 15     | An army goes one road further (+2 movement points) |
 
 ### Event deck
 
@@ -257,7 +257,8 @@ All text in the game is English by default. A map can add any number of language
 Every game records the version of the rules it is played by. Saves and replays keep theirs, so they play back exactly as they were played after the rules change.
 
 - **Version 1** (games from before these rules existed): no hand limit, the classic deck amounts whatever the number of nations, and battles only when an army moves next to an enemy.
-- **Version 2** (every new game): the 10-card hand limit, decks that grow with the number of nations, and battles between armies that stand next to each other.
+- **Version 2**: the 10-card hand limit, decks that grow with the number of nations, and battles between armies that stand next to each other.
+- **Version 3** (every new game): movement points, and battles fought in groups. By the older rules, an army moves at the speed of its slowest member in nodes per turn (cavalry and generals 4, infantry 3, artillery and supply 2), three times as far if it keeps to major roads, and +1 Moves adds one node. In battle, drawn defending units that no attacker faces sit the round out, each attacking unit fights the defending unit it faces on its own, and a defending unit facing several attackers is destroyed if it loses to any of them.
 
 ## Learning the game
 
