@@ -176,7 +176,7 @@ function richText(text: string) {
 /** Credits: [name, what it is, license]. */
 const CREDITS: { id: string; items: [string, string, string][] }[] = [
   { id: 'art', items: [
-    ['Maps, emblems and unit miniatures', 'made for this game with the help of AI image and model generation', ''],
+    ['Maps and emblems', 'made for this game with the help of AI image generation', ''],
     ['Sounds', 'synthesized in the browser as the game plays', ''],
   ] },
   { id: 'fonts', items: [
@@ -186,7 +186,6 @@ const CREDITS: { id: string; items: [string, string, string][] }[] = [
   { id: 'software', items: [
     ['PixiJS', 'the map', 'MIT'],
     ['pixi-viewport', 'panning and zooming', 'MIT'],
-    ['three.js', 'the 3D army miniatures', 'MIT'],
     ['d3-delaunay', 'fog of war areas', 'ISC'],
     ['fflate', 'save files', 'MIT'],
     ['Zod', 'map validation', 'MIT'],

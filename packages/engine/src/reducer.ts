@@ -160,7 +160,11 @@ function applyIntent(state: GameState, by: NationId, intent: Intent) {
     }
     case 'sabotage': applySabotage(state, intent.army); return;
     case 'recruit': applyRecruit(state, intent.node, intent.unit ?? null); return;
-    case 'muster': applyMuster(state, by, intent.node, intent.unit); return;
+    case 'muster':
+      applyMuster(state, by, intent.node, intent.unit);
+      // Re-enter the movement phase so a unit raised next to an enemy army fights it at once (version 2).
+      state.pending = [];
+      return;
   }
 }
 

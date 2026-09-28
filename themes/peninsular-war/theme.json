@@ -155,20 +155,6 @@
     "text": "#f2ecda"
   },
   "army": {
-    "model": {
-      "units": {
-        "infantry": "models/infantry.glb",
-        "cavalry": "models/cavalry.glb",
-        "artillery": "models/artillery.glb",
-        "supply": "models/supply.glb",
-        "general": "models/general.glb"
-      },
-      "tint": "Nation",
-      "scale": {
-        "artillery": 0.85,
-        "supply": 0.6
-      }
-    },
     "shadow": {
       "color": "#1f26336e"
     }

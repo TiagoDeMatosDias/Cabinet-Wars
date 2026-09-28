@@ -119,8 +119,5 @@
   "tooltip": {
     "surface": "#eee6d3",
     "text": "#121a2b"
-  },
-  "army": {
-    "model": false
   }
 }

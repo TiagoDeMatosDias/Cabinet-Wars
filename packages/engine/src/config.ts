@@ -63,6 +63,12 @@ export const MapConfigSchema = z.object({
   theme: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
   background: z.string().default('map.png'),
   nodesImage: z.string().default('nodes.png'),
+  /**
+   * How much bigger the map is drawn than its background image, while nodes, armies and labels keep
+   * their size: above 1 spreads the nodes out, so a map can hold more of them without crowding.
+   * Ignored by the rules engine.
+   */
+  mapScale: z.number().min(0.25).max(8).optional(),
   nations: z.array(z.object({
     id,
     name: z.string(),

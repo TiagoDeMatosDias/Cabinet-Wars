@@ -31,6 +31,7 @@ The core of the game is the map. It consists of an underlying visual depiction a
 
 - Some nodes contain victory points (VP).
 - Nodes are connected to each other by **major** or **minor** roads.
+- Armies are shown as **Kriegsspiel pieces** at the upper right of their node, in the manner of the red and blue blocks of the 1824 Prussian war game. A dark header shows the army's **total of combat units** in large figures, with a gold star per general. Below it is one block per unit type in the nation's color, marked with a military map symbol and a count: a cross for infantry, a diagonal for cavalry, a dot for artillery and a low bar for supply. Planned positions are drawn as translucent copies.
 
 ## Nations and victory
 
@@ -99,6 +100,8 @@ Supply doesn't pass through enemy armies. A node holding an enemy army is not a 
 
 This forces armies advancing into enemy territory to leave supply units behind, or suffer attrition. It also allows "chains" of supply units that provide a path to an army.
 
+**Supply overlay.** The **Supply** button in the top bar (or the S key) shades in red the areas of the map your side cannot supply this turn, taking your planned orders into account. An army that ends its turn in a red area loses a unit.
+
 ## Battles
 
 If an army moves to a node directly connected to a node holding an enemy army, a battle occurs. The army that moved is the **attacker**; the other army is the **defender**.
@@ -161,7 +164,7 @@ A battle is fought in rounds. Supply units and generals never fight; the other u
 ## Raising units
 
 - **Unit cap.** Each nation has a soft cap on its number of units (supply units included, generals not): half the victory points it owns at the start of the game, rounded down. The cap doesn't change during the game.
-- **Muster.** Once per turn, during its orders, a nation below its cap may raise one unit (cavalry, infantry, artillery or supply) in one of its own towns worth **more than 5 victory points**. The town must be under its control, with no other nation's army in it. A nation with no such town to use may muster in any of its own towns worth at least 1 victory point, under the same conditions. The unit joins the nation's army there, or forms a new army. Press **Muster** next to End Turn (or open the town's card), pick the unit type, then click a highlighted town.
+- **Muster.** Once per turn, during its orders, a nation below its cap may raise one unit (cavalry, infantry, artillery or supply) in one of its own towns worth **more than 5 victory points**. The town must be under its control, with no other nation's army in it. A nation with no such town to use may muster in any of its own towns worth at least 1 victory point, under the same conditions. The unit joins the nation's army there, or forms a new army. Press **Muster** next to End Turn (or open the town's card), pick the unit type, then click a highlighted town. While a muster is still available the Muster button pulses and End Turn reads "muster unused": the first press of End Turn only reminds you, and pressing it again ends the turn.
 - **War status.** Click the nations in the top bar to see, for every nation, the victory points it holds and owns, its war exhaustion, its willingness and how far it is from collapse.
 - **Recruit events** from the Event deck ignore the cap: they can take a nation past it.
 - Running out of units, or of armies, does not knock a nation out. Only its willingness does (see [Nations and victory](#nations-and-victory)).
@@ -229,6 +232,7 @@ Maps are made in the in-browser map editor (main menu → **Map editor** → "Ne
 - **Node map…** (optional) uploads an image with one colored dot per node on a transparent background, the same size as the base map; nodes are created from the dots. Without one, use **Place node** to click nodes onto the map (Shift+click moves the selected node).
 - **Download** saves the map as a `.cabinetwars` file: a zip with `config.json`, `map.png` and `nodes.png` (generated from the node positions if you placed nodes by hand). Unzip it into `Map/<Name>/` to serve it from the server, or share the file as is.
 - **Open…** loads a `.cabinetwars` file or a `config.json` back into the editor. "Import map…" under **Map editor** on the main menu adds one to the browser's map list.
+- **Map scale ×** draws the map this many times bigger than its image while nodes, roads, labels and armies keep their size. Above 1 the nodes spread out, so the same map can carry more nodes, at a finer grain, without looking crowded. Node positions stay in image pixels, so changing the scale never moves a node. It is saved as `mapScale` in `config.json`.
 - **Rules & decks** sets the round from which the End Game card can end the war, and how many of each card the Event and General decks contain.
 - **Languages & translations** adds languages to the map and translates its names and any interface text (see [Languages](#languages)).
 
@@ -258,6 +262,7 @@ Every game records the version of the rules it is played by. Saves and replays k
 ## Learning the game
 
 - **How to play** on the main menu has the rules in short, chapter by chapter, and starts the **tutorial**: a guided game against the computer on the smallest map, with notes pointing at each part of the screen. Some notes wait for the player to do what they describe (select an army, plan a move, end the turn). The tutorial can be left at any time.
+- **Battle odds.** When a planned move will meet an enemy army you can see, its line in the orders list shows the chance of winning and what a win would cost, for example "62% to win · a win costs about 3 units". The game works this out by fighting the battle a thousand times with the battle rules, as a straight fight: roll cards, retreats and panics are left out, and so are enemy armies hidden in the fog.
 - **Tooltips.** Rest the pointer on almost anything — units, towns' owner and control, victory points, supply, willingness, cards, buttons — for a short explanation.
 - **Since your last turn.** When a player's turn begins, a summary lists what their side saw happen since their previous turn, turn by turn; clicking a line shows it on the map. It can be turned off under **Settings**.
 
@@ -437,12 +442,12 @@ The game was called Krieg while it was being made. Files and settings from then 
 ## Documentation
 
 - [Design system: themeable UI](docs/design-system.md): how each map can have its own interface style, the design tokens a theme must define, how to write a theme, and the canonical Imperial China theme.
-- [Game screen: layout and interaction](docs/game-screen.md): the in-game layout, nation emblems, cards, 3D armies, the army card, the orders (step) list, turn controls, the battle panel and the log.
+- [Game screen: layout and interaction](docs/game-screen.md): the in-game layout, nation emblems, cards, army pieces, the army card, the orders (step) list, turn controls, the battle panel and the log.
 
 ## Credits
 
-- **Art and sound.** Maps, emblems and unit miniatures were made for this game with the help of AI image and model generation. Sounds are synthesized in the browser.
+- **Art and sound.** Maps and emblems were made for this game with the help of AI image generation. Sounds are synthesized in the browser.
 - **Fonts.** [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (via lxgw-wenkai-webfont) and [Noto Serif SC](https://fonts.google.com/noto/specimen/Noto+Serif+SC) (via Fontsource), both under the SIL Open Font License 1.1.
-- **Software.** [PixiJS](https://pixijs.com) and pixi-viewport (the map), [three.js](https://threejs.org) (3D miniatures), d3-delaunay (fog areas), fflate (save files), Zod (map validation), ws (server connections), selfsigned (HTTPS certificate) — MIT or ISC licensed; [cloudflared](https://github.com/cloudflare/cloudflared) (public links, Apache 2.0, downloaded when first needed). Built and tested with Vite, TypeScript, tsx and Vitest.
+- **Software.** [PixiJS](https://pixijs.com) and pixi-viewport (the map), d3-delaunay (fog and supply areas), fflate (save files), Zod (map validation), ws (server connections), selfsigned (HTTPS certificate) — MIT or ISC licensed; [cloudflared](https://github.com/cloudflare/cloudflared) (public links, Apache 2.0, downloaded when first needed). Built and tested with Vite, TypeScript, tsx and Vitest.
 
 The same credits are in the game, under **Settings → About → Credits**.

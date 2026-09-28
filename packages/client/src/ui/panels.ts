@@ -31,6 +31,8 @@ export function topBar(opts: {
   /** The war status panel is open. */
   warOpen: boolean;
   onToggleWar(): void;
+  /** The supply overlay toggle (players only). */
+  supply?: { on: boolean; onToggle(): void };
 }): HTMLElement {
   const { view: v, me, emblems } = opts;
   const ic = currentTheme().icons;
@@ -72,6 +74,10 @@ export function topBar(opts: {
         title: t('top.language'), 'aria-label': t('top.language'),
         onchange: (e: Event) => setPreferredLanguage((e.target as HTMLSelectElement).value),
       }, langs.map((l) => h('option', { value: l.code, selected: l.code === language() }, l.name))) : null,
+      opts.supply ? h('button', {
+        class: `supply-toggle ${opts.supply.on ? 'active' : ''}`, 'aria-pressed': String(opts.supply.on),
+        onclick: opts.supply.onToggle, 'data-tip': t('top.supplyTitle'),
+      }, t('top.supply')) : null,
       opts.onSave ? h('button', { onclick: opts.onSave }, t('top.save')) : null,
       h('button', { onclick: opts.onLeave }, t('top.leave'))));
 }
@@ -215,15 +221,18 @@ export function turnControls(opts: {
 }): HTMLElement | null {
   if (!opts.myTurn) return null;
   const m = opts.muster;
+  // A free unit is waiting: the Muster button asks for attention and End Turn says so.
+  const unused = Boolean(m && m.blocked === null && !opts.progress);
   return h('div', { class: 'turn-controls' },
     m ? h('button', {
-      class: `muster-btn ${m.active ? 'active' : ''}`, disabled: Boolean(m.blocked), 'aria-pressed': String(m.active),
+      class: `muster-btn ${m.active ? 'active' : ''} ${unused && !m.active ? 'attention' : ''}`, disabled: Boolean(m.blocked), 'aria-pressed': String(m.active),
       onclick: m.onToggle, title: m.blocked ? t(musterWhy(m.blocked)) : t('controls.musterTitle'),
     }, unitIcon('infantry', 18), ` ${t('controls.muster')}`) : null,
     h('button', { class: 'next-step', disabled: !opts.canStep, onclick: opts.onNext, title: t('controls.nextTitle') }, `${t('controls.next')} ▶`),
     h('button', { class: 'end-turn', disabled: !opts.canEnd, onclick: opts.onEnd, title: t('controls.endTitle') },
       h('span', {}, opts.progress ? t('controls.ending') : t('controls.end')),
-      h('small', {}, opts.progress ?? (opts.remaining ? tn('controls.remaining', opts.remaining) : t('controls.noneLeft')))));
+      h('small', {}, opts.progress ?? (opts.remaining ? tn('controls.remaining', opts.remaining) : t('controls.noneLeft'))),
+      unused ? h('small', { class: 'muster-unused' }, t('controls.musterUnused')) : null));
 }
 
 // ---- log drawer ---------------------------------------------------------------------------

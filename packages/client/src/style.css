@@ -417,6 +417,11 @@ button.tb-own:hover:not(:disabled) { border-color: currentColor; }
 .next-step { padding: 10px 18px; font-weight: 700; background: var(--k-controls-nextStep-fill, var(--secondary)); color: var(--k-controls-nextStep-text, var(--text)); border: 2px solid var(--k-controls-nextStep-border, var(--text)); box-shadow: var(--shadow-overlay); }
 .end-turn { display: flex; flex-direction: column; align-items: center; min-width: 200px; padding: 10px 22px; background: var(--k-controls-endTurn-fill, var(--primary)); color: var(--k-controls-endTurn-text, var(--on-primary)); border: 2px solid var(--k-controls-endTurn-border, var(--primary)); box-shadow: var(--shadow-overlay); }
 .muster-btn { display: inline-flex; align-items: center; gap: 4px; padding: 10px 16px; font-weight: 700; background: var(--k-controls-nextStep-fill, var(--secondary)); color: var(--k-controls-nextStep-text, var(--text)); border: 2px solid var(--k-controls-nextStep-border, var(--text)); box-shadow: var(--shadow-overlay); }
+.muster-btn.attention { border-color: var(--seal); animation: muster-pulse 1.6s ease-in-out infinite; }
+@keyframes muster-pulse { 0%, 100% { box-shadow: var(--shadow-overlay), 0 0 0 0 color-mix(in srgb, var(--seal) 55%, transparent); } 50% { box-shadow: var(--shadow-overlay), 0 0 0 6px color-mix(in srgb, var(--seal) 0%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .muster-btn.attention { animation: none; outline: 2px solid var(--seal); } }
+.end-turn .muster-unused { font-size: 11px; color: var(--k-controls-endTurn-text, var(--on-primary)); background: var(--seal); padding: 0 6px; border-radius: 2px; margin-top: 2px; }
+.supply-toggle.active { background: var(--text); color: var(--raised); border-color: var(--text); }
 .muster-btn.active { outline: 3px solid var(--seal); outline-offset: 1px; }
 .end-turn span { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.1; }
 .end-turn small { font-size: 11px; opacity: 0.85; }

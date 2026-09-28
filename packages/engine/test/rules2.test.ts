@@ -65,3 +65,17 @@ it('under the original rules, standing armies do not fight', () => {
   expect(g.state.battle).toBeNull();
   expect(g.prompt('red')?.kind).toBe('movement');
 });
+
+it('a unit mustered next to an enemy army fights it at once', () => {
+  const g = new TestGame(v2({
+    nodes: testConfig().nodes!.map((n) => (n.id === 'a3' ? { ...n, vp: 8 } : n)),
+    armies: [
+      { id: 'R', nation: 'red', node: 'a1', generals: ['gr'], units: { cavalry: 1, infantry: 2, artillery: 0, supply: 0 } },
+      { id: 'B', nation: 'blue', node: 'n1', generals: ['gb'], units: { cavalry: 0, infantry: 3, artillery: 0, supply: 0 } },
+    ],
+  }));
+  expect(g.state.battle).toBeNull();
+  g.act('red', { type: 'muster', node: 'a3', unit: 'infantry' });
+  expect(g.state.battle).not.toBeNull();
+  expect(g.state.history.some((h) => h.msg?.key === 'log.standoff')).toBe(true);
+});

@@ -1,12 +1,10 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, Texture, type FederatedPointerEvent } from 'pixi.js';
 import { Delaunay } from 'd3-delaunay';
 import { Viewport } from 'pixi-viewport';
-import type { Army, Edge, MapNode, Nation } from '@cabinet-wars/engine';
+import type { Army, Edge, MapNode, Nation, UnitType } from '@cabinet-wars/engine';
 import { alphaOf, currentTheme, hex, type Theme } from '../theme/theme';
 import type { Emblem } from '../ui/emblem';
 import { iconPath } from '../ui/icons';
-import { formation, type FigureKind } from './formation';
-import { armyModel, Miniatures, type AnimName, type Sheet } from './miniatures';
 
 export type HighlightKind = 'move' | 'retreat' | 'target';
 
@@ -31,11 +29,9 @@ export interface MapScene {
   arrows?: { path: string[]; step: number }[];
   /** Fog of war: the nodes the viewer can see into; every other node's area is fogged. Omit for no fog. */
   visible?: Set<string>;
-  /** Armies in battle, each with the node of the enemy it faces: their miniatures play the combat animation. */
-  fighting?: Map<string, string>;
-  /** Plays this animation on every miniature (the theme gallery). */
-  animation?: AnimName;
-  /** Armies out of supply: their count pill gets a warning badge. */
+  /** Supply overlay: the nodes the viewer's side can supply. Every other node's area gets a warning wash. */
+  supplied?: Set<string>;
+  /** Armies out of supply: their piece gets a warning badge. */
   unsupplied?: Set<string>;
   /** The same for planned positions (ghosts). */
   ghostsUnsupplied?: Set<string>;
@@ -53,23 +49,31 @@ export interface MapClick {
 
 interface Hitbox { id: string; x: number; y: number; w: number; h: number }
 
-/** A playing miniature sprite. */
-interface Figure { sprite: Sprite; sheet: Sheet; anim: AnimName; phase: number; army: string | null }
-
 /** An army walking from its previous node to its new one. */
 interface Tween { fromX: number; fromY: number; toX: number; toY: number; start: number; duration: number }
 
-/** Ground width of each figure kind in a formation, in figure heights. */
-const FOOTPRINT: Record<FigureKind, number> = { infantry: 0.42, general: 0.5, cavalry: 0.72, artillery: 0.9, supply: 1.15 };
+/** Order of the unit blocks in a Kriegsspiel piece. */
+const BLOCK_ORDER: UnitType[] = ['infantry', 'cavalry', 'artillery', 'supply'];
+/** Kriegsspiel piece sizes, in map pixels: unit blocks, the gap between them, and the header with the combat total. */
+const BLOCK = { w: 40, h: 18, gap: 2, header: 22 };
+/** Generals' stars on a piece: gilt, which reads on every nation color and on the ink header. */
+const STAR_GOLD = 0xe2bd52;
 /** Walking speed of armies moving between nodes, in map pixels per second. */
 const WALK_SPEED = 240;
 
-/** Pan/zoom map with roads, nodes, highlights and 3D-looking army miniatures over the background. */
+/**
+ * Pan/zoom map with roads, nodes, highlights and Kriegsspiel army pieces over the background.
+ *
+ * Node positions are stored in background-image pixels. The map scale spreads them (and the image)
+ * out while nodes, pieces and labels keep their size, so one map can carry more nodes without
+ * crowding. Everything the class takes or reports (clicks, focus points) is in image pixels.
+ */
 export class MapView {
   private app = new Application();
   private viewport!: Viewport;
   private edgeLayer = new Graphics();
   private fogLayer = new Container();
+  private supplyLayer = new Container();
   /** Wilderness cells split off oversized node areas; always fogged. */
   private wildCells: number[][] = [];
   /** Voronoi cell (flat polygon) of every node, recomputed when nodes move. */
@@ -81,32 +85,35 @@ export class MapView {
   private armyLayer = new Container();
   private boxLayer = new Graphics();
   private armyHitboxes: Hitbox[] = [];
+  /** The scene as given (image pixels), and as drawn (world pixels). */
+  private input: MapScene | null = null;
   private scene: MapScene | null = null;
   private hoveredArmy: string | null = null;
   private box: { x0: number; y0: number; x1: number; y1: number } | null = null;
   private suppressClick = false;
   private theme: Theme = currentTheme();
-  private minis: Miniatures | null = null;
-  private offMinis: (() => void) | null = null;
-  private figures: Figure[] = [];
+  /** Map scale: world pixels per background-image pixel. */
+  private s = 1;
+  private bg: Sprite | null = null;
+  private blank: Graphics | null = null;
   /** Army containers by id, moved while their army walks. */
   private pieces = new Map<string, Container>();
   private tweens = new Map<string, Tween>();
   /** Where each army was last drawn, to walk it when it changes node. */
   private lastPlace = new Map<string, { node: string; x: number; y: number }>();
-  /** Which way each army's miniatures face: 1 right, -1 left. */
-  private facing = new Map<string, number>();
   onClick: ((c: MapClick) => void) | null = null;
   onHover: ((node: string | null) => void) | null = null;
   onBoxSelect: ((armies: string[]) => void) | null = null;
   /** Right click on the map (the browser menu is suppressed). */
   onRightClick: ((c: MapClick) => void) | null = null;
   private hovered: string | null = null;
-  /** Size of the map in world pixels (the background image size). */
+  /** Size of the map in image pixels (the background image size). */
   worldSize = { width: 3840, height: 3024 };
 
-  static async create(host: HTMLElement, background: Blob | null, size?: { width: number; height: number }): Promise<MapView> {
+  /** `mapScale` is the map's scale (config `mapScale`): how far apart its nodes are drawn. */
+  static async create(host: HTMLElement, background: Blob | null, size?: { width: number; height: number }, mapScale = 1): Promise<MapView> {
     const view = new MapView();
+    view.s = validScale(mapScale);
     await view.init(host, background, size);
     return view;
   }
@@ -122,23 +129,27 @@ export class MapView {
       bg = new Sprite(Texture.from(bitmap));
       world = { width: bitmap.width, height: bitmap.height };
     }
+    const s = this.s;
     this.viewport = new Viewport({
       screenWidth: host.clientWidth,
       screenHeight: host.clientHeight,
-      worldWidth: world.width,
-      worldHeight: world.height,
+      worldWidth: world.width * s,
+      worldHeight: world.height * s,
       events: this.app.renderer.events,
     });
     this.worldSize = world;
-    this.viewport.drag().pinch().wheel().decelerate().clampZoom({ minScale: 0.1, maxScale: 4 });
+    this.viewport.drag().pinch().wheel().decelerate().clampZoom({ minScale: 0.05, maxScale: 4 });
     this.app.stage.addChild(this.viewport);
-    if (bg) this.viewport.addChild(bg);
-    else this.viewport.addChild(new Graphics().rect(0, 0, world.width, world.height).fill(hex(t.map.canvas.blank)).stroke({ width: 4, color: hex(t.map.canvas.blankBorder) }));
-    this.viewport.addChild(this.edgeLayer, this.fogLayer, this.highlightLayer, this.arrowLayer, this.nodeLayer, this.armyLayer, this.boxLayer);
-    this.viewport.fit(true, world.width, world.height);
-    this.viewport.moveCenter(world.width / 2, world.height / 2);
+    if (bg) { bg.scale.set(s); this.bg = bg; this.viewport.addChild(bg); }
+    else {
+      this.blank = new Graphics().rect(0, 0, world.width, world.height).fill(hex(t.map.canvas.blank)).stroke({ width: 4 / s, color: hex(t.map.canvas.blankBorder) });
+      this.blank.scale.set(s);
+      this.viewport.addChild(this.blank);
+    }
+    this.viewport.addChild(this.supplyLayer, this.edgeLayer, this.fogLayer, this.highlightLayer, this.arrowLayer, this.nodeLayer, this.armyLayer, this.boxLayer);
+    this.viewport.fit(true, world.width * s, world.height * s);
+    this.viewport.moveCenter((world.width * s) / 2, (world.height * s) / 2);
     this.app.renderer.on('resize', (w: number, h: number) => this.viewport.resize(w, h));
-    this.useModels(t);
     this.app.ticker.add(() => this.animate());
 
     this.viewport.on('clicked', (e) => {
@@ -147,10 +158,11 @@ export class MapView {
       // Only the left button selects; the right button is handled by onRightClick.
       if ((e.event as FederatedPointerEvent).button !== 0) return;
       const { x, y } = e.world;
+      const s = this.s;
       const shift = Boolean((e.event as FederatedPointerEvent).shiftKey || (e.event as FederatedPointerEvent).ctrlKey || (e.event as FederatedPointerEvent).metaKey);
       // Inside a town circle the node wins; the army piece stands above it.
       const onCircle = this.nodeAt(x, y, this.theme.map.node.radius);
-      this.onClick?.({ x, y, node: onCircle ?? this.nodeAt(x, y), army: onCircle ? null : this.armyAt(x, y), shift });
+      this.onClick?.({ x: x / s, y: y / s, node: onCircle ?? this.nodeAt(x, y), army: onCircle ? null : this.armyAt(x, y), shift });
     });
     this.viewport.on('pointermove', (e: FederatedPointerEvent) => {
       const p = this.viewport.toWorld(e.global);
@@ -196,7 +208,7 @@ export class MapView {
       e.preventDefault();
       const rect = this.app.canvas.getBoundingClientRect();
       const p = this.viewport.toWorld(e.clientX - rect.left, e.clientY - rect.top);
-      this.onRightClick?.({ x: p.x, y: p.y, node: this.nodeAt(p.x, p.y), army: this.armyAt(p.x, p.y), shift: e.shiftKey });
+      this.onRightClick?.({ x: p.x / this.s, y: p.y / this.s, node: this.nodeAt(p.x, p.y), army: this.armyAt(p.x, p.y), shift: e.shiftKey });
     });
     this.viewport.on('pointerup', endBox);
     this.viewport.on('pointerupoutside', endBox);
@@ -218,22 +230,28 @@ export class MapView {
 
   setTheme(theme: Theme) {
     this.theme = theme;
-    this.useModels(theme);
     this.app.renderer.background.color = hex(theme.map.canvas.background);
-    if (this.scene) this.render(this.scene);
+    if (this.input) this.render(this.input);
   }
 
-  /** Uses the theme's 3D miniatures when it has them; blocks are drawn until (or unless) they are ready. */
-  private useModels(theme: Theme) {
-    const model = armyModel(theme);
-    const minis = model ? Miniatures.for(model) : null;
-    if (minis === this.minis) return;
-    this.offMinis?.();
-    this.minis = minis;
-    this.offMinis = minis?.onChange(() => { if (this.scene) this.renderArmies(this.scene); }) ?? null;
+  /** Changes the map scale (the editor), keeping the same spot of the map in the middle of the screen. */
+  setMapScale(mapScale: number) {
+    const s = validScale(mapScale);
+    if (s === this.s) return;
+    const centre = this.viewport.center;
+    const [cx, cy] = [centre.x / this.s, centre.y / this.s];
+    this.s = s;
+    this.bg?.scale.set(s);
+    this.blank?.scale.set(s);
+    this.viewport.worldWidth = this.worldSize.width * s;
+    this.viewport.worldHeight = this.worldSize.height * s;
+    this.viewport.moveCenter(cx * s, cy * s);
+    this.cellsKey = '';
+    this.lastPlace.clear();
+    if (this.input) this.render(this.input);
   }
 
-  /** Per frame: walking armies advance, and every miniature shows its current animation frame. */
+  /** Per frame: walking armies advance towards their new node. */
   private animate() {
     const now = performance.now();
     for (const [id, tw] of this.tweens) {
@@ -242,25 +260,18 @@ export class MapView {
       if (piece && !piece.destroyed) piece.position.set((tw.fromX - tw.toX) * (1 - u), (tw.fromY - tw.toY) * (1 - u));
       if (u >= 1) this.tweens.delete(id);
     }
-    const s = now / 1000;
-    for (const f of this.figures) {
-      if (f.sprite.destroyed) continue;
-      const anim = f.army && this.tweens.has(f.army) ? 'Walk' : f.anim;
-      const frames = f.sheet.frames[anim];
-      if (frames.length) f.sprite.texture = frames[Math.floor(s * f.sheet.fps + f.phase * frames.length) % frames.length];
-    }
   }
 
   /** Pans to a point; `screenDy` puts it that many screen pixels above the centre (to clear a docked panel). */
   focus(x: number, y: number, screenDy = 0) {
-    this.viewport.animate({ position: { x, y: y + screenDy / this.viewport.scale.y }, time: this.theme.motion.map });
+    this.viewport.animate({ position: { x: x * this.s, y: y * this.s + screenDy / this.viewport.scale.y }, time: this.theme.motion.map });
   }
 
   /** Zoom to the bounding box of the given points. */
   fitTo(points: { x: number; y: number }[], pad = 150) {
     if (!points.length) return;
-    const xs = points.map((p) => p.x);
-    const ys = points.map((p) => p.y);
+    const xs = points.map((p) => p.x * this.s);
+    const ys = points.map((p) => p.y * this.s);
     const [x0, x1, y0, y1] = [Math.min(...xs) - pad, Math.max(...xs) + pad, Math.min(...ys) - pad, Math.max(...ys) + pad];
     this.viewport.fit(true, x1 - x0, y1 - y0);
     this.viewport.moveCenter((x0 + x1) / 2, (y0 + y1) / 2);
@@ -277,7 +288,7 @@ export class MapView {
   /** Screen (client) position of a world point. */
   worldToClient(x: number, y: number): { x: number; y: number } {
     const rect = this.app.canvas.getBoundingClientRect();
-    const p = this.viewport.toScreen(x, y);
+    const p = this.viewport.toScreen(x * this.s, y * this.s);
     return { x: rect.left + p.x, y: rect.top + p.y };
   }
 
@@ -300,7 +311,11 @@ export class MapView {
     return null;
   }
 
-  render(scene: MapScene) {
+  render(input: MapScene) {
+    this.input = input;
+    // Nodes are drawn at their scaled positions; the rest of the scene refers to them by id.
+    const s = this.s;
+    const scene: MapScene = s === 1 ? input : { ...input, nodes: input.nodes.map((n) => ({ ...n, x: n.x * s, y: n.y * s })) };
     this.scene = scene;
     const t = this.theme;
     const m = t.map;
@@ -359,6 +374,7 @@ export class MapView {
     this.arrowLayer.removeChildren().forEach((c) => c.destroy());
     for (const arrow of scene.arrows ?? []) this.drawArrow(arrow, nodes);
 
+    this.drawSupply(scene);
     this.drawFog(scene);
     this.nodeLayer.removeChildren().forEach((c) => c.destroy());
     const fogged = (id: string) => Boolean(scene.visible && !scene.visible.has(id));
@@ -377,11 +393,12 @@ export class MapView {
       group.addChild(c);
       if (n.vp > 0) {
         const s = m.vp.size + 6;
-        const x = n.x + R - 4;
         const y = n.y - R - s + 2;
         // Victory points: an icon seal plus the number (no text in any language).
         const num = new Text({ text: String(n.vp), style: { fontFamily: t.type.family.numeric, fontSize: m.vp.size - 4, fill: hex(m.vp.text), fontWeight: '700' } });
         const w = s + num.width + 6;
+        // Upper left: the upper right is where the army pieces stand.
+        const x = n.x - R + 4 - w;
         group.addChild(new Graphics().rect(x, y, w, s).fill(hex(m.vp.fill)).stroke({ width: 1.5, color: hex(m.node.outline) }));
         group.addChild(this.icon(t.icons.vp, s - 6, m.vp.text, x + 3, y + 3));
         num.anchor.set(0, 0.5);
@@ -401,7 +418,7 @@ export class MapView {
     }
     for (const id of scene.noSupply ?? []) {
       const n = nodes.get(id);
-      if (n) this.supplyBadge(this.nodeLayer, n.x - R - 6, n.y - R - 4);
+      if (n) this.supplyBadge(this.nodeLayer, n.x - R - 4, n.y + R - 2);
     }
     this.renderArmies(scene);
   }
@@ -424,17 +441,41 @@ export class MapView {
    * Fog of war: every node owns its Voronoi area of the map. Areas of nodes the viewer can't see
    * get a soft wash plus hatching; the map, roads and nodes stay visible underneath.
    */
+  /** The Voronoi area of every node (world pixels), recomputed only when nodes move. */
+  private ensureCells(scene: MapScene) {
+    const [width, height] = [this.worldSize.width * this.s, this.worldSize.height * this.s];
+    const key = `${width}x${height}|${scene.nodes.map((n) => `${n.id}:${n.x},${n.y}`).join('|')}`;
+    if (key === this.cellsKey) return;
+    const { cells, wild } = fogCells(scene.nodes, width, height);
+    this.cells = cells;
+    this.wildCells = wild;
+    this.cellsKey = key;
+  }
+
+  /**
+   * Supply overlay: the areas of nodes the viewer's side cannot supply get a wash in the danger
+   * color with a dashed edge, so the reach of supply reads as a region on the map.
+   */
+  private drawSupply(scene: MapScene) {
+    this.supplyLayer.removeChildren().forEach((c) => c.destroy());
+    if (!scene.supplied || !scene.nodes.length) return;
+    this.ensureCells(scene);
+    const danger = hex(this.theme.color.state.danger);
+    const wash = new Graphics();
+    for (const n of scene.nodes) {
+      if (scene.supplied.has(n.id)) continue;
+      const poly = this.cells.get(n.id);
+      if (poly && poly.length >= 6) wash.poly(poly).fill({ color: danger, alpha: 0.34 });
+    }
+    wash.filters = [new BlurFilter({ strength: 6, quality: 2 })];
+    this.supplyLayer.addChild(wash);
+  }
+
   private drawFog(scene: MapScene) {
     this.fogLayer.removeChildren().forEach((c) => c.destroy());
     if (!scene.visible || !scene.nodes.length) return;
-    const { width, height } = this.worldSize;
-    const key = `${width}x${height}|${scene.nodes.map((n) => `${n.id}:${n.x},${n.y}`).join('|')}`;
-    if (key !== this.cellsKey) {
-      const { cells, wild } = fogCells(scene.nodes, width, height);
-      this.cells = cells;
-      this.wildCells = wild;
-      this.cellsKey = key;
-    }
+    const [width, height] = [this.worldSize.width * this.s, this.worldSize.height * this.s];
+    this.ensureCells(scene);
     const hidden = [...scene.nodes.filter((n) => !scene.visible!.has(n.id)).map((n) => this.cells.get(n.id)), ...this.wildCells]
       .filter((c): c is number[] => !!c && c.length >= 6);
     if (!hidden.length) return;
@@ -495,32 +536,26 @@ export class MapView {
   private renderArmies(scene: MapScene) {
     this.armyLayer.removeChildren().forEach((c) => c.destroy());
     this.armyHitboxes = [];
-    this.figures = [];
     this.pieces.clear();
     const nodes = new Map(scene.nodes.map((n) => [n.id, n]));
+    const R = this.theme.map.node.radius;
     const pieces: { army: Army; node: string; ghost: boolean }[] = [
       ...scene.armies.map((army) => ({ army, node: army.node, ghost: false })),
       ...(scene.ghosts ?? []).map((g) => ({ army: g.army, node: g.node, ghost: true })),
     ];
     const perNode = new Map<string, typeof pieces>();
     for (const p of pieces) perNode.set(p.node, [...(perNode.get(p.node) ?? []), p]);
-    // Draw back to front so lower pieces overlap higher ones.
+    // Pieces stand at the node's upper right, side by side, clear of the town circle and its label.
     const placed: { p: (typeof pieces)[number]; x: number; y: number }[] = [];
     for (const [nodeId, list] of perNode) {
       const n = nodes.get(nodeId);
       if (!n) continue;
-      const count = list.length;
-      list.forEach((p, i) => {
-        let [ox, oy] = [0, 0];
-        if (count > 1 && count <= 3) ox = (i - (count - 1) / 2) * 50;
-        else if (count > 3) {
-          const ang = (i / count) * Math.PI * 2 - Math.PI / 2;
-          [ox, oy] = [Math.cos(ang) * 46, Math.sin(ang) * 30];
-        }
-        placed.push({ p, x: n.x + ox, y: n.y - this.theme.map.node.radius * 0.5 + oy });
-      });
+      let x = n.x + R * 0.75;
+      for (const p of list) {
+        placed.push({ p, x, y: n.y - R * 0.45 });
+        x += pieceWidth(p.army) + 6;
+      }
     }
-    placed.sort((a, b) => a.y - b.y);
     // An army that changed node walks there from where it was drawn last.
     const now = performance.now();
     for (const { p, x, y } of placed) {
@@ -531,17 +566,16 @@ export class MapView {
         const tw = this.tweens.get(p.army.id);
         const from = tw ? this.tweenPosition(tw, now) : last;
         this.tweens.set(p.army.id, { fromX: from.x, fromY: from.y, toX: x, toY: y, start: now, duration: Math.min(2200, Math.max(500, (dist / WALK_SPEED) * 1000)) });
-        if (Math.abs(x - from.x) > 1) this.facing.set(p.army.id, Math.sign(x - from.x));
       }
       this.lastPlace.set(p.army.id, { node: p.node, x, y });
     }
-    // Armies in battle face their enemy.
-    for (const [id, enemyNode] of scene.fighting ?? []) {
-      const own = scene.armies.find((a) => a.id === id);
-      const [a, b] = [own && nodes.get(own.node), nodes.get(enemyNode)];
-      if (a && b && Math.abs(b.x - a.x) > 1) this.facing.set(id, Math.sign(b.x - a.x));
+    for (const { p, x, y } of placed) {
+      const piece = this.drawPiece(p.army, x, y, p.ghost, scene);
+      if (!p.ghost) {
+        this.pieces.set(p.army.id, piece);
+        if (this.tweens.has(p.army.id)) this.animate();
+      }
     }
-    for (const { p, x, y } of placed) this.drawArmy(p.army, x, y, p.ghost, scene);
     this.armyHitboxes.reverse(); // topmost first
   }
 
@@ -550,116 +584,80 @@ export class MapView {
     return { x: tw.fromX + (tw.toX - tw.fromX) * u, y: tw.fromY + (tw.toY - tw.fromY) * u };
   }
 
-  private drawArmy(army: Army, x: number, y: number, ghost: boolean, scene: MapScene) {
-    const piece = (this.minis && this.drawFormation(army, x, y, ghost, scene)) || this.drawBlocks(army, x, y, ghost, scene);
-    if (!ghost) {
-      this.pieces.set(army.id, piece);
-      if (this.tweens.has(army.id)) this.animate();
-    }
-  }
-
   /**
-   * The army as a group of 3D miniatures: a set number of figures for its size and composition
-   * (see formation()), back rows higher on the map. Returns null while the sprites are not ready.
+   * An army as a Kriegsspiel piece, standing on (x, y) with its lower left corner. A header shows
+   * the nation's emblem glyph, the total of combat units in large figures and a star per general.
+   * Below it, one block per unit type in the nation color, marked with its military map symbol
+   * and count: infantry ☒, cavalry ◪, artillery ●, supply ▭.
    */
-  private drawFormation(army: Army, x: number, y: number, ghost: boolean, scene: MapScene): Container | null {
+  private drawPiece(army: Army, x: number, y: number, ghost: boolean, scene: MapScene): Container {
     const t = this.theme;
-    const minis = this.minis!;
     const nation = scene.nations.find((n) => n.id === army.nation);
-    const color = nation?.color ?? '#888888';
-    const figures: { kind: FigureKind; sheet: Sheet }[] = [];
-    for (const kind of formation(army, minis.model)) {
-      const sheet = minis.sheet(kind, color);
-      if (sheet === null) return null;
-      if (sheet) figures.push({ kind, sheet });
-    }
-    if (!figures.length) return null;
-
-    const k = minis.model.figureHeight / 30;
+    const base = hex(nation?.color ?? '#888888');
+    const ink = hex(t.map.node.outline);
+    const paper = hex(t.color.surface.raised);
     const selected = !ghost && scene.selectedArmies?.has(army.id);
     const hovered = !ghost && this.hoveredArmy === army.id;
-    const lift = hovered ? 4 : selected ? 2 : 0;
-    const facing = this.facing.get(army.id) ?? 1;
-    const anim: AnimName = scene.animation ?? (scene.fighting?.has(army.id) ? 'Combat' : 'Idle');
-    const outline = hex(t.map.node.outline);
+    const lift = hovered ? 3 : 0;
+    const counts = unitCounts(army);
+    const types = BLOCK_ORDER.filter((ty) => counts[ty] > 0);
+    const cols = types.length > 1 ? 2 : 1;
+    const rows = Math.ceil(types.length / cols);
+    const w = pieceWidth(army);
+    // Blocks share the piece's width, so a lone block is as wide as the header.
+    const bw = (w - (cols - 1) * BLOCK.gap) / cols;
+    const h = BLOCK.header + rows * (BLOCK.h + BLOCK.gap);
+    const [x0, y0] = [x, y - h - lift];
 
-    // Rows of figures, filled back to front up to a row width.
-    const rowWidth = 64 * k;
-    const rows: { kind: FigureKind; sheet: Sheet; w: number }[][] = [[]];
-    let used = 0;
-    for (const f of figures) {
-      const w = FOOTPRINT[f.kind] * minis.model.figureHeight * (minis.model.scale[f.kind] ?? 1);
-      if (used + w > rowWidth && rows[rows.length - 1].length) { rows.push([]); used = 0; }
-      rows[rows.length - 1].push({ ...f, w });
-      used += w;
-    }
-    const dy = 10 * k;
     const c = new Container();
     c.alpha = ghost ? t.army.ghostAlpha : 1;
-    const shadows = new Graphics();
-    const halfW = Math.max(...rows.map((r) => r.reduce((s, f) => s + f.w, 0))) / 2;
-    const cy = y - ((rows.length - 1) * dy) / 2;
+    const g = new Graphics();
+    // Ground shadow, then the selection frame.
+    g.rect(x0 + 2, y0 + 3 + lift, w, h).fill({ color: hex(t.army.shadow.color), alpha: alphaOf(t.army.shadow.color) });
     if (selected) {
-      const sel = hex(t.map.selection.color) === outline ? hex(t.color.surface.raised) : hex(t.map.selection.color);
-      shadows.ellipse(x, cy + 2, halfW + 12, (rows.length * dy) / 2 + 10).stroke({ width: 4, color: sel });
-      shadows.ellipse(x, cy + 2, halfW + 15, (rows.length * dy) / 2 + 13).stroke({ width: 2, color: outline });
+      const sel = hex(t.map.selection.color) === ink ? paper : hex(t.map.selection.color);
+      g.roundRect(x0 - 5, y0 - 5, w + 10, h + 10, 4).stroke({ width: 4, color: sel });
+      g.roundRect(x0 - 8, y0 - 8, w + 16, h + 16, 6).stroke({ width: 1.5, color: ink });
     }
-    c.addChild(shadows);
-    let [left, right, top] = [x - halfW, x + halfW, cy];
-    rows.forEach((row, ri) => {
-      const ry = y - (rows.length - 1 - ri) * dy - lift;
-      const width = row.reduce((s, f) => s + f.w, 0);
-      let fx = x - width / 2 + (ri % 2 ? 3 * k : 0);
-      row.forEach((f, fi) => {
-        const px = fx + f.w / 2;
-        fx += f.w;
-        shadows.ellipse(px + 2, ry + lift + 1, f.w * 0.5, 3.2 * k).fill({ color: hex(t.army.shadow.color), alpha: alphaOf(t.army.shadow.color) });
-        const sprite = new Sprite(f.sheet.frames[anim][0] ?? f.sheet.frames.Idle[0]);
-        // The anchor is in texture space, so it still marks the feet when the sprite is mirrored.
-        sprite.anchor.set(f.sheet.anchor.x, f.sheet.anchor.y);
-        sprite.scale.set(facing / f.sheet.resolution, 1 / f.sheet.resolution);
-        sprite.position.set(px, ry);
-        if (hovered) sprite.tint = 0xfff4dc;
-        c.addChild(sprite);
-        if (!ghost) this.figures.push({ sprite, sheet: f.sheet, anim, phase: (fnv(army.id) + fi * 0.37 + ri * 0.21) % 1, army: army.id });
-        const sx = px - f.sheet.width * f.sheet.anchor.x;
-        left = Math.min(left, facing < 0 ? px - f.sheet.width * (1 - f.sheet.anchor.x) : sx);
-        right = Math.max(right, facing < 0 ? px + f.sheet.width * f.sheet.anchor.x : sx + f.sheet.width);
-        top = Math.min(top, ry - f.sheet.height * f.sheet.anchor.y);
-      });
+    // Header: emblem square, then the combat total on ink.
+    g.rect(x0, y0, w, BLOCK.header).fill(hovered ? shade(ink, 1.35) : ink);
+    g.rect(x0 + 2, y0 + 2, BLOCK.header - 4, BLOCK.header - 4).fill(base);
+    types.forEach((ty, i) => {
+      const bx = x0 + (i % cols) * (bw + BLOCK.gap);
+      const by = y0 + BLOCK.header + BLOCK.gap + Math.floor(i / cols) * (BLOCK.h + BLOCK.gap);
+      g.rect(bx, by, bw, BLOCK.h).fill(hovered ? shade(base, 1.2) : base).stroke({ width: 1.2, color: ink });
+      g.rect(bx + 0.6, by + BLOCK.h - 3, bw - 1.2, 2.4).fill({ color: 0x000000, alpha: 0.25 });
+      unitMark(g, ty, bx + 3, by + 3.5, 13, 9, paper);
+      const num = new Text({ text: String(counts[ty]), style: { fontFamily: t.type.family.numeric, fontSize: 13, fontWeight: '700', fill: paper } });
+      num.anchor.set(1, 0.5);
+      num.position.set(bx + bw - 3, by + BLOCK.h / 2 - 0.5);
+      c.addChild(num);
     });
-    this.countPill(c, army, x, y + 4 * k, scene, ghost);
-    this.armyLayer.addChild(c);
-    this.armyHitboxes.push({ id: ghost ? `ghost:${army.id}` : army.id, x: left, y: top, w: right - left, h: y + 30 - top });
-    return c;
-  }
+    g.rect(x0, y0, w, h).stroke({ width: 1.4, color: ink });
+    c.addChildAt(g, 0);
 
-  /** The number of combat units (and +supply) under a piece, with the nation's emblem glyph. */
-  private countPill(c: Container, army: Army, x: number, y: number, scene: MapScene, ghost = false) {
-    const t = this.theme;
-    const outline = hex(t.map.node.outline);
-    const combat = army.units.filter((u) => u.type !== 'supply').length;
-    const supply = army.units.length - combat;
-    const label = `${combat}${supply ? `+${supply}` : ''}`;
-    const pill = new Text({ text: label, style: { fontFamily: t.type.family.numeric, fontSize: 14, fontWeight: '700', fill: hex(t.color.text.primary) } });
-    pill.anchor.set(0.5);
-    pill.position.set(x + 4, y + 20);
-    const pw = pill.width + 12;
-    const bg = new Graphics().roundRect(x + 4 - pw / 2, y + 11, pw, 18, 3).fill(hex(t.color.surface.raised)).stroke({ width: 1.2, color: outline });
-    c.addChild(bg, pill);
-    const glyph = this.minis ? scene.emblems?.get(army.nation)?.glyph : undefined;
+    const glyph = scene.emblems?.get(army.nation)?.glyph ?? '';
     if (glyph) {
-      const nation = scene.nations.find((n) => n.id === army.nation);
-      const s = 18;
-      const bx = x + 4 - pw / 2 - s + 1;
-      c.addChild(new Graphics().rect(bx, y + 11, s, 18).fill(hex(nation?.color ?? '#888888')).stroke({ width: 1.2, color: outline }));
-      const g = new Text({ text: glyph, style: { fontFamily: t.type.family.display, fontWeight: '700', fontSize: glyph.length > 1 ? 9 : 13, fill: hex(t.color.surface.raised) } });
-      g.anchor.set(0.5);
-      g.position.set(bx + s / 2, y + 20);
-      c.addChild(g);
+      const gl = new Text({ text: glyph, style: { fontFamily: t.type.family.display, fontWeight: '700', fontSize: glyph.length > 1 ? 8 : 12, fill: paper } });
+      gl.anchor.set(0.5);
+      gl.position.set(x0 + BLOCK.header / 2, y0 + BLOCK.header / 2);
+      c.addChild(gl);
+    }
+    const combat = counts.infantry + counts.cavalry + counts.artillery;
+    const total = new Text({ text: String(combat), style: { fontFamily: t.type.family.numeric, fontSize: 17, fontWeight: '700', fill: paper } });
+    total.anchor.set(0, 0.5);
+    total.position.set(x0 + BLOCK.header + 3, y0 + BLOCK.header / 2);
+    c.addChild(total);
+    // Generals: gold stars at the right of the header.
+    for (let i = 0; i < Math.min(army.generals.length, 3); i++) {
+      const star = new Graphics().star(x0 + w - 8 - i * 12, y0 + BLOCK.header / 2, 5, 5.5, 2.4).fill(STAR_GOLD).stroke({ width: 0.8, color: ink });
+      c.addChild(star);
     }
     // Out of supply: it will lose a unit at the end of its turn.
-    if ((ghost ? scene.ghostsUnsupplied : scene.unsupplied)?.has(army.id)) this.supplyBadge(c, x + 4 + pw / 2 + 10, y + 20);
+    if ((ghost ? scene.ghostsUnsupplied : scene.unsupplied)?.has(army.id)) this.supplyBadge(c, x0 + w + 4, y0 + 2);
+    this.armyLayer.addChild(c);
+    this.armyHitboxes.push({ id: ghost ? `ghost:${army.id}` : army.id, x: x0 - 3, y: y0 - 3, w: w + 6, h: h + 6 + lift });
+    return c;
   }
 
   /** The "out of supply" mark: a warning disc with an exclamation mark, on the danger color. */
@@ -672,85 +670,47 @@ export class MapView {
     c.addChild(mark);
   }
 
-  /** A block miniature: ground shadow, a stack of lit blocks in the nation color, and a banner with the emblem glyph. */
-  private drawBlocks(army: Army, x: number, y: number, ghost: boolean, scene: MapScene): Container {
-    const t = this.theme;
-    const nation = scene.nations.find((n) => n.id === army.nation);
-    const base = hex(nation?.color ?? '#888888');
-    const shade = (c: number, f: number) => {
-      const [r, g, b] = [(c >> 16) & 255, (c >> 8) & 255, c & 255];
-      const mix = (v: number) => (f < 1 ? v * f : v + (255 - v) * (f - 1));
-      return (Math.round(mix(r)) << 16) | (Math.round(mix(g)) << 8) | Math.round(mix(b));
-    };
-    const outline = hex(t.map.node.outline);
-    const selected = !ghost && scene.selectedArmies?.has(army.id);
-    const hovered = !ghost && this.hoveredArmy === army.id;
-    const lift = hovered ? 4 : selected ? 2 : 0;
-    const combat = army.units.filter((u) => u.type !== 'supply').length;
-    const supply = army.units.length - combat;
-    const blocks = Math.max(1, Math.min(t.army.maxBlocks, Math.ceil(combat / t.army.blockPerUnits)));
-    const c = new Container();
-    c.alpha = ghost ? t.army.ghostAlpha : 1;
-    const g = new Graphics();
-    const w = 34;
-    const dp = 12;
-    const bh = 8;
-    const by = y - lift;
-    g.ellipse(x + 4, y + 4, w * 0.85, 9).fill({ color: hex(t.army.shadow.color), alpha: alphaOf(t.army.shadow.color) });
-    if (selected) {
-      g.ellipse(x + 4, y + 4, w + 6, 14).stroke({ width: 4, color: hex(t.map.selection.color) === outline ? hex(t.color.surface.raised) : hex(t.map.selection.color) });
-      g.ellipse(x + 4, y + 4, w + 9, 17).stroke({ width: 2, color: outline });
-    }
-    const x0 = x - w / 2;
-    for (let i = 0; i < blocks; i++) {
-      const yb = by - i * bh;
-      g.poly([x0, yb, x0 + w, yb, x0 + w, yb - bh, x0, yb - bh]).fill(shade(base, 0.85)).stroke({ width: 1.2, color: outline });
-      g.poly([x0 + w, yb, x0 + w + dp, yb - dp / 2, x0 + w + dp, yb - dp / 2 - bh, x0 + w, yb - bh]).fill(shade(base, 0.62)).stroke({ width: 1.2, color: outline });
-    }
-    const yt = by - blocks * bh;
-    g.poly([x0, yt, x0 + w, yt, x0 + w + dp, yt - dp / 2, x0 + dp, yt - dp / 2]).fill(shade(base, hovered ? 1.45 : 1.28)).stroke({ width: 1.2, color: outline });
-    if (supply) {
-      // A supply crate on the plinth.
-      const cx = x0 + 4;
-      g.rect(cx, yt - 12, 11, 9).fill(hex(t.color.card.face)).stroke({ width: 1.2, color: outline });
-      g.moveTo(cx, yt - 12).lineTo(cx + 11, yt - 3).stroke({ width: 1, color: outline });
-    }
-    let bannerTop = yt;
-    if (army.generals.length) {
-      const px = x + 6;
-      const pole = 44 + (army.generals.length > 1 ? 6 : 0);
-      g.moveTo(px, yt - 3).lineTo(px, yt - pole).stroke({ width: 2.5, color: outline });
-      g.circle(px, yt - pole - 2, 3).fill(hex(t.color.state.warning)).stroke({ width: 1, color: outline });
-      const fy = yt - pole + 2;
-      g.poly([px, fy, px + 30, fy, px + 26, fy + 12, px + 30, fy + 24, px, fy + 24]).fill(base).stroke({ width: 1.5, color: outline });
-      bannerTop = fy;
-    }
-    c.addChild(g);
-    if (army.generals.length) {
-      const glyph = scene.emblems?.get(army.nation)?.glyph ?? '';
-      const txt = new Text({ text: glyph, style: { fontFamily: t.type.family.display, fontWeight: '700', fontSize: glyph.length > 1 ? 11 : 17, fill: hex(t.color.surface.raised) } });
-      txt.anchor.set(0.5);
-      txt.position.set(x + 20, bannerTop + 12);
-      c.addChild(txt);
-    }
-    this.countPill(c, army, x, y, scene, ghost);
-    this.armyLayer.addChild(c);
-    const top = Math.min(bannerTop - 6, yt - dp);
-    this.armyHitboxes.push({ id: ghost ? `ghost:${army.id}` : army.id, x: x0 - 4, y: top, w: w + dp + 22, h: y + 30 - top });
-    return c;
-  }
-
   destroy() {
-    this.offMinis?.();
     this.app.destroy(true, { children: true, texture: true });
   }
 }
 
-/** A stable number in [0, 1) for an id, to desynchronize the armies' animations. */
-function fnv(s: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0;
-  return h / 2 ** 32;
+/** A map scale that makes sense: 1 when unset or invalid, else between 0.25 and 8. */
+function validScale(x: number): number {
+  return Number.isFinite(x) && x > 0 ? Math.min(8, Math.max(0.25, x)) : 1;
+}
+
+function unitCounts(army: Army): Record<UnitType, number> {
+  const out: Record<UnitType, number> = { infantry: 0, cavalry: 0, artillery: 0, supply: 0 };
+  for (const u of army.units) out[u.type]++;
+  return out;
+}
+
+/** Width of an army's piece: one or two columns of unit blocks, never narrower than its header. */
+function pieceWidth(army: Army): number {
+  const types = new Set(army.units.map((u) => u.type)).size;
+  const cols = types > 1 ? 2 : 1;
+  const stars = Math.min(army.generals.length, 3);
+  return Math.max(cols * BLOCK.w + (cols - 1) * BLOCK.gap, BLOCK.header + 28 + stars * 12);
+}
+
+/** Lightens (f > 1) or darkens (f < 1) a color. */
+function shade(c: number, f: number): number {
+  const [r, g, b] = [(c >> 16) & 255, (c >> 8) & 255, c & 255];
+  const mix = (v: number) => Math.round(f < 1 ? v * f : v + (255 - v) * (f - 1));
+  return (mix(r) << 16) | (mix(g) << 8) | mix(b);
+}
+
+/**
+ * A unit type's military map symbol in a frame (x, y, w, h): a cross for infantry, a diagonal for
+ * cavalry, a dot for artillery and a bar low in the frame for supply.
+ */
+export function unitMark(g: Graphics, type: UnitType, x: number, y: number, w: number, h: number, color: number) {
+  g.rect(x, y, w, h).stroke({ width: 1.2, color });
+  if (type === 'infantry') g.moveTo(x, y).lineTo(x + w, y + h).moveTo(x + w, y).lineTo(x, y + h).stroke({ width: 1.2, color });
+  else if (type === 'cavalry') g.moveTo(x, y + h).lineTo(x + w, y).stroke({ width: 1.2, color });
+  else if (type === 'artillery') g.circle(x + w / 2, y + h / 2, h * 0.24).fill(color);
+  else g.moveTo(x, y + h * 0.68).lineTo(x + w, y + h * 0.68).stroke({ width: 1.2, color });
 }
 
 /** An area bigger than this many times the mean is split, so empty map edges are not left clear. */

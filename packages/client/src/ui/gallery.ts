@@ -1,7 +1,5 @@
 import { GENERAL_SPEED, UNIT_SPEED, type Army, type GeneralCardType, type MapNode, type Nation, type UnitType } from '@cabinet-wars/engine';
 import { MapView } from '../render/MapView';
-import type { FigureKind } from '../render/formation';
-import { ANIMS, armyModel, FIGURE_KINDS, instance, loadModel, studio, type AnimName, type ArmyModel } from '../render/miniatures';
 import { applyTheme, CANONICAL_ID, listThemes, loadFonts, playerOverride, resolveTheme, type Theme } from '../theme/theme';
 import { t, tn, useMapText } from '../i18n/i18n';
 import { clear, h } from './dom';
@@ -9,22 +7,19 @@ import { buildEmblems, emblemEl } from './emblem';
 import { iconEl } from './icons';
 
 /**
- * The theme gallery: a theme's army miniatures (live 3D, with their animations), how armies of
- * different sizes look on the map, and the theme's nation colors, emblems, icons and type.
+ * The theme gallery: the Kriegsspiel unit blocks and their symbols, how armies of different sizes
+ * look on the map, and the theme's nation colors, emblems, icons and type.
  */
 export async function galleryScreen(root: HTMLElement, back: () => void): Promise<() => void> {
   useMapText(null);
   let theme: Theme;
   let color = '';
-  let anim: AnimName = 'Idle';
-  let viewers: Viewer[] = [];
   let map: MapView | null = null;
   let generation = 0;
-  let raf = 0;
+  let unitsBox: HTMLElement | null = null;
 
   const themeSelect = h('select', { onchange: () => void show(themeSelect.value) });
   const swatches = h('div', { class: 'row' });
-  const animButtons = h('div', { class: 'row' });
   const body = h('div', {});
   clear(root, h('div', { class: 'menu gallery' },
     h('div', { class: 'row gallery-head' },
@@ -32,33 +27,37 @@ export async function galleryScreen(root: HTMLElement, back: () => void): Promis
       h('h1', {}, t('gallery.title'))),
     h('div', { class: 'row gallery-controls' },
       h('label', { class: 'row' }, `${t('gallery.theme')} `, themeSelect),
-      h('span', { class: 'row' }, `${t('gallery.color')} `, swatches),
-      h('span', { class: 'row' }, `${t('gallery.animation')} `, animButtons)),
+      h('span', { class: 'row' }, `${t('gallery.color')} `, swatches)),
     body));
 
   const list = await listThemes();
   const initial = playerOverride() ?? CANONICAL_ID;
   themeSelect.append(...list.map((th) => h('option', { value: th.id, selected: th.id === initial }, th.name)));
 
-  const loop = () => {
-    raf = requestAnimationFrame(loop);
-    void drawViewers(viewers);
-  };
-  raf = requestAnimationFrame(loop);
   void show(themeSelect.value || CANONICAL_ID);
 
   function renderControls() {
     clear(swatches, [...theme.map.nationPalette, 'custom'].map((c) => (c === 'custom'
       ? h('input', { type: 'color', value: color, title: t('gallery.customColor'), oninput: (e: Event) => setColor((e.target as HTMLInputElement).value) })
       : h('button', { class: `swatch ${c === color ? 'active' : ''}`, style: `background:${c}`, title: c, 'aria-label': c, onclick: () => setColor(c) }))));
-    clear(animButtons, ANIMS.map((a) => h('button', { class: a === anim ? 'active' : '', 'aria-pressed': a === anim, onclick: () => { anim = a; renderControls(); for (const v of viewers) v.play(anim); renderMap(); } }, t(`gallery.anim.${a}`))));
   }
 
   function setColor(c: string) {
     color = c;
     renderControls();
-    for (const v of viewers) v.setColor(c);
+    renderUnits();
     renderMap();
+  }
+
+  /** One block per unit type, as the map draws it, with its name and speed. */
+  function renderUnits() {
+    if (!unitsBox) return;
+    const kinds: (UnitType | 'general')[] = ['infantry', 'cavalry', 'artillery', 'supply', 'general'];
+    clear(unitsBox, kinds.map((kind) => h('figure', { class: 'gallery-unit' },
+      h('div', { class: 'gallery-viewer gallery-icon' }, kind === 'general' ? starSvg() : blockSvg(kind, color, theme)),
+      h('figcaption', {},
+        h('strong', {}, t(`gallery.kind.${kind}`)),
+        h('div', { class: 'muted small' }, tn('gallery.speed', kind === 'general' ? GENERAL_SPEED : UNIT_SPEED[kind]))))));
   }
 
   async function show(id: string) {
@@ -68,52 +67,27 @@ export async function galleryScreen(root: HTMLElement, back: () => void): Promis
     applyTheme(theme);
     await loadFonts(theme);
     color = theme.map.nationPalette[0] ?? '#a8362a';
-    for (const v of viewers) v.dispose();
-    viewers = [];
     map?.destroy();
     map = null;
     renderControls();
-    const model = armyModel(theme);
 
-    const unitsBox = h('div', { class: 'gallery-units' });
+    unitsBox = h('div', { class: 'gallery-units' });
     const mapBox = h('div', { class: 'gallery-map' });
     clear(body,
       h('section', {},
         h('h2', {}, t('gallery.units')),
-        h('p', { class: 'muted small' }, model ? t('gallery.unitsHint') : t('gallery.noModels')),
+        h('p', { class: 'muted small' }, t('gallery.unitsHint')),
         unitsBox),
       h('section', {},
         h('h2', {}, t('gallery.armies')),
-        h('p', { class: 'muted small' }, model
-          ? t('gallery.armiesHint', { n: model.unitsPerFigure, max: model.maxFigures })
-          : t('gallery.armiesBlocks', { n: theme.army.blockPerUnits, max: theme.army.maxBlocks })),
+        h('p', { class: 'muted small' }, t('gallery.armiesHint')),
         mapBox),
       nationsSection(theme),
       iconsSection(theme),
       colorsSection(theme),
       typeSection(theme));
 
-    for (const kind of FIGURE_KINDS) {
-      const canvas = h('canvas', { width: 480, height: 480, class: 'gallery-viewer' });
-      const status = h('div', { class: 'muted small' });
-      const speed = kind === 'general' ? GENERAL_SPEED : UNIT_SPEED[kind];
-      unitsBox.append(h('figure', { class: 'gallery-unit' },
-        model?.units[kind] ? canvas : h('div', { class: 'gallery-viewer gallery-icon' }, iconEl(kind === 'general' ? theme.icons.general : theme.icons.unit[kind], 72)),
-        status,
-        h('figcaption', {},
-          h('strong', {}, t(`gallery.kind.${kind}`)),
-          h('div', { class: 'muted small' }, tn('gallery.speed', speed)))));
-      if (!model?.units[kind]) continue;
-      status.textContent = t('gallery.loading');
-      Viewer.create(canvas, model, kind, color, anim).then((v) => {
-        if (gen !== generation) { v.dispose(); return; }
-        status.textContent = '';
-        viewers.push(v);
-      }, (err) => {
-        console.warn(err);
-        status.textContent = t('gallery.failed');
-      });
-    }
+    renderUnits();
 
     map = await MapView.create(mapBox, null, { width: 1200, height: 430 });
     if (gen !== generation) { map.destroy(); return; }
@@ -133,14 +107,12 @@ export async function galleryScreen(root: HTMLElement, back: () => void): Promis
     } as unknown as Army));
     map.render({
       nodes, edges: nodes.slice(1).map((n, i) => ({ a: nodes[i].id, b: n.id, type: i % 2 ? 'minor' : 'major' })),
-      nations: [nation], armies, emblems: buildEmblems([nation], null, theme), animation: anim,
+      nations: [nation], armies, emblems: buildEmblems([nation], null, theme),
     });
   }
 
   return () => {
     generation++;
-    cancelAnimationFrame(raf);
-    for (const v of viewers) v.dispose();
     map?.destroy();
   };
 }
@@ -209,115 +181,43 @@ function typeSection(theme: Theme) {
     h('p', { class: 'muted small' }, `${fam.display[0]} · ${fam.body[0]}`));
 }
 
-// ---- live 3D viewers ---------------------------------------------------------------------------
+// ---- unit blocks ------------------------------------------------------------------------------
 
-type Three = typeof import('three');
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-class Viewer {
-  private yaw = 0.6;
-  private spin = true;
-  private drag: number | null = null;
-  private clips = new Map<string, import('three').AnimationAction>();
-  private clock = performance.now();
-  private disposed = false;
-
-  private constructor(
-    private canvas: HTMLCanvasElement,
-    private scene: import('three').Scene,
-    private camera: import('three').PerspectiveCamera,
-    private pivot: import('three').Group,
-    private inst: Awaited<ReturnType<typeof instance>>,
-  ) {
-    canvas.addEventListener('pointerdown', this.onDown);
-    window.addEventListener('pointermove', this.onMove);
-    window.addEventListener('pointerup', this.onUp);
-  }
-
-  static async create(canvas: HTMLCanvasElement, model: ArmyModel, kind: FigureKind, color: string, anim: AnimName): Promise<Viewer> {
-    const [st, gltf] = await Promise.all([studio(), loadModel(model.units[kind]!)]);
-    const THREE: Three = st.THREE;
-    const inst = await instance(gltf, model.tint);
-    inst.setColor(color);
-    const scene = new THREE.Scene();
-    st.light(scene);
-    const pivot = new THREE.Group();
-    pivot.add(inst.root);
-    scene.add(pivot);
-    const box = new THREE.Box3().setFromObject(inst.root);
-    const sphere = box.getBoundingSphere(new THREE.Sphere());
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(Math.hypot(box.max.x - box.min.x, box.max.z - box.min.z) * 0.42, 48),
-      new THREE.MeshStandardMaterial({ color: 0xd9ceb2, roughness: 1 }));
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.005;
-    scene.add(ground);
-    // Frame the model's bounding sphere, seen from a little above.
-    const fov = 30;
-    const camera = new THREE.PerspectiveCamera(fov, 1, 0.1, 100);
-    const dist = sphere.radius / Math.sin((fov * Math.PI) / 360) * 0.92;
-    const pitch = (22 * Math.PI) / 180;
-    camera.position.set(0, sphere.center.y + dist * Math.sin(pitch), dist * Math.cos(pitch));
-    camera.lookAt(0, sphere.center.y * 0.9, 0);
-    const v = new Viewer(canvas, scene, camera, pivot, inst);
-    for (const clip of gltf.animations) v.clips.set(clip.name, inst.mixer.clipAction(clip));
-    v.play(anim);
-    return v;
-  }
-
-  play(anim: AnimName) {
-    for (const a of this.clips.values()) a.stop();
-    this.clips.get(anim)?.reset().play();
-  }
-
-  setColor(color: string) {
-    this.inst.setColor(color);
-  }
-
-  render(st: { THREE: Three; renderer: import('three').WebGLRenderer }) {
-    if (this.disposed) return;
-    const now = performance.now();
-    const dt = (now - this.clock) / 1000;
-    this.clock = now;
-    if (this.spin && this.drag === null) this.yaw += dt * 0.35;
-    this.pivot.rotation.y = this.yaw;
-    this.inst.mixer.update(dt);
-    const { width, height } = this.canvas;
-    st.renderer.setPixelRatio(1);
-    st.renderer.setSize(width, height, false);
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-    st.renderer.render(this.scene, this.camera);
-    const ctx = this.canvas.getContext('2d')!;
-    ctx.clearRect(0, 0, width, height);
-    ctx.drawImage(st.renderer.domElement, 0, 0);
-  }
-
-  private onDown = (e: PointerEvent) => { this.drag = e.clientX; this.spin = false; this.canvas.setPointerCapture?.(e.pointerId); };
-  private onMove = (e: PointerEvent) => {
-    if (this.drag === null) return;
-    this.yaw += (e.clientX - this.drag) * 0.012;
-    this.drag = e.clientX;
-  };
-  private onUp = () => { this.drag = null; };
-
-  dispose() {
-    this.disposed = true;
-    this.canvas.removeEventListener('pointerdown', this.onDown);
-    window.removeEventListener('pointermove', this.onMove);
-    window.removeEventListener('pointerup', this.onUp);
-    this.inst.mixer.stopAllAction();
-    this.inst.dispose();
-  }
+function svgEl(tag: string, attrs: Record<string, string | number>): SVGElement {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  return el;
 }
 
-let drawing = false;
+/** A unit block as the map draws it: nation color, the type's military map symbol, a count. */
+function blockSvg(type: UnitType, color: string, theme: Theme): SVGElement {
+  const ink = theme.map.node.outline;
+  const paper = theme.color.surface.raised;
+  const svg = svgEl('svg', { viewBox: '-2 -2 44 22', width: 176, height: 88, role: 'img', 'aria-label': type });
+  svg.append(svgEl('rect', { x: 0, y: 0, width: 40, height: 18, fill: color, stroke: ink, 'stroke-width': 1.2 }));
+  svg.append(svgEl('rect', { x: 0.6, y: 15, width: 38.8, height: 2.4, fill: '#000', opacity: 0.25 }));
+  const [x, y, w, hh] = [3, 3.5, 13, 9];
+  svg.append(svgEl('rect', { x, y, width: w, height: hh, fill: 'none', stroke: paper, 'stroke-width': 1.2 }));
+  if (type === 'infantry') svg.append(svgEl('path', { d: `M${x} ${y}L${x + w} ${y + hh}M${x + w} ${y}L${x} ${y + hh}`, stroke: paper, 'stroke-width': 1.2 }));
+  else if (type === 'cavalry') svg.append(svgEl('path', { d: `M${x} ${y + hh}L${x + w} ${y}`, stroke: paper, 'stroke-width': 1.2 }));
+  else if (type === 'artillery') svg.append(svgEl('circle', { cx: x + w / 2, cy: y + hh / 2, r: hh * 0.24, fill: paper }));
+  else svg.append(svgEl('path', { d: `M${x} ${y + hh * 0.68}H${x + w}`, stroke: paper, 'stroke-width': 1.2 }));
+  const num = svgEl('text', { x: 37, y: 13.5, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 700, fill: paper, 'font-family': theme.type.family.numeric.join(', ') });
+  num.textContent = '12';
+  svg.append(num);
+  return svg;
+}
 
-async function drawViewers(viewers: Viewer[]) {
-  if (drawing || !viewers.length) return;
-  drawing = true;
-  try {
-    const st = await studio();
-    for (const v of viewers) v.render(st);
-  } finally {
-    drawing = false;
-  }
+/** A general: the gilt star that pieces show in their header. */
+function starSvg(): SVGElement {
+  const svg = svgEl('svg', { viewBox: '-10 -10 20 20', width: 88, height: 88, role: 'img', 'aria-label': 'general' });
+  const pts = Array.from({ length: 10 }, (_, i) => {
+    const r = i % 2 ? 3.4 : 8;
+    const a = (i * Math.PI) / 5 - Math.PI / 2;
+    return `${(Math.cos(a) * r).toFixed(2)},${(Math.sin(a) * r).toFixed(2)}`;
+  }).join(' ');
+  svg.append(svgEl('polygon', { points: pts, fill: '#e2bd52', stroke: '#1f2633', 'stroke-width': 0.8 }));
+  return svg;
 }

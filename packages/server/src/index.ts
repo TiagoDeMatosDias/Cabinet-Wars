@@ -42,7 +42,6 @@ const TYPES: Record<string, string> = {
   '.cabinetwars': 'application/zip',
   '.krieg': 'application/zip',
   '.woff2': 'font/woff2',
-  '.glb': 'model/gltf-binary',
   '.woff': 'font/woff',
   '.ttf': 'font/ttf',
 };

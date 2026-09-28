@@ -1,6 +1,6 @@
 import {
-  dependentsOf, isPlaceholder, orderCreates, orderRefs, projectOrders,
-  type ArmyRef, type GameState, type GameView, type Order, type OrderIntent, type OrderProjection,
+  battleOdds, dependentsOf, isPlaceholder, orderCreates, orderRefs, projectOrders,
+  type ArmyRef, type GameState, type GameView, type Order, type OrderIntent, type OrderProjection, type UnitType,
 } from '@cabinet-wars/engine';
 import { t, tn } from '../i18n/i18n';
 
@@ -144,6 +144,14 @@ export function armyLabel(ref: ArmyRef, ids: Map<ArmyRef, string>): string {
   return real ? t('desc.newSuffix', { army: real }) : t('desc.newArmyUnnamed');
 }
 
+/** "70% to win, a win costs about 2 units": a straight fight simulated with the battle rules (no cards, no retreats). */
+export function oddsText(b: { attacker: UnitType[]; defenders: UnitType[][] }): string {
+  const o = battleOdds(b.attacker, b.defenders);
+  const pct = Math.round(o.win * 100);
+  const shown = pct === 100 && o.win < 1 ? 99 : pct === 0 && o.win > 0 ? 1 : pct;
+  return o.win ? t('desc.odds', { pct: shown, losses: Math.max(0, Math.round(o.lossesIfWin)) }) : t('desc.oddsNone');
+}
+
 /** One-line text and a detail line for an order, using a projection for positions. */
 export function describe(order: Order, view: GameView, projection: Projection, index?: number): { text: string; detail: string } {
   const o = order.intent;
@@ -159,7 +167,7 @@ export function describe(order: Order, view: GameView, projection: Projection, i
       const helpless = moved && !moved.units.some((u) => u.type !== 'supply');
       return {
         text: from ? t('desc.move', { army, fromNode: from, toNode: to }) : t('desc.moveTo', { army, toNode: to }),
-        detail: `${tn('desc.moves', o.path.length)}${r?.meetsEnemy ? ` · ${t(helpless ? 'desc.meetsEnemyNoCombat' : 'desc.meetsEnemy')}` : ''}`,
+        detail: `${tn('desc.moves', o.path.length)}${r?.meetsEnemy ? ` · ${t(helpless ? 'desc.meetsEnemyNoCombat' : 'desc.meetsEnemy')}` : ''}${!helpless && r?.battle ? ` · ${oddsText(r.battle)}` : ''}`,
       };
     }
     case 'split':

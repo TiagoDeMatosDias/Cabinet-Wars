@@ -297,7 +297,7 @@ Purely decorative, and safe to leave out.
 
 ### 4.9 Game screen components
 
-Tokens for the components described in the [game screen specification](game-screen.md): emblems, cards, 3D army miniatures, the orders list, turn controls, the battle panel and the log drawer.
+Tokens for the components described in the [game screen specification](game-screen.md): emblems, cards, army pieces, the orders list, turn controls, the battle panel and the log drawer.
 
 | Token | Used for |
 |---|---|
@@ -306,10 +306,8 @@ Tokens for the components described in the [game screen specification](game-scre
 | `cards.width` / `cards.height` / `cards.radius` / `cards.frameWidth` | Card size and shape. The frame is always filled with the owning nation's color; the face uses `color.card.face`, `color.card.faceDisabled` (cards not playable now) and `color.card.ink` from 4.1 |
 | `cards.lift` / `cards.fan` | How far a hovered card rises (px) and the hand's fan angle (degrees) |
 | `tooltip.surface` / `tooltip.text` / `tooltip.delay` | Tooltip colors (an inverse surface) and hover delay (ms) |
-| `army.model` | 3D miniatures: `units` (a glTF file per `infantry`, `cavalry`, `artillery`, `supply`, `general`, relative to the theme folder), `tint` (the material recolored with the nation color), `unitsPerFigure` / `maxFigures` / `maxWagons` / `maxGenerals` (how many figures an army shows), `figureHeight` (map pixels of a 1.8 m figure), `scale` (per kind), `view` (`pitch`, `turn` in degrees) and `fps`. `false` keeps the procedural blocks. Models need `Idle`, `Walk` and `Combat` animations ([models README](../themes/imperial-china/models/README.md)) |
-| `army.blockPerUnits` / `army.maxBlocks` | Plinth height: one block per this many combat units, capped |
-| `army.shadow` | Ground shadow color and blur |
-| `army.ghostAlpha` | Opacity of planned-position ghost miniatures |
+| `army.shadow` | Drop shadow color of army pieces |
+| `army.ghostAlpha` | Opacity of planned-position ghost pieces |
 | `map.highlight.here` | Ring around the selected army's node |
 | `map.fog.color` / `map.fog.alpha` / `map.fog.blur` | The fog-of-war wash over hidden areas (a Voronoi area per node), and how soft its edge is |
 | `map.fog.hatch` / `map.fog.hatchAlpha` / `map.fog.hatchSpacing` | Diagonal hatching that marks fogged areas clearly |
@@ -418,8 +416,7 @@ State colors are meant for paper surfaces. On the darker mounting they drop to 3
     "frame-mounting": "ornament/scroll-mounting-frame.png",
     "divider-waves": "ornament/wave-divider.svg",
     "card-back": "ornament/card-back-seal.png",
-    "seal-wear": "ornament/seal-wear.png",
-    "army-miniatures": "sprites/army-miniatures.png"
+    "seal-wear": "ornament/seal-wear.png"
   },
   "fonts": {
     "LXGW WenKai": [
@@ -731,9 +728,6 @@ State colors are meant for paper surfaces. On the darker mounting they drop to 3
     "delay": 300
   },
   "army": {
-    "model": "army-miniatures",
-    "blockPerUnits": 2,
-    "maxBlocks": 5,
     "shadow": {
       "color": "#2c25216e",
       "blur": 3
@@ -809,7 +803,7 @@ About these choices:
 - **Ornaments.** The panel texture is a faint xuan-paper fibre. The hotseat handoff screen and the battle dialog use a brocade scroll-mounting frame. Section dividers reuse the curling wave motif drawn in the map's sea.
 - **Dice.** Attacker dice have a cinnabar ring and defender dice a river-teal ring, since the battle dialog shows both sides' dice at once.
 - **Handoff overlay.** The scrim is a wash of ink (`#2c2521` at 90%), so the paper banner in front of it reads like a sheet laid on a dark table.
-- **Game screen components.** Emblems are seals (square, round, gourd, tablet; 白文 or 朱文 style). Army miniatures are lacquered blocks with silk banners. Order icons are pictograms: an arrow (move), a fork (split), a join (merge), swap arrows (reorganize) and a card. The End Turn button is a solid ink block and Next Step its paper counterpart. See the [game screen specification](game-screen.md) and its mockups.
+- **Game screen components.** Emblems are seals (square, round, gourd, tablet; 白文 or 朱文 style). Armies are Kriegsspiel pieces: blocks in the nation's color with military map symbols, under a header with the combat total. Order icons are pictograms: an arrow (move), a fork (split), a join (merge), swap arrows (reorganize) and a card. The End Turn button is a solid ink block and Next Step its paper counterpart. See the [game screen specification](game-screen.md) and its mockups.
 
 ### 5.5 Example of a regional theme built on top: Prussian Baroque
 

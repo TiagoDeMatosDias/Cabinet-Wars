@@ -13,7 +13,7 @@ It complements the [design system](design-system.md), which defines colors, font
 
 *Mockup of the game screen, not a screenshot:*
 - *Top bar: the acting player's emblem and turn, and each nation's willingness.*
-- *Map: 3D army miniatures on the nodes. Two armies at Town 20 are selected, their node has a red "here" ring, and the nodes they can reach are highlighted.*
+- *Map: army pieces on the nodes (the mockup predates the Kriegsspiel pieces). Two armies at Town 20 are selected, their node has a red "here" ring, and the nodes they can reach are highlighted.*
 - *Bottom left: the army card. Bottom centre: the hand, with a tooltip on "+1 Moves".*
 - *Right side: the orders list, with the collapsed log tab at the edge. Bottom right: Next Step and End Turn.*
 
@@ -42,7 +42,7 @@ The map fills the whole window below the top bar. Every other element floats ove
 | Region | Position | Contents | Visible |
 |---|---|---|---|
 | Top bar | Top, full width | Acting player's emblem, name and "your turn · orders" status; the player's own **collapse pill**; turn number; each nation's emblem with its willingness bar, threshold mark and willingness chip; deck counters | Always |
-| Map | Full window under the top bar | Background art, roads, nodes, 3D army miniatures, highlights, planned-order arrows | Always |
+| Map | Full window under the top bar | Background art, roads, nodes, army pieces, highlights, planned-order arrows, the supply overlay | Always |
 | Army card | Bottom left | Details and actions of the selected army or armies ([section 5](#5-the-army-card)) | When an army is selected |
 | Hand | Bottom centre | The acting player's cards ([section 3](#3-cards-in-hand)) | Always during a player's own turn and in battles |
 | Turn controls | Bottom right | **End Turn** (large) and **Next Step** (smaller, to its left) ([section 7](#7-end-turn-and-next-step)) | During the player's own turn |
@@ -69,7 +69,7 @@ Clicking the nations, or that pill, opens the **War status** panel. It has one r
 Every nation has an **emblem**: a small, unique badge used everywhere the game refers to that nation.
 - the top bar (large, for the acting player)
 - willingness bars and the lobby's seat list
-- the banners on army miniatures and the army card
+- the emblem square on army pieces and the army card
 - card backs and the corner of face-down cards
 - order entries and log entries
 - the battle panel's sides, wings and phase chips
@@ -170,7 +170,7 @@ The tooltip uses the theme's inverse surface (ink background, paper text in Impe
 
 ### 3.5 Playing a card
 
-- **Drag and drop:** drag +1 Moves onto an army miniature or the army card; battle cards are played from the battle panel (click a card, then a die).
+- **Drag and drop:** drag +1 Moves onto an army piece or the army card; battle cards are played from the battle panel (click a card, then a die).
 - **Click alternative** (and for keyboard and touch): click the card to select it; valid targets light up; click a target. Escape cancels.
 - **+1 Moves** played outside a battle becomes an **order** in the step list (it takes effect when executed), so it can be reordered like any other order.
 
@@ -178,34 +178,31 @@ The tooltip uses the theme's inverse surface (ink background, paper text in Impe
 
 ## 4. Armies on the map
 
-### 4.1 Miniatures
+### 4.1 Kriegsspiel pieces
 
-Armies are shown as **3D miniatures standing on their node**, like the wooden pieces of a board game:
+Armies are drawn as **Kriegsspiel pieces**, after the red and blue blocks of Reisswitz's 1824 war game, which was played on a paper map like this one. Each piece stands at the **upper right of its node**, so the town circle, its name (below) and its victory-point badge (upper left) stay visible and clickable:
 
-- a **plinth** of stacked blocks in the nation's color, lit from the top left. The stack height shows army size: one block per 2 combat units, capped at 5.
-- a **banner** on a pole, in the nation color, carrying the nation's emblem glyph. An army with a general has a larger banner with a gold finial; an army without a general (supply only) has no banner, just a supply crate on the plinth.
-- a **soft ground shadow**, so the piece sits on the painting.
-- a small **count pill** below it with the number of combat units (supply shown as `+n` when present).
-- a red **"!" badge** next to the pill when one of the player's own (or allied) armies is **out of supply**, i.e. it will lose a unit at the end of its turn. Ghosts of planned positions get the badge too when the planned move ends out of supply.
+- a dark **header** with the nation's emblem glyph on a square of its color, the army's **total of combat units** in large figures (supply units don't fight, so they are not counted), and a **gold star per general** (at most three drawn);
+- below it, **one block per unit type** the army holds, in the nation's color, in two columns: the type's military map symbol (a cross for infantry, a diagonal for cavalry, a dot for artillery, a low bar for supply) and how many units of that type the army has;
+- a **drop shadow**, so the piece sits on the painting;
+- a red **"!" badge** at the header's right when one of the player's own (or allied) armies is **out of supply**, i.e. it will lose a unit at the end of its turn. Ghosts of planned positions get the badge too when the planned move ends out of supply.
 
-**Current implementation.** A theme with 3D models (`army.model`, see the [design system](design-system.md#49-game-screen-components)) shows each army as a small group of animated miniatures: one figure per `unitsPerFigure` combat units (at most `maxFigures`), shared out between infantry, cavalry and artillery in proportion to the army's composition (every type present gets a figure while there are enough), plus supply wagons and a figure per general (`render/formation.ts`). The glTF models are pre-rendered with three.js into sprite sheets per nation color, then played by Pixi (`render/miniatures.ts`): figures stand idle, walk when their army moves to another node, and fight while their army is in a battle, facing the enemy. The count pill carries the nation's emblem glyph. A theme without models (or before its sprites are ready, or without WebGL) gets the procedural pieces: shaded blocks in the nation color, a banner with the emblem glyph, a supply crate, and a ground shadow.
+The pieces are drawn with Pixi graphics in `render/MapView.ts` (`drawPiece`), so every theme gets them with no art; a theme only sets their shadow (`army.shadow`) and the ghosts' opacity (`army.ghostAlpha`). An army that changes node slides there along a straight line.
 
-The **theme gallery** (main menu → Settings → "Theme gallery…") shows a theme's units as live 3D models with their animations and a nation-color picker, sample armies of several sizes on a map, and the theme's nation colors, emblems, icons, interface colors and type.
+The **theme gallery** (main menu → Settings → "Theme gallery…") shows the unit blocks and their symbols in any nation color, sample armies of several sizes on a map, and the theme's nation colors, emblems, icons, interface colors and type.
 
-**Rendering approach (recommended for richer art).** Pre-render each miniature part (plinth block, banner, crate, general's finial) from simple 3D models at the map's viewing angle. Store them in the theme as sprite sheets, with a grey-scale color layer the renderer tints with the nation color. PixiJS composes them. This keeps a single renderer, stays fast with many armies, and lets each theme ship its own miniatures (Chinese banners in Imperial China, flags and tricornes in a European theme).
-
-**Alternative.** A real 3D layer (three.js, orthographic camera) above the Pixi map. It allows rotation and lighting effects, but needs a second renderer kept in sync with the pan and zoom, plus separate hit testing. Only worth it if the camera should ever tilt.
+**Map scale.** A map's `mapScale` (set in the editor) draws the background that many times bigger while nodes, roads, labels and pieces keep their size. The map view keeps node positions in image pixels and scales them when drawing, so clicks, focus points and the editor all keep working in image pixels.
 
 ### 4.2 Several armies on one node
 
-Up to 3 armies stand side by side around the node's centre; with more, they fan out in a ring. Allied armies can't share a node (see the rules), so a node only ever holds armies of one nation.
+Several armies on one node stand side by side, the first at the node's upper right and the others to its right. A planned position (ghost) takes its place in the same row. Allied armies can't share a node (see the rules), so a node only ever holds armies of one nation.
 
 ### 4.3 Interaction
 
 | Action | Result |
 |---|---|
-| Hover a miniature | It lifts slightly; a tooltip shows nation, army name and unit summary |
-| Click own army | Selects it: selection ring around the plinth, red **"here" ring** on its node, reachable nodes highlighted, army card opens. Reachable nodes where the army would end the turn **out of supply** also get a red ring and the "!" badge (`suppliedAt` in the engine; supply units travelling with the army count only if they are supplied there themselves) |
+| Hover a piece | It lifts slightly and brightens |
+| Click own army | Selects it: a selection frame around the piece, red **"here" ring** on its node, reachable nodes highlighted, army card opens. Reachable nodes where the army would end the turn **out of supply** also get a red ring and the "!" badge (`suppliedAt` in the engine; supply units travelling with the army count only if they are supplied there themselves) |
 | Shift/Ctrl + click, or drag a box | Adds armies to the selection (needed for Merge) |
 | Click an enemy army | Selects it read-only: the army card shows what is known about it; no highlights, no actions |
 | Click a highlighted node | Adds a **Move** order for the selected army (see [section 6](#6-orders-and-steps)) |
@@ -215,10 +212,10 @@ Up to 3 armies stand side by side around the node's centre; with more, they fan 
 ### 4.4 Planned positions
 
 After an order is added, the map shows the **planned** result:
-- a translucent **ghost miniature** at the destination
+- a translucent **ghost piece** at the destination
 - a **dotted ink arrow** along the path, with a numbered disc showing the order's step number
 
-The real miniature stays where it is until the order is executed, and then moves along the path.
+The real piece stays where it is until the order is executed, and then moves along the path.
 
 ---
 
@@ -309,7 +306,7 @@ During their turn a player doesn't act immediately: they **plan orders**, which 
 ### 6.2 Planning
 
 - **Projection.** The client keeps a **projected state**: a copy of the player's current view with every planned order applied in list order. It uses the engine's own functions (`moveArmy`, `splitArmy`, `mergeArmies`, `reachable` in `packages/engine`), so planning follows exactly the same rules as execution.
-- **What it drives.** The army card's numbers, the reachable-node highlights and the ghost miniatures all come from this projection.
+- **What it drives.** The army card's numbers, the reachable-node highlights and the ghost pieces all come from this projection.
 - **Placeholder armies.** Orders can refer to armies that only exist after an earlier planned Split. These use **placeholder ids** that are replaced by the real ids when the split executes.
 - **Adding orders.** New orders can be added **as long as some army still has a valid action** in the projected state (moves left, or something to split, merge or reorganize). Otherwise the list shows "No more orders possible. Press End Turn."
 
@@ -383,7 +380,7 @@ Keyboard: **N** runs the next step, **L** opens or closes the log, **M** minimiz
 
 ## 8. The battle panel
 
-A battle opens a **compact panel docked at the bottom of the screen**. There is no dimming, so the fight stays visible on the map. The map pans to the battle so the two armies, fighting as miniatures, sit above the panel. The panel opens for both players: the attacker when their order triggers it, and the defender whenever it starts (in online games the defender's screen opens it immediately; in hotseat after the handoff screen). The hand is hidden during a battle, because its cards are played from the panel.
+A battle opens a **compact panel docked at the bottom of the screen**. There is no dimming, so the fight stays visible on the map. The map pans to the battle so the two armies sit above the panel. The panel opens for both players: the attacker when their order triggers it, and the defender whenever it starts (in online games the defender's screen opens it immediately; in hotseat after the handoff screen). The hand is hidden during a battle, because its cards are played from the panel.
 
 ### 8.1 Structure
 
@@ -472,7 +469,7 @@ The log is its own **drawer on the right edge**:
 The rules engine barely changes; most of this is client work.
 
 **As built**, compared with this proposal:
-- Army miniatures are drawn procedurally rather than from sprite sheets (`army.model` is reserved for that).
+- Armies are Kriegsspiel pieces drawn with Pixi graphics (section 4.1), not sprites.
 - Order planning lives in `packages/engine/src/orders.ts`: `projectOrders`, `orderToIntents`, and dependency helpers. The client's list and runner are in `packages/client/src/orders/plan.ts` and `ui/game.ts`.
 - In the battle panel, roll cards are placed by selecting a card and then clicking a die. Drag-and-drop is used for playing +1 Moves onto armies.
 - The parts of section 11 are in `packages/client/src/ui/`: `chat.ts` (chat, mute, connection banner), `turnClock.ts`, `summary.ts`, `tooltip.ts`, `tutorial.ts`, `alerts.ts` and `gameSounds.ts`, with the sounds in `audio/sound.ts`. Online games run on the server through `packages/table`, which the browser also uses for games on one computer (`net/local.ts`); `net/online.ts` is the browser's side of an online game.
@@ -486,7 +483,7 @@ The rules engine barely changes; most of this is client work.
 **Client (`packages/client`)**
 - `ui/emblem.ts`: emblem resolution and generation (section 2), with an SVG renderer and a cache.
 - `ui/hand.ts`: cards, tooltips, drag and drop (section 3).
-- `render/armies.ts`: miniature sprites, stacking, hover and selection, ghost pieces and order arrows (section 4). Replaces the flat counters in `render/MapView.ts`.
+- Army pieces, stacking, hover and selection, ghost pieces and order arrows (section 4) are in `render/MapView.ts`.
 - `ui/armyCard.ts`, with the split and reorganize editors (section 5). Replaces the army section of `ui/game.ts`.
 - `orders/planner.ts` (projection, placeholders, dependencies) and `ui/orders.ts` (the list, reordering, execution loop) (section 6).
 - `ui/turnControls.ts` (section 7).

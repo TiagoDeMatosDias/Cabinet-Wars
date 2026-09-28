@@ -1,5 +1,5 @@
 import {
-  dependentsOf, musterBlocked, musterNodes, orderToIntents, reachable, retreatPlan, sideOf, suppliedAt, unsuppliedArmies, visibleNodes,
+  dependentsOf, musterBlocked, musterNodes, orderToIntents, reachable, retreatPlan, sideOf, suppliedAt, suppliedNodes, unsuppliedArmies, visibleNodes,
   type Army, type BattleReport, type GameState, type GameView, type HistoryEntry, type Intent, type OrderIntent, type UnitType,
 } from '@cabinet-wars/engine';
 import { MapView, type HighlightKind, type MapScene } from '../render/MapView';
@@ -41,6 +41,9 @@ export interface SaveRecord {
 }
 
 /** The in-game screen (docs/game-screen.md). */
+/** Browser setting: the supply overlay is on. */
+const SUPPLY_OVERLAY_KEY = 'krieg:supplyOverlay';
+
 export async function gameScreen(root: HTMLElement, session: Session, onExit: () => void, onReplay?: (replay: ReplaySession) => void) {
   await useThemeForMap(session.map.config);
   useMapText(session.map.config);
@@ -91,7 +94,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   const clock = session.room ? turnClock(session, () => emblems) : null;
   if (clock) slots.clock.append(clock.el);
 
-  const map = await MapView.create(mapEl, session.map.files[backgroundName(session.map)] ?? null);
+  const map = await MapView.create(mapEl, session.map.files[backgroundName(session.map)] ?? null, undefined, session.config.mapScale);
   const unsubTheme = onThemeChange((t) => { emblems = buildEmblems(nations(), session.map, t); map.setTheme(t); render(); });
 
   // ---- local UI state ----
@@ -124,6 +127,15 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   let recruitType: UnitType = 'infantry';
   /** The Muster banner is open: clicking a highlighted town raises the turn's unit there. */
   let mustering = false;
+  /** The turn (turn:nation) whose unused muster End Turn already reminded the player of. */
+  let musterReminded = '';
+  /** The supply overlay is shown (remembered in this browser). */
+  let supplyOverlay = (() => { try { return localStorage.getItem(SUPPLY_OVERLAY_KEY) === '1'; } catch { return false; } })();
+  const toggleSupply = () => {
+    supplyOverlay = !supplyOverlay;
+    try { localStorage.setItem(SUPPLY_OVERLAY_KEY, supplyOverlay ? '1' : '0'); } catch { /* private window: just for this game */ }
+    render();
+  };
   let shownSeat: string | null = null;
   /** The battle the map was last panned to. */
   let shownBattle: string | null = null;
@@ -264,6 +276,15 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
   async function endTurn() {
     const v = view();
     if (!v || running || progress || !plan) return;
+    // Unused muster: the first press only reminds; pressing again ends the turn anyway.
+    const turnKey = `${v.turn}:${v.current}`;
+    if (!musterState(v) && musterReminded !== turnKey) {
+      musterReminded = turnKey;
+      sound.play('warning');
+      toast(t('game.musterReminder'));
+      render();
+      return;
+    }
     stopRequested = false;
     const total = plan.orders.length;
     let n = 0;
@@ -475,6 +496,7 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       onLeave: onExit,
       warOpen,
       onToggleWar: () => { warOpen = !warOpen; render(); },
+      supply: seat && !replay ? { on: supplyOverlay, onToggle: toggleSupply } : undefined,
     }));
     slots.war.replaceChildren(warOpen ? warPanel(v, seat, emblems, () => { warOpen = false; render(); }) : '');
 
@@ -701,19 +723,12 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
       visible: handoff ? undefined : visible,
       ghosts: handoff ? [] : ghosts,
       arrows: handoff ? [] : arrows,
-      fighting: fighting(v),
+      // Supply overlay: where the viewer's side can supply its armies, after the planned orders.
+      supplied: supplyOverlay && seat && !handoff && v.phase !== 'gameOver' ? suppliedNodes(state, sideOf(v, seat)) : undefined,
       unsupplied: handoff ? undefined : unsuppliedOf(v),
       ghostsUnsupplied: handoff || !proj ? undefined : unsuppliedOf(proj.state),
       noSupply: handoff ? undefined : noSupply,
     });
-  }
-
-  /** The two armies of the current battle, each facing the other's node. */
-  function fighting(v: GameView): Map<string, string> {
-    const out = new Map<string, string>();
-    const [att, def] = v.battle ? [v.armies[v.battle.attackerArmy], v.armies[v.battle.defenderArmy]] : [];
-    if (att && def) { out.set(att.id, def.node); out.set(def.id, att.node); }
-    return out;
   }
 
   /** Where summaries remember what they showed: the online game, or this session. */
@@ -773,6 +788,8 @@ export async function gameScreen(root: HTMLElement, session: Session, onExit: ()
     } else if (e.key === 'l' || e.key === 'L') {
       logOpen = !logOpen;
       render();
+    } else if ((e.key === 's' || e.key === 'S') && !replay && me()) {
+      toggleSupply();
     }
   };
   window.addEventListener('keydown', onKey);

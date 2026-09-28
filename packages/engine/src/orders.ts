@@ -1,4 +1,4 @@
-import type { GameState, NationId, NodeId } from './types';
+import type { GameState, NationId, NodeId, UnitType } from './types';
 import { fail, GameError, log, sideOf } from './graph';
 import { mergeArmies, moveArmy, splitArmy, transferArmies } from './movement';
 import type { Intent } from './reducer';
@@ -30,6 +30,8 @@ export interface OrderProjection {
   errorParams?: Record<string, string | number>;
   /** The move ends next to a known enemy army, so a battle will start there. */
   meetsEnemy?: boolean;
+  /** When the move meets the enemy: the unit types of the moving army and of each enemy army it will fight. */
+  battle?: { attacker: UnitType[]; defenders: UnitType[][] };
   /** Nodes the move passes through (for arrows), including the start. */
   path?: NodeId[];
 }
@@ -130,13 +132,19 @@ export function orderToIntents(o: OrderIntent, ids: Map<ArmyRef, string>, nation
 function applyOrder(state: GameState, o: OrderIntent, ids: Map<ArmyRef, string>, nationId: NationId): OrderProjection {
   const { intents, created } = orderToIntents(o, ids, nationId, state.nextId);
   let meetsEnemy = false;
+  let battle: OrderProjection['battle'];
   let path: NodeId[] | undefined;
   for (const i of intents) {
     switch (i.type) {
       case 'move': {
         const a = state.armies[i.army] ?? fail('The army no longer exists');
         const start = a.node;
-        meetsEnemy = moveArmy(state, i.army, i.path).length > 0;
+        const enemies = moveArmy(state, i.army, i.path);
+        meetsEnemy = enemies.length > 0;
+        if (meetsEnemy) {
+          const types = (id: string) => state.armies[id].units.map((u) => u.type);
+          battle = { attacker: types(i.army), defenders: enemies.map(types) };
+        }
         const end = state.armies[i.army].node;
         path = [start, ...i.path.slice(0, i.path.indexOf(end) + 1)];
         break;
@@ -149,7 +157,7 @@ function applyOrder(state: GameState, o: OrderIntent, ids: Map<ArmyRef, string>,
     }
   }
   for (const [k, v] of created) ids.set(k, v);
-  return { ok: true, meetsEnemy, path };
+  return { ok: true, meetsEnemy, battle, path };
 }
 
 /**

@@ -20,6 +20,8 @@ interface EGeneral { id: string; name: string; nation: string }
 interface EArmy { id: string; nation: string; node: string; generals: string[]; units: { cavalry: number; infantry: number; artillery: number; supply: number } }
 interface EConfig {
   name: string; version: number; background: string; nodesImage: string;
+  /** How much bigger the map is drawn than its image, with nodes and armies keeping their size (1 when unset). */
+  mapScale?: number;
   theme?: string | Record<string, unknown>;
   rules?: { endGameFromRound?: number; mode?: 'sides' | 'freeForAll' };
   text?: Record<string, Record<string, string>>;
@@ -57,6 +59,7 @@ function normalize(raw: Record<string, unknown>, name: string): EConfig {
     armies: c.armies ?? [],
     ...(c.decks ? { decks: c.decks } : {}),
     ...(c.theme ? { theme: c.theme } : {}),
+    ...(c.mapScale && c.mapScale !== 1 ? { mapScale: c.mapScale } : {}),
     ...(c.rules ? { rules: c.rules } : {}),
     ...(c.text ? { text: c.text } : {}),
     ...(c.languageNames ? { languageNames: c.languageNames } : {}),
@@ -100,7 +103,7 @@ export async function editorScreen(root: HTMLElement, source: MapBundle | null, 
   async function mountMap() {
     view?.destroy();
     mapEl.replaceChildren();
-    view = await MapView.create(mapEl, map.files[cfg.background] ?? null);
+    view = await MapView.create(mapEl, map.files[cfg.background] ?? null, undefined, cfg.mapScale ?? 1);
     view.onClick = ({ node, x, y, shift }) => onMapClick(node, x, y, shift);
     if (cfg.nodes.length) view.fitTo(cfg.nodes);
     redraw();
@@ -526,7 +529,21 @@ export async function editorScreen(root: HTMLElement, source: MapBundle | null, 
           onchange: (e: Event) => { const v = (e.target as HTMLSelectElement).value; if (v) cfg.theme = v; else delete cfg.theme; void previewTheme(); },
         },
         h('option', { value: '', selected: !cfg.theme }, 'Theme: default'),
-        knownThemes().map((th) => h('option', { value: th.id, selected: cfg.theme === th.id }, `Theme: ${th.name}`)))),
+        knownThemes().map((th) => h('option', { value: th.id, selected: cfg.theme === th.id }, `Theme: ${th.name}`))),
+        h('label', {
+          class: 'row',
+          title: 'Draws the map this many times bigger than its image while nodes, roads, labels and armies keep their size. Above 1, nodes spread out, so a map can hold more of them without looking crowded. Node positions are kept.',
+        },
+        'Map scale ×',
+        h('input', {
+          type: 'number', min: 0.25, max: 8, step: 0.25, value: String(cfg.mapScale ?? 1), style: 'width:4.5em',
+          onchange: (e: Event) => {
+            const v = Math.min(8, Math.max(0.25, Number((e.target as HTMLInputElement).value) || 1));
+            if (v === 1) delete cfg.mapScale; else cfg.mapScale = v;
+            view?.setMapScale(v);
+            redraw();
+          },
+        }))),
       h('div', { class: 'hud-right' },
         h('button', { onclick: () => void uploadBaseMap(), title: 'The background image players see (PNG, WebP or JPEG)' }, 'Base map…'),
         h('button', { onclick: () => void uploadNodeMap(), title: 'Optional: an image with one colored dot per node, the same size as the base map. Nodes are created from the dots.' }, 'Node map…'),
